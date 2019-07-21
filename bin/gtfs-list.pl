@@ -141,13 +141,13 @@ sub write_ifopt {
             @ifopt_parts = split( ':', $ifopt );
             $ifopt_part  = undef;
 
-            if ( $ifopt_levels == 1 && $ifopt_parts[0] ) {
+            if ( $ifopt_levels == 1 && defined($ifopt_parts[0]) ) {
                 $ifopt_part = $ifopt_parts[0];
-            } elsif ( $ifopt_levels == 2 && $ifopt_parts[0] && $ifopt_parts[1] ) {
+            } elsif ( $ifopt_levels == 2 && defined($ifopt_parts[0]) && defined($ifopt_parts[1]) ) {
                 $ifopt_part = $ifopt_parts[0] . ':' . $ifopt_parts[1];
-            } elsif ( $ifopt_levels == 3 && $ifopt_parts[0] && $ifopt_parts[1] && $ifopt_parts[2] ) {
+            } elsif ( $ifopt_levels == 3 && defined($ifopt_parts[0]) && defined($ifopt_parts[1]) && defined($ifopt_parts[2]) ) {
                 $ifopt_part = $ifopt_parts[0] . ':' . $ifopt_parts[1] . ':' . $ifopt_parts[2];
-            } elsif ( $ifopt_levels == 4 && $ifopt_parts[0] && $ifopt_parts[1] && $ifopt_parts[2] && $ifopt_parts[3] ) {
+            } elsif ( $ifopt_levels == 4 && defined($ifopt_parts[0]) && defined($ifopt_parts[1]) && defined($ifopt_parts[2]) && defined($ifopt_parts[3]) ) {
                 $ifopt_part = $ifopt_parts[0] . ':' . $ifopt_parts[1] . ':' . $ifopt_parts[2] . ':' . $ifopt_parts[3];
             }
 
@@ -160,7 +160,6 @@ sub write_ifopt {
             } else {
                 
                 printf STDERR "Can't split %s\n", $ifopt;
-
             }
 
         }
