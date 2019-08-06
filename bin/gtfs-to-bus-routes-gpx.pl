@@ -27,7 +27,12 @@ my %ROUTE_SHORT_NAME    = ();
 
 my %STOP_LISTS_OF_ROUTE_SHORT_NAME  = ();   # key: short name of route, e.g. '210' or '975'
 
-#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'08:15'} = 1;
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'departures'}->{'08:15'} = 1;
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'departures'}->{'09:15'} = 1;
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'notes'}->{'subroute-of'}->{'02'} = 1;
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'notes'}->{'subroute-of'}->{'05'} = 1;
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2189:0:2'}->{'number'}                         = "01";
+#$STOP_LISTS_OF_ROUTE_SHORT_NAME{'210'}->{'de:09162:1010:5:5|gen:9184:2302:0:3|gen:9184:2134:0:1|gen:9184:2134:0:2'}->{'notes'}->{'strange-end'} = 1;
 
 #############################################################################################
 
@@ -74,6 +79,8 @@ read_trips( $filename_trips );
 enhance_stops();
 
 enhance_stop_times();
+
+analyze_stop_lists();
 
 if ( $all_routes ) {
 
@@ -218,7 +225,7 @@ sub read_stop_times {
                     $TRIPS{$trip_id}->{'stop_id'}->{$stop_id}  = $stop_sequence;
                 }
                 if ( $TRIPS{$trip_id}->{'stop_id_list'} ) {
-                    $TRIPS{$trip_id}->{'stop_id_list'}        .= '|' . $stop_id;
+                    $TRIPS{$trip_id}->{'stop_id_list'}        .= ';' . $stop_id;
                 } else {
                     $TRIPS{$trip_id}->{'stop_id_list'}             = $stop_id;
                     $TRIPS{$trip_id}->{'stop_id_list_departure'}   = $departure;
@@ -322,9 +329,91 @@ sub enhance_stop_times {
                 $stop_list = $TRIPS{$trip_id}->{'stop_id_list'};
                 
                 if ( $stop_list ) {
-                    $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_list}->{$TRIPS{$trip_id}->{'stop_id_list_departure'}} = 1;
+                    $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_list}->{'departures'}->{$TRIPS{$trip_id}->{'stop_id_list_departure'}} = 1;
                 } else {
                     printf STDERR "enhance_stop_times(): no stop_list for Route: %s, Trip: %s\n", $route_short_name, $trip_id;
+                }
+            }
+        }
+    }
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub analyze_stop_lists {
+    my $route_short_name        = undef;
+    my $stop_list               = undef;
+    my @stop_lists              = ();
+    my $index1                  = 0;
+    my $index2                  = 0;
+    my $num_of_stop_lists       = 0;
+    my $last_stop               = undef;
+    my $second_last_stop        = undef;
+    my @last_stop_split         = ();
+    my @second_last_stop_split  = ();
+    my $new_stop_list           = undef;
+    
+    foreach my $route_short_name (  keys ( %STOP_LISTS_OF_ROUTE_SHORT_NAME ) ) {
+
+        # printf STDERR "analyze_stop_lists(): route_short_name = %s\n", $route_short_name;
+        
+        # check for strange end of list, where the last stop is the second-last stop but in opposite direction or so
+        
+        @stop_lists = sort( keys( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}} ) );
+        
+        $num_of_stop_lists = scalar( @stop_lists );
+        
+        for ( $index1 = 0; $index1 < $num_of_stop_lists; $index1++ ) {
+            if ( $stop_lists[$index1] =~ m/;([^;]+);([^;]+)$/ ) {
+                $second_last_stop   = $1;
+                $last_stop          = $2;
+                
+                @last_stop_split        = split( ':', $last_stop );
+                @second_last_stop_split = split( ':', $second_last_stop );
+                
+                if ( defined($last_stop_split[0]) && defined($second_last_stop_split[0]) && $last_stop_split[0] eq $second_last_stop_split[0] &&
+                     defined($last_stop_split[1]) && defined($second_last_stop_split[1]) && $last_stop_split[1] eq $second_last_stop_split[1] &&
+                     defined($last_stop_split[2]) && defined($second_last_stop_split[2]) && $last_stop_split[2] eq $second_last_stop_split[2]    ) {
+                    
+                    #printf STDERR "Strange End for %s - %d: %s ~ %s\n", $route_short_name, $index1+1, $second_last_stop, $last_stop;
+                    $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index1]}->{'notes'}->{'strange-end'} = 1;
+                    
+                    $new_stop_list = $stop_lists[$index1]; 
+                    $new_stop_list =~ s/;([^;]+)$//;
+                    
+                    foreach my $departures ( keys ( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index1]}->{'departures'}} ) ) {
+                        $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$new_stop_list}->{'departures'}->{$departures} = 1;
+                    }
+                }
+            }
+        }
+
+        # we might have added new routes in the step above, so let's rearrange ...
+        # check for subroutes
+        
+        @stop_lists = sort( keys( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}} ) );
+        
+        $num_of_stop_lists = scalar( @stop_lists );
+        
+        for ( $index1 = 0; $index1 < $num_of_stop_lists; $index1++ ) {
+            
+            $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index1]}->{'number'} = sprintf("%02d",$index1+1);
+
+            for ( $index2 = 0; $index2 < $num_of_stop_lists; $index2++ ) {
+
+                next    if ( $index1 == $index2 );
+                
+                next    if ( $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index1]}->{'notes'}->{'strange-end'} ||
+                             $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index2]}->{'notes'}->{'strange-end'}    );
+                
+                #printf STDERR "Analyze %s\n %d   %s\n %d   %s\n", $route_short_name, $index1+1, $stop_lists[$index1], $index2+1, $stop_lists[$index2] if ( $route_short_name eq '210' );
+                if ( $stop_lists[$index2] =~ m/\Q$stop_lists[$index1]\E/ ) {
+                    #printf STDERR "%d is subroute of %d\n", $index1+1, $index2+1  if ( $route_short_name eq '210' );
+                    $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_lists[$index1]}->{'notes'}->{'subroute-of'}->{sprintf("%02d",$index2+1)} = 1;
                 }
             }
         }
@@ -341,12 +430,13 @@ sub write_trips_of_route {
     my $route_short_name = shift;
     my $prefix           = shift;
 
-    my $index       = undef;
     my $filename    = undef;
     my $pretty_route= undef;
-    my $filenumber  = 0;
     my $departures  = '';
     my @routes      = ();
+    my $list_ptr    = undef;
+    my $index       = 0;
+    my $help        = undef;
     
     if ( $route_short_name && $prefix ) {
         
@@ -360,15 +450,27 @@ sub write_trips_of_route {
             
             printf STDERR "%s\n", $route_short_name     if ( $verbose );
             
-            $filenumber = 1;
-            foreach my $stop_list ( sort ( keys( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}} ) ) ) {
+            foreach my $stop_list ( keys( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}} ) ) {
+                
+                $list_ptr = $STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_list};
                 
                 $pretty_route = $route_short_name;
                 $pretty_route =~ s/[^A-Za-z0-9_-]/_/g;
                 
-                $filename = $prefix . '-' . $pretty_route . '-' . sprintf("%02d",$filenumber++) . '.gpx';
+                $help = undef;
+                if ( $list_ptr->{'notes'}->{'strange-end'} ) {
+                    $filename = $prefix . '-' . $pretty_route . '-' . $list_ptr->{'number'} . '-strange-end' . '.gpx';
+                } else {
+                    $help = join( '-and-', sort ( keys (%{$list_ptr->{'notes'}->{'subroute-of'}} ) ) );
+                    if ( $help ) {
+                        $filename = $prefix . '-' . $pretty_route . '-' . $list_ptr->{'number'} . '-subroute-of-' . $help . '.gpx';
+                    } else {
+                        $filename = $prefix . '-' . $pretty_route . '-' . $list_ptr->{'number'} . '.gpx';
+                    }
+                }
                 
-                $departures = join( ',', sort( keys( %{$STOP_LISTS_OF_ROUTE_SHORT_NAME{$route_short_name}->{$stop_list}} ) ) );
+                
+                $departures = join( ',', sort( keys( %{$list_ptr->{'departures'}} ) ) );
                 
                 #printf STDERR "creating %s\n", $filename;
                 
@@ -381,7 +483,7 @@ sub write_trips_of_route {
                     # write the way points
                     #
                     $index = 0;
-                    foreach my $stop_id ( split( '\|', $stop_list ) ) {
+                    foreach my $stop_id ( split( ';', $stop_list ) ) {
                         $index++;
                         if ( $STOPS{$stop_id}->{'name'} && $STOPS{$stop_id}->{'lat'} && $STOPS{$stop_id}->{'lon'} ) {
                             printf ROUTE "    <wpt lat='%s' lon='%s'>\r\n", $STOPS{$stop_id}->{'lat'}, $STOPS{$stop_id}->{'lon'};
