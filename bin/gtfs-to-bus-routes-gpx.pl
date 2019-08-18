@@ -504,7 +504,7 @@ sub write_trips_of_route {
                     printf ROUTE "    <rte>\r\n";
                     printf ROUTE "        <name><![CDATA[%s: departures %s]]></name>\r\n", $route_short_name, $departures;
                     $index = 0;
-                    foreach my $stop_id ( split( '\|', $stop_list ) ) {
+                    foreach my $stop_id ( split( ';', $stop_list ) ) {
                         $index++;
                         if ( $STOPS{$stop_id}->{'name'} && $STOPS{$stop_id}->{'lat'} && $STOPS{$stop_id}->{'lon'} ) {
                             printf ROUTE "        <rtept lat='%s' lon='%s' />\r\n", $STOPS{$stop_id}->{'lat'}, $STOPS{$stop_id}->{'lon'};
