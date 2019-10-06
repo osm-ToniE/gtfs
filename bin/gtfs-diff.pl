@@ -29,7 +29,7 @@ my $new_dir                 = undef;
 my $new_name                = undef;
 my $old_dir                 = undef;
 my $old_name                = undef;
-my $list_this               = 'agency;routes;stops;trips';
+my $list_this               = 'stops';
 my $format                  = undef;
 my $print_all               = undef;
 
@@ -39,6 +39,8 @@ GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
             'new-dir=s'             =>  \$new_dir,               # --new-dir=
             'old-dir=s'             =>  \$old_dir,               # --old-dir=
+            'new-name=s'            =>  \$new_name,              # --new-name=
+            'old-name=s'            =>  \$old_name,              # --old-name=
             'list=s'                =>  \$list_this,             # --list=           --list=stops / --list=routes / --list=trips / --list=agency
             'format=s'              =>  \$format,                # --format=html
             'print-all'             =>  \$print_all,             # --print-all
@@ -47,18 +49,12 @@ GetOptions( 'debug'                 =>  \$debug,                 # --debug
 
 #############################################################################################
 
-my @list_these = split( '[;, ]', $list_this );
-
-my $this_file  = undef;
-
 if ( $old_dir ) {
     if ( -d $old_dir ) {
-        foreach $this_file ( @list_these ) {
-            printf STDERR "Evaluating: %s/%s.txt\n", $old_dir, $this_file       if ( $verbose );
-            if ( -f "$old_dir/$this_file.txt" && -r "$old_dir/$this_file.txt" ) {
-            } else {
-                $errors++;
-            }
+        printf STDERR "Evaluating: %s/%s.txt\n", $old_dir, $list_this       if ( $verbose );
+        if ( -f "$old_dir/$list_this.txt" && -r "$old_dir/$list_this.txt" ) {
+        } else {
+            $errors++;
         }
     } else {
         $errors++;
@@ -69,12 +65,10 @@ if ( $old_dir ) {
 
 if ( $new_dir ) {
     if ( -d $new_dir ) {
-        foreach $this_file ( @list_these ) {
-            printf STDERR "Evaluating: %s/%s.txt\n", $new_dir, $this_file       if ( $verbose );
-            if ( -f "$new_dir/$this_file.txt" && -r "$new_dir/$this_file.txt" ) {
-            } else {
-                $errors++;
-            }
+        printf STDERR "Evaluating: %s/%s.txt\n", $new_dir, $list_this       if ( $verbose );
+        if ( -f "$new_dir/$list_this.txt" && -r "$new_dir/$list_this.txt" ) {
+        } else {
+            $errors++;
         }
     } else {
         $errors++;
@@ -91,7 +85,15 @@ if ( $format ) {
     }
 }
 
-exit 1  if ( $errors );
+if ( $errors ) {
+    printf STDERR "%s --list=agency --format=html --old-dir=xxx --new-dir=yyy\n", $0;
+    printf STDERR "%s --list=routes --format=html --old-dir=xxx --new-dir=yyy\n", $0;
+    printf STDERR "%s --list=stops  --format=html --old-dir=xxx --new-dir=yyy\n",  $0;
+    printf STDERR "%s --list=trips  --format=html --old-dir=xxx --new-dir=yyy\n",  $0;
+    
+    exit 1;
+}
+
 
 $new_name = $new_dir    unless ( $new_name );
 $old_name = $old_dir    unless ( $old_name );
@@ -108,44 +110,31 @@ my $new_dbh = DBI->connect( "dbi:CSV:f_dir=$new_dir;csv_sep_char=,", "", "", { A
 my @results = ();
 
 
-if ( scalar @list_these ) {
+printf STDERR "Evaluating: %s\n", $list_this    if ( $verbose );
 
-    foreach $list_this ( @list_these ) {
+if ( $list_this eq 'agency'  ) {
 
-        printf STDERR "Evaluating: %s\n", $list_this    if ( $verbose );
+    check_agency();
 
-        if ( $list_this eq 'agency'  ) {
+} elsif ( $list_this eq 'routes' ) {
 
-            check_agency();
+    check_routes();
 
-        } elsif ( $list_this eq 'routes' ) {
+} elsif ( $list_this eq 'stops' ) {
 
-            check_routes();
-
-        } elsif ( $list_this eq 'stops' ) {
-
-            @results = check_stops();
-            
-            if ( $format && $format =~ m/^html$/ ) {
-                print_stops_html( 'results-ref' => \@results, 'old-name' => $old_name, 'new-name' => $new_name );
-            } else {
-                foreach my $line ( @results ) {
-                    printf STDOUT "%s\n", $line;
-                }
-            }
-
-        }  elsif ( $list_this eq 'trips'  ) {
-
-            check_trips();
-
+    @results = check_stops();
+    
+    if ( $format && $format =~ m/^html$/ ) {
+        print_stops_html( 'results-ref' => \@results, 'old-name' => $old_name, 'new-name' => $new_name );
+    } else {
+        foreach my $line ( @results ) {
+            printf STDOUT "%s\n", $line;
         }
     }
-} else {
 
-    printf STDERR "%s --list=agency\n", $0;
-    printf STDERR "%s --list=routes\n", $0;
-    printf STDERR "%s --list=stops\n",  $0;
-    printf STDERR "%s --list=trips\n",  $0;
+}  elsif ( $list_this eq 'trips'  ) {
+
+    check_trips();
 
 }
 
@@ -542,7 +531,7 @@ sub print_stops_html {
     my $old_name         = $hash{'old-name'} || 'old';
     my $new_name         = $hash{'new-name'} || 'new';
     
-    print_html_header();
+    print_html_header( 'Stops' );
     
     print_html_table_header( '&nbsp;', "C4:GTFS ($old_name)", "C4:GTFS ($new_name)" );
     
@@ -665,15 +654,16 @@ sub check_trips {
 #
 
 sub print_html_header {
+    my $what = shift || '';
 
     printf STDOUT "<!DOCTYPE html>\r\n";
     printf STDOUT "<html lang=\"de\">\r\n";
     printf STDOUT "    <head>\r\n";
-    printf STDOUT "        <title>GTFS Diff</title>\r\n";
+    printf STDOUT "        <title>GTFS %s Diff</title>\r\n", $what;
     printf STDOUT "        <meta charset=\"utf-8\" />\r\n";
     printf STDOUT "        <meta name=\"generator\" content=\"gtfs-diff\">\r\n";
     printf STDOUT "        <meta name=\"keywords\" content=\"GTFS\">\r\n";
-    printf STDOUT "        <meta name=\"description\" content=\"GTFS diff\">\r\n";
+    printf STDOUT "        <meta name=\"description\" content=\"GTFS %s diff\">\r\n", $what;
     printf STDOUT "        <style>\r\n";
     printf STDOUT "              table { border-width: 1px; border-style: solid; border-collapse: collapse; vertical-align: center; }\r\n";
     printf STDOUT "              th    { border-width: 1px; border-style: solid; border-collapse: collapse; padding: 0.2em; }\r\n";
