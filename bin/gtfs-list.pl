@@ -18,6 +18,8 @@ binmode STDERR, ":utf8";
 
 use DBI;
 
+use Date::Calc;
+
 
 #############################################################################################
 
@@ -40,7 +42,6 @@ my %route_id_2_type     = ( '0' => 'tram',
                             '7' => 'funicular',
                           );
 
-
 #############################################################################################
 
 use Getopt::Long;
@@ -51,7 +52,9 @@ my $ifopt_levels             = 5;
 my $list_this                = undef;
 my $format                   = undef;
 my $agency                   = undef;
+my $route_short_name         = undef;
 my $route_type               = undef;
+my $show_dates               = undef;
 my $comment                  = 'route_id';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
@@ -60,12 +63,17 @@ GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'list=s'                =>  \$list_this,             # --list=           --list=ifopt|IFOPT|stops / --list=routes / --list=agency / --list=agency-id
             'format=s'              =>  \$format,                # --format=PTNA
             'agency=s'              =>  \$agency,                # --agency=
+            'route-short-name=s'    =>  \$route_short_name,      # --route-short-name=
             'route-type=s'          =>  \$route_type,            # --route-type=
+            'show-dates'            =>  \$show_dates,            # --show-dates
             'comment=s'             =>  \$comment,               # --comment=route_id
           );
 
 
 #############################################################################################
+#
+#
+#
 
 if ( $format ) {
 
@@ -81,7 +89,17 @@ if ( $format ) {
 #
 #
 
-my $dbh = DBI->connect( "dbi:CSV:f_dir=.;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB failed";
+my %service_ids = (); 
+
+my %service_ids_of_route_ids = (); 
+
+
+#############################################################################################
+#
+#
+#
+
+my $dbh = DBI->connect( "dbi:CSV:f_dir=.;f_ext=.txt;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB failed";
 
 
 if ( $list_this ) {
@@ -104,8 +122,14 @@ if ( $list_this ) {
                 $route_type  =  undef;
             }
         }
+        
+        if ( $show_dates ) {
+            read_calendar();
+            
+            read_trips();
+        }
 
-        list_routes( format => $format, agency => $agency, route_type => $route_type, comment => $comment );
+        list_routes( format => $format, agency => $agency, route_type => $route_type, route_short_name => $route_short_name, comment => $comment, show_dates => $show_dates );
 
     }  elsif ( $list_this eq 'agency'  ) {
 
@@ -113,7 +137,7 @@ if ( $list_this ) {
 
     }  elsif ( $list_this eq 'agency-id'  ) {
 
-        list_agency_idies();
+        list_agency_ids();
 
     }  elsif ( $list_this eq 'route-type'  ) {
 
@@ -148,7 +172,7 @@ sub list_stops {
     my $sth             = undef;
     my @row             = ();
 
-    $sth = $dbh->prepare( "SELECT stop_id FROM stops.txt" );
+    $sth = $dbh->prepare( "SELECT stop_id FROM stops" );
     $sth->execute();
 
     if ( $list_this eq 'stops' ) {
@@ -207,10 +231,16 @@ sub list_stops {
 sub list_routes {
     my %hash                        = ( @_ );
 
-    my $format                      = $hash{'format'};
-    my $agency                      = $hash{'agency'};
-    my $route_type                  = $hash{'route_type'};
-    my $comment                     = $hash{'comment'};
+    my $opt_format                  = $hash{'format'};
+    my $opt_agency                  = $hash{'agency'};
+    my $opt_route_type              = $hash{'route_type'};
+    my $opt_route_short_name        = $hash{'route_short_name'};
+    my $opt_comment                 = $hash{'comment'};
+    my $route_comment               = undef;
+    my $route_id                    = undef;
+    my $route_short_name            = undef;
+    my $route_long_name             = undef;
+    my $route_type                  = undef;
     my $ptna_ref                    = undef;
     my $ptna_route_type             = undef;
     my $ptna_comment                = undef;
@@ -223,44 +253,47 @@ sub list_routes {
     my $sth                         = undef;
     my @row                         = ();
 
-    if ( defined $agency     ) { push(@clauses,"agency_id=?" ); push(@bind,$agency    ); }
-    if ( defined $route_type ) { push(@clauses,"route_type=?"); push(@bind,$route_type); }
+    if ( defined $opt_agency     )          { push(@clauses,"agency_id=?" );        push(@bind,$opt_agency    ); }
+    if ( defined $opt_route_type )          { push(@clauses,"route_type=?");        push(@bind,$opt_route_type); }
+    if ( defined $opt_route_short_name )    { push(@clauses,"route_short_name=?");  push(@bind,$opt_route_short_name); }
 
     if ( scalar @clauses ) {
         $clause = "WHERE " . join( " AND ", @clauses )
     }
 
-    printf STDERR "SELECT %s,route_id,route_short_name,route_long_name,route_type FROM routes.txt %s\n", $comment, $clause if ( $debug );
+    printf STDERR "SELECT %s,route_id,route_short_name,route_long_name,route_type FROM routes %s\n", $comment, $clause if ( $debug );
 
-    $sth = $dbh->prepare( "SELECT $comment,route_short_name,route_long_name,route_type FROM routes.txt $clause" );
+    $sth = $dbh->prepare( "SELECT $comment,route_id,route_short_name,route_long_name,route_type FROM routes $clause" );
     $sth->execute(@bind);
 
     while ( @row = $sth->fetchrow_array ) {
 
-        printf STDERR "comment=%s, route_id=%s, route_short_name=%s, route_long_name=%s, route_type=%s\n", $row[0], $row[1], $row[2], $row[3], $row[4]  if ( $debug );
+        ($route_comment,$route_id,$route_short_name,$route_long_name,$route_type) = @row;
+        
+        printf STDERR "comment=%s, route_id=%s, route_short_name=%s, route_long_name=%s, route_type=%s\n", $route_comment, $route_id, $route_short_name, $route_long_name, $route_type  if ( $debug );
 
-        if ( defined $format && $format =~ m/^ptna$/i ) {
-            if ( $comment ) {
-                if ( $row[0] =~ m/;/ ) {
-                    $ptna_comment = '"' . $row[0] . '"';
+        if ( defined $opt_format && $opt_format =~ m/^ptna$/i ) {
+            if ( $opt_comment ) {
+                if ( $route_comment =~ m/;/ ) {
+                    $ptna_comment = '"' . $route_comment . '"';
                 } else {
-                    $ptna_comment = $row[0];
+                    $ptna_comment = $route_comment;
                 }
             } else {
                 $ptna_comment = '';
             }
-            if ( $row[1] =~ m/;/ ) {
-                $ptna_ref = '"' . $row[1] . '"';
+            if ( $route_short_name =~ m/;/ ) {
+                $ptna_ref = '"' . $route_short_name . '"';
             } else {
-                $ptna_ref = $row[1];
+                $ptna_ref = $route_short_name;
             }
-            if ( defined $route_id_2_type{$row[3]} ) {
-                $ptna_route_type = $route_id_2_type{$row[3]};
+            if ( defined $route_id_2_type{$route_type} ) {
+                $ptna_route_type = $route_id_2_type{$route_type};
             } else {
                 $ptna_route_type = 'bus';
             }
-            if ( $row[2] ) {
-                $ptna_from = $ptna_to = $row[2];
+            if ( $route_long_name ) {
+                $ptna_from = $ptna_to = $route_long_name;
 
                 $ptna_from =~ s|\s*[/-].*$||;
 
@@ -279,7 +312,7 @@ sub list_routes {
             printf STDOUT "%s;%s;%s;%s;%s;%s\n", $ptna_ref, $ptna_route_type, $ptna_comment, $ptna_from, $ptna_to, $ptna_operator;
 
         } else {
-            printf STDOUT "%s\n", $row[1];
+            printf STDOUT "%s\n", $route_short_name;
         }
     }
 
@@ -296,7 +329,7 @@ sub list_agencies {
     my @row     = ();
     my %printed = ();
 
-    $sth = $dbh->prepare( "SELECT agency_name FROM agency.txt" );
+    $sth = $dbh->prepare( "SELECT agency_name FROM agency" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -314,12 +347,12 @@ sub list_agencies {
 #
 #
 
-sub list_agency_idies {
+sub list_agency_ids {
     my $sth     = undef;
     my @row     = ();
     my %printed = ();
 
-    $sth = $dbh->prepare( "SELECT agency_id FROM agency.txt" );
+    $sth = $dbh->prepare( "SELECT agency_id FROM agency" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -342,7 +375,7 @@ sub find_agency_id {
     my $sth         = undef;
     my @row         = ();
 
-    $sth = $dbh->prepare( "SELECT agency_id FROM agency.txt WHERE agency_name = '$agency_name'" );
+    $sth = $dbh->prepare( "SELECT agency_id FROM agency WHERE agency_name = '$agency_name'" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -372,7 +405,7 @@ sub find_agency_ids {
     printf STDERR "$clause\n";
 
     @bind   = split( ',', $agency_names );
-    $sth = $dbh->prepare( "SELECT agency_id FROM agency.txt WHERE $clause" );
+    $sth = $dbh->prepare( "SELECT agency_id FROM agency WHERE $clause" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -395,7 +428,7 @@ sub list_route_type {
     my @row     = ();
     my %printed = ();
 
-    $sth = $dbh->prepare( "SELECT route_type FROM routes.txt" );
+    $sth = $dbh->prepare( "SELECT route_type FROM routes" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -405,6 +438,58 @@ sub list_route_type {
         $printed{$row[0]} = 1;
     }
 
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub read_calendar {
+    my $sth         = undef;
+    my $service_id  = undef;
+    my $start_date  = undef;
+    my $end_date    = undef;
+    my $help        = undef;
+
+    $sth = $dbh->prepare( "SELECT service_id,start_date,end_date FROM calendar" );
+    $sth->execute();
+
+    while ( ($service_id,$start_date,$end_date) = $sth->fetchrow_array ) {
+
+        $service_ids{$service_id}->{'start_date'} = $start_date;
+        $service_ids{$service_id}->{'end_date'}   = $end_date;
+        $help = $start_date . $end_date;
+        if ( $help =~ m/^(\d\d\d\d)(\d\d)(\d\d)(\d\d\d\d)(\d\d)(\d\d)$/ ) {
+            $service_ids{$service_id}->{'duration'} = Date::Calc::Delta_Days($1,$2,$3,$4,$5,$6);
+
+            #printf STDERR "Service-ID: %s - %s - %s == %s\n", $service_id, $start_date, $end_date, $service_ids{$service_id}->{'duration'};
+        }
+    }
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub read_trips {
+    my $sth         = undef;
+    my $route_id    = undef;
+    my $service_id  = undef;
+
+    $sth = $dbh->prepare( "SELECT route_id,service_id FROM trips" );
+    $sth->execute();
+
+    while ( ($route_id,$service_id) = $sth->fetchrow_array ) {
+        $service_ids_of_route_ids{$route_id}->{$service_id} = 1;
+    }
+    
+    foreach $route_id ( sort ( keys ( %service_ids_of_route_ids ) ) ) {
+        printf STDERR "Route-ID: %s - %s\n", $route_id, join( ', ', sort( keys ( %{$service_ids_of_route_ids{$route_id}} ) ) );
+    }
 }
 
 

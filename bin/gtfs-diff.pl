@@ -103,9 +103,9 @@ $old_name = $old_dir    unless ( $old_name );
 #
 #
 
-my $old_dbh = DBI->connect( "dbi:CSV:f_dir=$old_dir;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB for old GTFS info failed";
+my $old_dbh = DBI->connect( "dbi:CSV:f_dir=$old_dir;f_ext=.txt;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB for old GTFS info failed";
 
-my $new_dbh = DBI->connect( "dbi:CSV:f_dir=$new_dir;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB for new GTFS info failed";
+my $new_dbh = DBI->connect( "dbi:CSV:f_dir=$new_dir;f_ext=.txt;csv_sep_char=,", "", "", { AutoCommit=> 1, RaiseError => 1 } )  or die "Connect to DB for new GTFS info failed";
 
 my @results = ();
 
@@ -166,7 +166,7 @@ sub check_agency {
     my $old_new             = undef;
 
     $old_new = 'old';
-    $sth = $old_dbh->prepare( "SELECT $columns FROM agency.txt" );
+    $sth = $old_dbh->prepare( "SELECT $columns FROM agency" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -181,7 +181,7 @@ sub check_agency {
     }
 
     $old_new = 'new';
-    $sth = $new_dbh->prepare( "SELECT $columns FROM agency.txt" );
+    $sth = $new_dbh->prepare( "SELECT $columns FROM agency" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -235,7 +235,7 @@ sub check_routes {
     my $old_new                 = undef;
 
     $old_new = 'old';
-    $sth = $old_dbh->prepare( "SELECT $columns FROM routes.txt" );
+    $sth = $old_dbh->prepare( "SELECT $columns FROM routes" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -250,7 +250,7 @@ sub check_routes {
     }
 
     $old_new = 'new';
-    $sth = $new_dbh->prepare( "SELECT $columns FROM routes.txt" );
+    $sth = $new_dbh->prepare( "SELECT $columns FROM routes" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -310,7 +310,7 @@ sub check_stops {
     my $result_diffs            = 0;
 
     $old_new = 'old';
-    $sth = $old_dbh->prepare( "SELECT $columns FROM stops.txt" );
+    $sth = $old_dbh->prepare( "SELECT $columns FROM stops" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -345,7 +345,7 @@ sub check_stops {
     }
 
     $old_new = 'new';
-    $sth = $new_dbh->prepare( "SELECT $columns FROM stops.txt" );
+    $sth = $new_dbh->prepare( "SELECT $columns FROM stops" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -533,7 +533,7 @@ sub print_stops_html {
     
     print_html_header( 'Stops' );
     
-    print_html_table_header( '&nbsp;', "C4:GTFS ($old_name)", "C4:GTFS ($new_name)" );
+    print_html_table_header( 'Stops', "C4:GTFS ($old_name)", "C4:GTFS ($new_name)" );
     
     print_html_table_subheader( 'Name', 'IFOPT', 'Name', 'Lat', 'Lon', 'IFOPT', 'Name', 'Lat', 'Lon' );
     
@@ -583,7 +583,7 @@ sub check_trips {
     my $old_new             = undef;
 
     $old_new = 'old';
-    $sth = $old_dbh->prepare( "SELECT $columns FROM trips.txt" );
+    $sth = $old_dbh->prepare( "SELECT $columns FROM trips" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
@@ -608,7 +608,7 @@ sub check_trips {
     }
 
     $old_new = 'new';
-    $sth = $new_dbh->prepare( "SELECT $columns FROM trips.txt" );
+    $sth = $new_dbh->prepare( "SELECT $columns FROM trips" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array ) {
