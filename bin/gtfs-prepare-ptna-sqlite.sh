@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DB="ptna-sqlite.db"
+DB="ptna-gtfs-sqlite.db"
 
 SQ_OPTIONS="-csv -header"
 
@@ -18,8 +18,9 @@ sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna;"
 if [ -f ptna.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import ptna.txt ptna"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today' WHERE id=1;"
 else
-    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', comment TEXT DEFAULT ''";
+    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, comment TEXT DEFAULT ''";
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
     sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ptna.txt
@@ -145,6 +146,7 @@ then
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_is_wrong   TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET has_shapes=(SELECT COUNT(*) FROM shapes);"
     rm -f shapes-wo-header.txt
 else
     columns="shape_id TEXT DEFAULT '',shape_pt_lat TEXT DEFAULT '',shape_pt_lon TEXT DEFAULT '',shape_pt_sequence TEXT DEFAULT '', ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
@@ -218,8 +220,10 @@ sqlite3 $SQ_OPTIONS $DB ".schema"
 
 echo "Test for route_id from routes"
 sqlite3 $SQ_OPTIONS $DB "SELECT route_id FROM routes WHERE route_id='1';"
+
 echo "Test for trip_id from trips"
 sqlite3 $SQ_OPTIONS $DB "SELECT trip_id FROM trips WHERE trip_id='1';"
+
 echo "Test for route_id and trip_id from trips"
 sqlite3 $SQ_OPTIONS $DB "SELECT route_id,trip_id FROM trips WHERE trip_id='1';"
 

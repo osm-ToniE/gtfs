@@ -25,7 +25,7 @@ use DBI;
 #
 #
 
-my $DB_NAME = "ptna-sqlite.db";
+my $DB_NAME = "ptna-gtfs-sqlite.db";
 
 
 #############################################################################################
@@ -74,7 +74,7 @@ my @unique_trip_ids                 = ();
 
 @route_ids_of_agency = FindRouteIdsOfAgency( $agency );
 
-printf STDERR "Routes of agancies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose );
+printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose );
 
 foreach my $route_id ( @route_ids_of_agency  ) {
     
