@@ -302,7 +302,7 @@ sub CreatePtnaAnalysis {
 #
 
 sub UpdatePtnaAnalysis {
-    my $seconds    = shift || 0;
+    my $seconds    = shift || 1;
     
     my $stmt    = '';
     my $sth     = undef;
