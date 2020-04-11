@@ -44,12 +44,21 @@ GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'agency=s'              =>  \$agency,                # --agency=
           );
 
+if ( $ARGV[0] ) {
+    $DB_NAME = $ARGV[0];
+}
+
 
 ####################################################################################################################
 #
 #
 #
 ####################################################################################################################
+
+if ( !(-f $DB_NAME && -w $DB_NAME) ) {
+    printf STDERR "Database %s does not exist or can not be written\n", $DB_NAME;
+    exit 1;
+}
 
 my $dbh = DBI->connect( "DBI:SQLite:dbname=$DB_NAME", "", "", { RaiseError => 1 } ) or die $DBI::errstr;
 
@@ -77,11 +86,11 @@ my @unique_trip_ids                 = ();
 printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose );
 
 foreach my $route_id ( @route_ids_of_agency  ) {
-    
+
     @trip_ids_of_route_id_are_valid  = FindValidTripIdsOfRouteId( $route_id );
 
     push( @trip_ids_are_valid, @trip_ids_of_route_id_are_valid );
-    
+
     printf STDERR "Valid trips of route %s = %d\n", $route_id, scalar(@trip_ids_of_route_id_are_valid)  if ( $debug );
 }
 
@@ -90,15 +99,15 @@ my $tripcount = 0;
 my $uniques   = 0;
 
 printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
-    
+
 foreach my $trip_id ( @trip_ids_are_valid  ) {
 
     $tripcount++;
-    
+
     $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
     printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
-    
+
     if ( !defined($stop_list_hash{$stop_id_list_as_string}) ) {
         $stop_list_hash{$stop_id_list_as_string} = $trip_id;
         push( @unique_trip_ids, $trip_id );
@@ -158,7 +167,7 @@ exit 0;
 
 sub FindRouteIdsOfAgency {
     my $agency = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my $where_clause = '';
@@ -168,23 +177,23 @@ sub FindRouteIdsOfAgency {
     if ( $agency ) {
         $where_clause = sprintf( "WHERE agency.agency_id='%s' OR agency.agency_name='%s'", $agency, $agency );
     }
-    
+
     $stmt = sprintf( "SELECT DISTINCT routes.route_id
-                      FROM            routes 
-                      JOIN            agency ON routes.agency_id = agency.agency_id 
+                      FROM            routes
+                      JOIN            agency ON routes.agency_id = agency.agency_id
                       %s
                       ORDER BY        route_short_name;",
                       $where_clause
                    );
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
             push( @return_array, $row[0] );
         }
     }
-    
+
     return @return_array;
 }
 
@@ -197,7 +206,7 @@ sub FindRouteIdsOfAgency {
 
 sub FindValidTripIdsOfRouteId {
     my $route_id     = shift || '-';
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -207,21 +216,21 @@ sub FindValidTripIdsOfRouteId {
 
     my $today = sprintf( "%04d%02d%02d", $year+1900, $month+1, $day );
 
-    $stmt = sprintf( "SELECT DISTINCT trips.trip_id 
-                      FROM            trips 
-                      JOIN            calendar ON trips.service_id = calendar.service_id 
-                      WHERE           trips.route_id='%s' AND %s < calendar.end_date;", 
+    $stmt = sprintf( "SELECT DISTINCT trips.trip_id
+                      FROM            trips
+                      JOIN            calendar ON trips.service_id = calendar.service_id
+                      WHERE           trips.route_id='%s' AND %s < calendar.end_date;",
                       $route_id, $today );
-    
+
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
             push( @return_array, $row[0] );
         }
     }
-    
+
     return @return_array;
 }
 
@@ -233,27 +242,27 @@ sub FindValidTripIdsOfRouteId {
 
 sub FindStopIdListAsString {
     my $trip_id      = shift || '-';
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
 
     $stmt = sprintf( "SELECT   GROUP_CONCAT(stop_id,'|')
                       FROM     stop_times
-                      WHERE    trip_id='%s' 
+                      WHERE    trip_id='%s'
                       ORDER BY CAST (stop_sequence AS INTEGER);",
                       $trip_id
                    );
-    
+
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
             return $row[0];
         }
     }
-    
+
     return '';
 
 }
@@ -266,7 +275,7 @@ sub FindStopIdListAsString {
 
 sub CreateNewStopTimesTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -274,7 +283,7 @@ sub CreateNewStopTimesTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS new_stop_times;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "SELECT sql FROM sqlite_master WHERE type='table' AND name='stop_times';" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -285,7 +294,7 @@ sub CreateNewStopTimesTable {
         $sth  = $dbh->prepare( $stmt );
         $sth->execute();
     }
-    
+
     return 0;
 }
 
@@ -297,7 +306,7 @@ sub CreateNewStopTimesTable {
 
 sub FillNewStopTimesTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -319,7 +328,7 @@ sub FillNewStopTimesTable {
 
 sub RenameAndDropStopTimesTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -327,11 +336,11 @@ sub RenameAndDropStopTimesTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS stop_times;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "ALTER TABLE new_stop_times RENAME TO stop_times;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     return 0;
 }
 
@@ -343,7 +352,7 @@ sub RenameAndDropStopTimesTable {
 
 sub CreateNewTripsTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -351,7 +360,7 @@ sub CreateNewTripsTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS new_trips;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "SELECT sql FROM sqlite_master WHERE type='table' AND name='trips';" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -361,7 +370,7 @@ sub CreateNewTripsTable {
         $sth  = $dbh->prepare( $row[0] );
         $sth->execute();
     }
-    
+
     return 0;
 }
 
@@ -373,7 +382,7 @@ sub CreateNewTripsTable {
 
 sub FillNewTripsTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -395,7 +404,7 @@ sub FillNewTripsTable {
 
 sub RenameAndDropTripsTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -403,11 +412,11 @@ sub RenameAndDropTripsTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS trips;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "ALTER TABLE new_trips RENAME TO trips;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     return 0;
 }
 
@@ -419,7 +428,7 @@ sub RenameAndDropTripsTable {
 
 sub CreateNewRoutesTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -427,7 +436,7 @@ sub CreateNewRoutesTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS new_routes;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "SELECT sql FROM sqlite_master WHERE type='table' AND name='routes';" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -437,7 +446,7 @@ sub CreateNewRoutesTable {
         $sth  = $dbh->prepare( $row[0] );
         $sth->execute();
     }
-    
+
     return 0;
 }
 
@@ -449,7 +458,7 @@ sub CreateNewRoutesTable {
 
 sub FillNewRoutesTable {
     my $array_ref   = shift;
-    
+
     my $stmt        = '';
     my $sth         = undef;
     my @row         = ();
@@ -459,7 +468,7 @@ sub FillNewRoutesTable {
         $stmt = sprintf( "SELECT DISTINCT route_id FROM trips WHERE trips.trip_id='%s';", $trip_id );
         $sth  = $dbh->prepare( $stmt );
         $sth->execute();
-        
+
         while ( $row[0] = $sth->fetchrow_array() ) {
             if ( $row[0] && !defined($have_seen{$row[0]}) ) {
                 $have_seen{$row[0]} = 1;
@@ -467,9 +476,9 @@ sub FillNewRoutesTable {
                 $sth                = $dbh->prepare( $stmt );
                 $sth->execute();
             }
-        }  
+        }
     }
-    
+
     return 0;
 }
 
@@ -481,7 +490,7 @@ sub FillNewRoutesTable {
 
 sub RenameAndDropRoutesTable {
     my $array_ref = shift;
-    
+
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
@@ -489,11 +498,11 @@ sub RenameAndDropRoutesTable {
     $stmt = sprintf( "DROP TABLE IF EXISTS routes;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "ALTER TABLE new_routes RENAME TO routes;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     return 0;
 }
 
@@ -507,7 +516,7 @@ sub StoreImprovements {
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
-    
+
     my $routes_before       = 0;
     my $routes_after        = 0;
     my $trips_before        = 0;
@@ -518,12 +527,12 @@ sub StoreImprovements {
     my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
     my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
-    
-    
+
+
     $stmt = sprintf( "DROP TABLE IF EXISTS ptna_aggregation;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
-        
+
     $stmt = sprintf( "CREATE TABLE ptna_aggregation (
                                    'id'                 INTEGER DEFAULT 0 PRIMARY KEY,
                                    'date'               TEXT,
@@ -545,48 +554,48 @@ sub StoreImprovements {
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $routes_before      = $row[0]   if ( defined($row[0]) ); 
-    
+    $routes_before      = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "SELECT COUNT(*) FROM new_routes;" );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $routes_after       = $row[0]   if ( defined($row[0]) ); 
-    
+    $routes_after       = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "SELECT COUNT(*) FROM trips;" );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $trips_before       = $row[0]   if ( defined($row[0]) ); 
-    
+    $trips_before       = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "SELECT COUNT(*) FROM new_trips;" );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $trips_after        = $row[0]   if ( defined($row[0]) ); 
-    
+    $trips_after        = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "SELECT COUNT(*) FROM stop_times;" );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $stop_times_before  = $row[0]   if ( defined($row[0]) ); 
-    
+    $stop_times_before  = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "SELECT COUNT(*) FROM new_stop_times;" );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $stop_times_after   = $row[0]   if ( defined($row[0]) ); 
-    
-    $stmt               = sprintf( "INSERT INTO ptna_aggregation 
+    $stop_times_after   = $row[0]   if ( defined($row[0]) );
+
+    $stmt               = sprintf( "INSERT INTO ptna_aggregation
                                            (id,date,routes_before,routes_after,trips_before,trips_after,stop_times_before,stop_times_after)
-                                    VALUES (1, '%s',%d,           %d,          %d,          %d,         %d,               %d              );", 
+                                    VALUES (1, '%s',%d,           %d,          %d,          %d,         %d,               %d              );",
                                     $today, $routes_before, $routes_after, $trips_before, $trips_after, $stop_times_before, $stop_times_after
                                  );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
     @row                = $sth->fetchrow_array();
-    $stop_times_before  = $row[0]   if ( defined($row[0]) ); 
-    
+    $stop_times_before  = $row[0]   if ( defined($row[0]) );
+
     $stmt  = sprintf( "UPDATE ptna SET aggregated='%s' WHERE id=1;", $today );
     $sth   = $dbh->prepare( $stmt );
     $sth->execute();
@@ -604,7 +613,7 @@ sub UpdatePtnaAggregation {
     my $seconds    = shift || 0;
     my $sizebefore = shift || 0;
     my $sizeafter  = shift || 0;
-    
+
     my $stmt    = '';
     my $sth     = undef;
     my @row     = ();
@@ -623,7 +632,7 @@ sub UpdatePtnaAggregation {
 #
 
 sub ShowImprovements {
-    
+
     my $stmt    = '';
     my $sth     = undef;
     my @row     = ();
@@ -638,7 +647,7 @@ sub ShowImprovements {
 #
 
 sub Vacuum {
-    
+
     my $stmt    = '';
     my $sth     = undef;
     my @row     = ();
