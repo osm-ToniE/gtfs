@@ -55,12 +55,12 @@ if ( $ARGV[0] ) {
 #
 #
 
-my $subroute_of     = "Sub-route of";
-my $strange_end_for = "Suspicious end of itinerary: does the vehicle make a u-turn with or without passengers?";
+my $subroute_of        = "Sub-route of";
+my $suspicious_end_for = "Suspicious end of itinerary: does the vehicle make a u-turn with or without passengers";
 
 if ( $language eq 'de' ) {
-    $subroute_of     = "Teilroute von";
-    $strange_end_for = "Verdächtiges Ende der Fahrt: wendet das Fahrzeug an der Endhaltestellen mit oder ohne Passagiere?";
+    $subroute_of        = "Teilroute von";
+    $suspicious_end_for = "Verdächtiges Ende der Fahrt: wendet das Fahrzeug an der Endhaltestellen mit oder ohne Passagiere";
 }
 
 
@@ -89,6 +89,7 @@ my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 
 CreatePtnaAnalysis();
 
+ClearAllPtnaCommentsForTrips();
 
 my $start_time              = time();
 
@@ -100,7 +101,7 @@ my %stop_hash_of_route_id   = ();
 
 my $stop_list               = '';
 
-printf STDERR "Routes of agancies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose );
+printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose > 1 );
 
 foreach my $route_id ( @route_ids_of_agency ) {
 
@@ -110,14 +111,16 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
     foreach my $trip_id ( @trip_ids_of_route_id ) {
 
+        MarkSuspiciousEnd( $trip_id );
+
         $stop_list  = FindStopIdListAsString( $trip_id );
 
         $stop_hash_of_route_id{$stop_list} = $trip_id   if ( $stop_list );
     }
 
-    printf STDERR "Route-ID: %s Trip-IDs: %s\n", $route_id, join( ', ', values(%stop_hash_of_route_id) )  if ( $verbose );
+    printf STDERR "Route-ID: %s Trip-IDs: %s\n", $route_id, join( ', ', values(%stop_hash_of_route_id) )  if ( $verbose > 1 );
 
-    AnalyzeStopIdLists( \%stop_hash_of_route_id );
+    MarkSubRoutes( \%stop_hash_of_route_id );
 }
 
 UpdatePtnaAnalysis( time() - $start_time );
@@ -229,20 +232,93 @@ sub FindStopIdListAsString {
 
 #############################################################################################
 #
+# check for a suspicious end of this route. I.e. does the bus, ...
+# make a u-turn at the end of the journey with/without passengers?
 #
 #
 
-sub AnalyzeStopIdLists {
+sub MarkSuspiciousEnd {
+    my $trip_id      = shift || '-';
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    # we are only interested in the last two stops of this trip
+
+    $stmt = sprintf( "SELECT   stop_times.stop_id,stops.stop_name
+                      FROM     stop_times
+                      JOIN     stops ON stop_times.stop_id = stops.stop_id
+                      WHERE    trip_id='%s'
+                      ORDER BY CAST (stop_times.stop_sequence AS INTEGER) DESC LIMIT 2;",
+                      $trip_id
+                   );
+
+    $sth = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    my $last_stop_id          = '';
+    my $last_stop_name        = '';
+    my $second_last_stop_id   = '';
+    my $second_last_stop_name = '';
+
+    @row = $sth->fetchrow_array();
+    if ( scalar(@row) ) {
+        $last_stop_id   = $row[0]   if ( $row[0]  );
+        $last_stop_name = $row[1]   if ( $row[1]  );
+    }
+    @row = $sth->fetchrow_array();
+    if ( scalar(@row) ) {
+        $second_last_stop_id   = $row[0]   if ( $row[0]  );
+        $second_last_stop_name = $row[1]   if ( $row[1]  );
+    }
+
+    if ( $last_stop_name && $second_last_stop_name &&
+         $last_stop_name eq $second_last_stop_name    ) {
+
+        $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s (stop_name)?' WHERE trip_id='%s'", $today, $suspicious_end_for, $trip_id );
+        $sth   = $dbh->prepare( $stmt );
+        $sth->execute();
+
+        printf STDERR "Suspicious end per name for: %s\n", $trip_id  if ( $verbose );
+
+    } elsif ( $last_stop_id && $second_last_stop_id ) {
+
+        # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
+
+        if ( $second_last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+
+            my $string1 = $1 . ':' . $2 . ':' . $3;
+
+            if ( $last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+
+                my $string2 = $1 . ':' . $2 . ':' . $3;
+
+                if (  $string2 eq $string1 ) {
+
+                    $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s (IFOPT)?' WHERE trip_id='%s'", $today, $suspicious_end_for, $trip_id );
+                    $sth   = $dbh->prepare( $stmt );
+                    $sth->execute();
+
+                    printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $verbose );
+                }
+            }
+        }
+    }
+}
+
+
+#############################################################################################
+#
+# check whether we find sub-routes of this route here.
+# I.e. a stop-list which is a sub-string of another stop-list
+#
+
+sub MarkSubRoutes {
     my $hash_ref    = shift;
 
     my $stoplist1           = '';
-    my $trip_id1            = '';
     my $stoplist2           = '';
-    my $trip_id2            = '';
-    my $second_last_stop_id = '';
-    my $last_stop_id        = '';
-    my $string1             = '';
-    my $string2             = '';
     my @subroute_of         = ();
 
     if ( $hash_ref ) {
@@ -251,36 +327,6 @@ sub AnalyzeStopIdLists {
 
         foreach $stoplist1 (@stop_lists) {
 
-            # check for a strange end of this route. I.e. does the bus, ... make a u-turn at the end of the journey with/without passengers?
-
-            if ( $stoplist1 =~ m/\|([^\|]+)\|([^\|]+)$/ ) {
-                $second_last_stop_id = $1;
-                $last_stop_id        = $2;
-
-                # check whether stop_ids are of type IFOPT (a:b:c:d:e)
-
-                if ( $second_last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
-
-                    $string1 = $1 . ':' . $2 . ':' . $3 . ':' . $4;
-
-                    if ( $last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
-
-                        $string2 = $1 . ':' . $2 . ':' . $3 . ':' . $4;
-
-                        if (  $string2 eq $string1 ) {
-
-                            my $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s' WHERE trip_id='%s'", $today, $strange_end_for, ${$hash_ref}{$stoplist1} );
-                            my $sth   = $dbh->prepare( $stmt );
-                            $sth->execute();
-
-                            printf STDERR "Strange end for: %s\n", ${$hash_ref}{$stoplist1}  if ( $verbose );
-                            next;
-                        }
-                    }
-                }
-            }
-
-            # check whether we find subroutes of this route here. I.e. a stoplist which is a substring of this stoplist
             @subroute_of = ();
 
             foreach $stoplist2 (@stop_lists) {
@@ -293,11 +339,27 @@ sub AnalyzeStopIdLists {
             }
 
             if ( scalar(@subroute_of) ) {
-                my $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s %s' WHERE trip_id='%s'", $today, $subroute_of, join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
-                my $sth   = $dbh->prepare( $stmt );
+
+                my $stmt = sprintf( "SELECT   ptna_comment
+                                     FROM     trips
+                                     WHERE    trip_id='%s';",
+                                     ${$hash_ref}{$stoplist1}
+                                  );
+
+                my $sth = $dbh->prepare( $stmt );
                 $sth->execute();
 
-                printf STDERR "%s is subroute of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $verbose );
+                my @row = $sth->fetchrow_array();
+                my $existing_comment = '';
+                if ( $row[0] ) {
+                        $existing_comment = $row[0] . "\n";
+                }
+
+                $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s%s %s' WHERE trip_id='%s'", $today, $existing_comment, $subroute_of, join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
+                $sth   = $dbh->prepare( $stmt );
+                $sth->execute();
+
+                printf STDERR "%s is sub-route of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $verbose > 1 );
             }
         }
     }
@@ -324,22 +386,22 @@ sub CreatePtnaAnalysis {
     $sth->execute();
 
     $stmt = sprintf( "CREATE TABLE ptna_analysis (
-                                   'id'                 INTEGER DEFAULT 0 PRIMARY KEY,
-                                   'date'               TEXT,
-                                   'duration'           INTEGER DEFAULT 0,
-                                   'count_subroute'     INTEGER DEFAULT 0,
-                                   'count_strange_end'  INTEGER DEFAULT 0
+                                   'id'                    INTEGER DEFAULT 0 PRIMARY KEY,
+                                   'date'                  TEXT,
+                                   'duration'              INTEGER DEFAULT 0,
+                                   'count_subroute'        INTEGER DEFAULT 0,
+                                   'count_suspicious_end'  INTEGER DEFAULT 0
                       );"
                    );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
-    $stmt               = sprintf( "INSERT INTO ptna_analysis
-                                           (id,date)
-                                    VALUES (1, '%s');",
-                                                $today
-                                 );
-    $sth                = $dbh->prepare( $stmt );
+    $stmt = sprintf( "INSERT INTO ptna_analysis
+                             (id,date)
+                      VALUES (1, '%s');",
+                      $today
+                   );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     $stmt  = sprintf( "UPDATE ptna SET analyzed='%s' WHERE id=1;", $today );
@@ -347,6 +409,25 @@ sub CreatePtnaAnalysis {
     $sth->execute();
 
     return;
+}
+
+
+####################################################################################################################
+#
+#
+#
+
+sub ClearAllPtnaCommentsForTrips {
+
+    my $stmt    = '';
+    my $sth     = undef;
+    my @row     = ();
+
+
+    $stmt = sprintf( "UPDATE trips SET ptna_changedate='',ptna_is_invalid='',ptna_is_wrong='',ptna_comment='';" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
 }
 
 
@@ -372,12 +453,12 @@ sub UpdatePtnaAnalysis {
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%s';", $strange_end_for );
+    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%s%%';", $suspicious_end_for );
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
     @row = $sth->fetchrow_array();
 
-    $stmt = sprintf( "UPDATE ptna_analysis SET count_strange_end='%s' WHERE id=1;", $row[0] );
+    $stmt = sprintf( "UPDATE ptna_analysis SET count_suspicious_end='%s' WHERE id=1;", $row[0] );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
