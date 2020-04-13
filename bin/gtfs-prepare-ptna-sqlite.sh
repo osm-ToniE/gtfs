@@ -6,11 +6,11 @@ SQ_OPTIONS="-csv -header"
 
 rm -f $DB
 
+today=$(date '+%Y-%m-%d')
+
 #
 # create a TABLE with PTNA specific information: license, release date, modification date, ...
 #
-
-today=$(date '+%Y-%m-%d')
 
 echo "Table 'ptna'"
 
@@ -24,6 +24,25 @@ else
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
     sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ../ptna.txt
+fi
+
+
+#
+# create a TABLE with OSM specific information for route relations: 'network', 'network:short', 'network:guid', gtfs_agency_is_operator (true/false)
+#
+
+echo "Table 'osm'"
+
+sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS osm;"
+if [ -f ../osm.txt ]
+then
+    sqlite3 $SQ_OPTIONS $DB ".import ../osm.txt osm"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE osm SET prepared='$today' WHERE id=1;"
+else
+    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE osm ($columns);"
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO osm (id,prepared) VALUES (1,'$today');"
+    sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
 fi
 
 

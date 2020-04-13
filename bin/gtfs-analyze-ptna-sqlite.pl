@@ -60,7 +60,7 @@ my $suspicious_end_for = "Suspicious end of itinerary: does the vehicle make a u
 
 if ( $language eq 'de' ) {
     $subroute_of        = "Teilroute von";
-    $suspicious_end_for = "Verdächtiges Ende der Fahrt: wendet das Fahrzeug an der Endhaltestellen mit oder ohne Passagiere";
+    $suspicious_end_for = "Verdächtiges Ende der Fahrt: wendet das Fahrzeug an der Endhaltestelle mit oder ohne Passagiere";
 }
 
 
