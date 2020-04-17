@@ -9,6 +9,25 @@ rm -f $DB
 today=$(date '+%Y-%m-%d')
 
 #
+# create a TABLE with OSM specific information for route relations: 'network', 'network:short', 'network:guid', gtfs_agency_is_operator (true/false)
+#
+
+echo "Table 'osm'"
+
+sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS osm;"
+if [ -f ../osm.txt ]
+then
+    sqlite3 $SQ_OPTIONS $DB ".import ../osm.txt osm"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE osm SET prepared='$today' WHERE id=1;"
+else
+    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE osm ($columns);"
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO osm (id,prepared) VALUES (1,'$today');"
+    sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
+fi
+
+
+#
 # create a TABLE with PTNA specific information: license, release date, modification date, ...
 #
 
@@ -27,23 +46,10 @@ else
 fi
 
 
-#
-# create a TABLE with OSM specific information for route relations: 'network', 'network:short', 'network:guid', gtfs_agency_is_operator (true/false)
-#
+echo "Table 'ptna_trips'"
 
-echo "Table 'osm'"
-
-sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS osm;"
-if [ -f ../osm.txt ]
-then
-    sqlite3 $SQ_OPTIONS $DB ".import ../osm.txt osm"
-    sqlite3 $SQ_OPTIONS $DB "UPDATE osm SET prepared='$today' WHERE id=1;"
-else
-    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE osm ($columns);"
-    sqlite3 $SQ_OPTIONS $DB "INSERT INTO osm (id,prepared) VALUES (1,'$today');"
-    sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
-fi
+sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna_trips;"
+sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, representative_trip_id TEXT DEFAULT '', departure_time TEXT DEFAULT '');"
 
 
 #
@@ -228,10 +234,10 @@ then
     fgrep -v trip_id trips.txt > trips-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import trips-wo-header.txt trips"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_changedate TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_invalid TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_wrong   TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_changedate      TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_invalid      TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_wrong        TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_comment         TEXT DEFAULT '';"
     rm -f trips-wo-header.txt
 fi
 

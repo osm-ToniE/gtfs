@@ -7,7 +7,6 @@ use strict;
 #
 #
 #
-####################################################################################################################
 
 use POSIX;
 
@@ -53,7 +52,6 @@ if ( $ARGV[0] ) {
 #
 #
 #
-####################################################################################################################
 
 if ( !(-f $DB_NAME && -w $DB_NAME) ) {
     printf STDERR "Database %s does not exist or can not be written\n", $DB_NAME;
@@ -67,19 +65,20 @@ my $dbh = DBI->connect( "DBI:SQLite:dbname=$DB_NAME", "", "", { RaiseError => 1 
 #
 #
 #
-####################################################################################################################
 
-my $start_time = time();
-
+my $start_time  = time();
+my $size_before = (stat($DB_NAME))[7];
 
 my @route_ids_of_agency             = ();
-my @route_ids_are_valid             = ();
 my @trip_ids_of_route_id_are_valid  = ();
 my @trip_ids_are_valid              = ();
-my $stop_id_list_as_string          = '';
-my %stop_list_hash                  = ();
 my @unique_trip_ids                 = ();
 
+
+####################################################################################################################
+#
+#
+#
 
 @route_ids_of_agency = FindRouteIdsOfAgency( $agency );
 
@@ -94,59 +93,36 @@ foreach my $route_id ( @route_ids_of_agency  ) {
     printf STDERR "Valid trips of route %s = %d\n", $route_id, scalar(@trip_ids_of_route_id_are_valid)  if ( $debug );
 }
 
-my $totals    = scalar(@trip_ids_are_valid);
-my $tripcount = 0;
-my $uniques   = 0;
+printf STDERR "Find  Unique Trip-IDs\n"         if ( $verbose );
+CreatePtnaTripsTable();
+@unique_trip_ids = FindUniqueTripIds( \@trip_ids_are_valid );
+printf STDERR "Found Unique Trip-IDs\n"         if ( $verbose );
 
-printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
-
-foreach my $trip_id ( @trip_ids_are_valid  ) {
-
-    $tripcount++;
-
-    $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
-
-    printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
-
-    if ( !defined($stop_list_hash{$stop_id_list_as_string}) ) {
-        $stop_list_hash{$stop_id_list_as_string} = $trip_id;
-        push( @unique_trip_ids, $trip_id );
-        $uniques++;
-        printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
-    }
-}
-
-printf STDERR "\n"  if ( $verbose );
-
-my $size_before = (stat($DB_NAME))[7];
-
-printf STDERR "Create new Tables\n"  if ( $verbose );
-
+printf STDERR "Create new Tables\n"             if ( $verbose );
 CreateNewStopTimesTable();
 CreateNewTripsTable();
 CreateNewRoutesTable();
+printf STDERR "New Tables created\n"            if ( $verbose );
 
-printf STDERR "New Tables created\n"  if ( $verbose );
-
-printf STDERR "Fill New Stop Times Table\n"  if ( $verbose );
+printf STDERR "Fill New Stop Times Table\n"     if ( $verbose );
 FillNewStopTimesTable( \@unique_trip_ids );
-printf STDERR "New Stop Times Table filled\n"  if ( $verbose );
+printf STDERR "New Stop Times Table filled\n"   if ( $verbose );
 
-printf STDERR "Fill New Trips Table\n"  if ( $verbose );
+printf STDERR "Fill New Trips Table\n"          if ( $verbose );
 FillNewTripsTable(     \@unique_trip_ids );
-printf STDERR "New Trips Tables filled\n"  if ( $verbose );
+printf STDERR "New Trips Tables filled\n"       if ( $verbose );
 
-printf STDERR "Fill New Routes Tables\n"  if ( $verbose );
+printf STDERR "Fill New Routes Tables\n"        if ( $verbose );
 FillNewRoutesTable(    \@unique_trip_ids );
-printf STDERR "New Routes Tables filled\n"  if ( $verbose );
+printf STDERR "New Routes Tables filled\n"      if ( $verbose );
 
 StoreImprovements();
 
-printf STDERR "Rename New Tables\n"  if ( $verbose );
+printf STDERR "Rename New Tables\n"             if ( $verbose );
 RenameAndDropStopTimesTable();
 RenameAndDropTripsTable();
 RenameAndDropRoutesTable();
-printf STDERR "New Tables renamed\n"  if ( $verbose );
+printf STDERR "New Tables renamed\n"            if ( $verbose );
 
 Vacuum();
 
@@ -232,6 +208,100 @@ sub FindValidTripIdsOfRouteId {
     }
 
     return @return_array;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub CreatePtnaTripsTable {
+    my $array_ref = shift;
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    $stmt = sprintf( "DROP TABLE IF EXISTS ptna_trips;" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    $stmt = sprintf( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, representative_trip_id TEXT DEFAULT '', departure_time TEXT DEFAULT '');" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub FindUniqueTripIds {
+    my $array_ref = shift;
+
+    my @ret_array = ();
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    my $stop_id_list_as_string = '';
+    my %stop_list_hash         = ();
+    my $representative_trip_id = '';
+    my $departure_time         = '';
+
+    my $totals    = scalar( @{$array_ref} );
+    my $tripcount = 0;
+    my $uniques   = 0;
+
+    printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
+
+    foreach my $trip_id ( @trip_ids_are_valid  ) {
+
+        $tripcount++;
+
+        $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
+
+        printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
+
+        if ( !defined($stop_list_hash{$stop_id_list_as_string}) ) {
+            $stop_list_hash{$stop_id_list_as_string} = $trip_id;
+            $representative_trip_id                  = $trip_id;
+            push( @ret_array, $trip_id );
+            $uniques++;
+            printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, $uniques, $totals  if ( $verbose );
+        } else {
+            $representative_trip_id = $stop_list_hash{$stop_id_list_as_string};
+        }
+
+        $stmt = sprintf( "SELECT   departure_time
+                          FROM     stop_times
+                          WHERE    trip_id='%s'
+                          ORDER BY CAST (stop_sequence AS INTEGER) LIMIT 1;",
+                          $trip_id
+                       );
+
+        $sth = $dbh->prepare( $stmt );
+        $sth->execute();
+        @row = $sth->fetchrow_array();
+        $departure_time = $row[0] || '';
+
+        $stmt               = sprintf( "INSERT INTO ptna_trips
+                                               ( trip_id, representative_trip_id, departure_time )
+                                        VALUES ( '%s', '%s', '%s' );",
+                                        $trip_id, $representative_trip_id, $departure_time
+                                     );
+        $sth                = $dbh->prepare( $stmt );
+        $sth->execute();
+    }
+
+    printf STDERR "\n"  if ( $verbose );
+
+    return @ret_array;
 }
 
 
@@ -381,11 +451,13 @@ sub CreateNewTripsTable {
 #
 
 sub FillNewTripsTable {
-    my $array_ref = shift;
+    my $array_ref   = shift;
+    my $hash_ref    = shift;
 
-    my $stmt         = '';
-    my $sth          = undef;
-    my @row          = ();
+    my $stmt            = '';
+    my $sth             = undef;
+    my @row             = ();
+    my %departure_time  = ();
 
     foreach my $trip_id ( @{$array_ref} ) {
         $stmt = sprintf( "INSERT INTO new_trips SELECT * FROM trips WHERE trips.trip_id='%s';", $trip_id );
@@ -593,8 +665,6 @@ sub StoreImprovements {
                                  );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
-    @row                = $sth->fetchrow_array();
-    $stop_times_before  = $row[0]   if ( defined($row[0]) );
 
     $stmt  = sprintf( "UPDATE ptna SET aggregated='%s' WHERE id=1;", $today );
     $sth   = $dbh->prepare( $stmt );
