@@ -70,7 +70,6 @@ my $start_time  = time();
 my $size_before = (stat($DB_NAME))[7];
 
 my @route_ids_of_agency             = ();
-my @trip_ids_of_route_id_are_valid  = ();
 my @trip_ids_are_valid              = ();
 my @unique_trip_ids                 = ();
 
@@ -84,14 +83,7 @@ my @unique_trip_ids                 = ();
 
 printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $verbose );
 
-foreach my $route_id ( @route_ids_of_agency  ) {
-
-    @trip_ids_of_route_id_are_valid  = FindValidTripIdsOfRouteId( $route_id );
-
-    push( @trip_ids_are_valid, @trip_ids_of_route_id_are_valid );
-
-    printf STDERR "Valid trips of route %s = %d\n", $route_id, scalar(@trip_ids_of_route_id_are_valid)  if ( $debug );
-}
+@trip_ids_are_valid = FindValidTrips( \@route_ids_of_agency );
 
 printf STDERR "Find  Unique Trip-IDs\n"         if ( $verbose );
 CreatePtnaTripsTable();
@@ -174,6 +166,22 @@ sub FindRouteIdsOfAgency {
 }
 
 
+#############################################################################################
+#
+#
+#
+
+sub FindValidTrips {
+    my $array_ref = shift;
+    my @ret_array = ();
+
+    foreach my $route_id ( @{$array_ref}  ) {
+        push( @ret_array, FindValidTripIdsOfRouteId( $route_id ) );
+    }
+
+    return @ret_array;
+}
+
 
 #############################################################################################
 #
@@ -227,7 +235,7 @@ sub CreatePtnaTripsTable {
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
-    $stmt = sprintf( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, representative_trip_id TEXT DEFAULT '', departure_time TEXT DEFAULT '');" );
+    $stmt = sprintf( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '');" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
@@ -253,6 +261,8 @@ sub FindUniqueTripIds {
     my %stop_list_hash         = ();
     my $representative_trip_id = '';
     my $departure_time         = '';
+    
+    my %collection_trip_id     = ();
 
     my $totals    = scalar( @{$array_ref} );
     my $tripcount = 0;
@@ -284,21 +294,28 @@ sub FindUniqueTripIds {
                           ORDER BY CAST (stop_sequence AS INTEGER) LIMIT 1;",
                           $trip_id
                        );
-
         $sth = $dbh->prepare( $stmt );
         $sth->execute();
         @row = $sth->fetchrow_array();
-        $departure_time = $row[0] || '';
+        $departure_time = $row[0] || '-';
 
-        $stmt               = sprintf( "INSERT INTO ptna_trips
-                                               ( trip_id, representative_trip_id, departure_time )
-                                        VALUES ( '%s', '%s', '%s' );",
-                                        $trip_id, $representative_trip_id, $departure_time
-                                     );
-        $sth                = $dbh->prepare( $stmt );
-        $sth->execute();
+        $collection_trip_id{$representative_trip_id}{'similars'}{$trip_id}          = 1;
+        $collection_trip_id{$representative_trip_id}{'departures'}{$departure_time} = 1;
     }
 
+    foreach my $trip_id ( keys ( %collection_trip_id ) ) {
+        $stmt = sprintf( "INSERT INTO ptna_trips
+                          ( trip_id, list_trip_ids, list_departure_times )
+                          VALUES ( ?, ?, ? );"
+                       );
+        $sth   = $dbh->prepare( $stmt );
+        $sth->execute( $trip_id, 
+                       join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'similars'}} ) ) ),
+                       join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'departures'}} ) ) )
+                     );
+        printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, --$uniques, $totals  if ( $verbose );
+    }
+                       
     printf STDERR "\n"  if ( $verbose );
 
     return @ret_array;

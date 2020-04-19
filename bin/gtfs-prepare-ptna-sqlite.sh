@@ -49,7 +49,7 @@ fi
 echo "Table 'ptna_trips'"
 
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna_trips;"
-sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, representative_trip_id TEXT DEFAULT '', departure_time TEXT DEFAULT '');"
+sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '');"
 
 
 #
