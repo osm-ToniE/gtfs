@@ -36,7 +36,7 @@ use Getopt::Long;
 
 my $debug                    = undef;
 my $verbose                  = undef;
-my $language                 = 'en';
+my $language                 = 'de';
 my $agency                   = undef;
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
