@@ -34,8 +34,8 @@ my $DB_NAME = "ptna-gtfs-sqlite.db";
 
 use Getopt::Long;
 
-my $debug                    = undef;
-my $verbose                  = undef;
+my $debug                    = 0;
+my $verbose                  = 0;
 my $language                 = 'de';
 my $agency                   = undef;
 

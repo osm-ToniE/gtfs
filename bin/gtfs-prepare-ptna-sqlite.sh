@@ -8,6 +8,17 @@ rm -f $DB
 
 today=$(date '+%Y-%m-%d')
 
+# basename $PWD should be the date of the release like: "/osm/ptna/work/gtfs-networks/DE/BY/MVV/2020-03-17"
+
+released=$(basename $PWD)
+
+#
+# unzip the GTFS file
+#
+
+unzip *.zip
+
+
 #
 # create a TABLE with OSM specific information for route relations: 'network', 'network:short', 'network:guid', gtfs_agency_is_operator (true/false)
 #
@@ -23,8 +34,8 @@ else
     columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE osm ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO osm (id,prepared) VALUES (1,'$today');"
-    sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
 fi
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
 
 
 #
@@ -37,13 +48,14 @@ sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna;"
 if [ -f ../ptna.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import ../ptna.txt ptna"
-    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today' WHERE id=1;"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today', aggregated='', analyzed='', normalized='' WHERE id=1;"
 else
     columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, comment TEXT DEFAULT ''";
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
-    sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ../ptna.txt
 fi
+sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET release_date='$released', has_shapes='0' WHERE id=1;"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ../ptna.txt
 
 
 echo "Table 'ptna_trips'"
@@ -251,4 +263,12 @@ sqlite3 $SQ_OPTIONS $DB "SELECT trip_id FROM trips WHERE trip_id='1';"
 
 echo "Test for route_id and trip_id from trips"
 sqlite3 $SQ_OPTIONS $DB "SELECT route_id,trip_id FROM trips WHERE trip_id='1';"
+
+echo
+echo "OSM settings"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;"
+echo
+echo "PTNA settings"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;"
+
 
