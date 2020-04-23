@@ -36,10 +36,15 @@ use Getopt::Long;
 
 my $debug                    = 0;
 my $verbose                  = 0;
-my $language                 = 'en';
+my $agency                   = undef;
+my $ignore_calendar          = undef;
+my $language                 = 'de';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
+            'agency=s'              =>  \$agency,                # --agency=
+            'ignore-calendar'       =>  \$ignore_calendar,       # --ignore-calendar
+            'language=s'            =>  \$language,              # --language=de
           );
 
 if ( $ARGV[0] ) {
