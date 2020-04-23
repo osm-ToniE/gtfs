@@ -37,10 +37,14 @@ use Getopt::Long;
 my $debug                    = 0;
 my $verbose                  = 0;
 my $agency                   = undef;
+my $ignore_calendar          = undef;
+my $language                 = 'de';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
             'agency=s'              =>  \$agency,                # --agency=
+            'ignore-calendar'       =>  \$ignore_calendar,       # --ignore-calendar
+            'language=s'            =>  \$language,              # --language=de
           );
 
 if ( $ARGV[0] ) {
@@ -91,10 +95,15 @@ CreatePtnaTripsTable();
 printf STDERR "Found Unique Trip-IDs\n"         if ( $verbose );
 
 printf STDERR "Create new Tables\n"             if ( $verbose );
+CreateNewShapesTable();
 CreateNewStopTimesTable();
 CreateNewTripsTable();
 CreateNewRoutesTable();
 printf STDERR "New Tables created\n"            if ( $verbose );
+
+printf STDERR "Fill New Shapes Table\n"         if ( $verbose );
+FillNewShapesTable( \@unique_trip_ids );
+printf STDERR "New Shapes Table filled\n"   if ( $verbose );
 
 printf STDERR "Fill New Stop Times Table\n"     if ( $verbose );
 FillNewStopTimesTable( \@unique_trip_ids );
@@ -111,6 +120,7 @@ printf STDERR "New Routes Tables filled\n"      if ( $verbose );
 StoreImprovements();
 
 printf STDERR "Rename New Tables\n"             if ( $verbose );
+RenameAndDropShapesTable();
 RenameAndDropStopTimesTable();
 RenameAndDropTripsTable();
 RenameAndDropRoutesTable();
@@ -196,15 +206,23 @@ sub FindValidTripIdsOfRouteId {
     my @row          = ();
     my @return_array = ();
 
-    my ($sec,$min,$hour,$day,$month,$year) = localtime();
-
-    my $today = sprintf( "%04d%02d%02d", $year+1900, $month+1, $day );
-
-    $stmt = sprintf( "SELECT DISTINCT trips.trip_id
-                      FROM            trips
-                      JOIN            calendar ON trips.service_id = calendar.service_id
-                      WHERE           trips.route_id='%s' AND %s < calendar.end_date;",
-                      $route_id, $today );
+    if ( $ignore_calendar ) {
+        $stmt = sprintf( "SELECT DISTINCT trips.trip_id
+                          FROM            trips
+                          JOIN            calendar ON trips.service_id = calendar.service_id
+                          WHERE           trips.route_id='%s';",
+                          $route_id );
+    } else {
+        my ($sec,$min,$hour,$day,$month,$year) = localtime();
+    
+        my $today = sprintf( "%04d%02d%02d", $year+1900, $month+1, $day );
+    
+        $stmt = sprintf( "SELECT DISTINCT trips.trip_id
+                          FROM            trips
+                          JOIN            calendar ON trips.service_id = calendar.service_id
+                          WHERE           trips.route_id='%s' AND %s <= calendar.end_date;",
+                          $route_id, $today );
+    }
 
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
@@ -352,6 +370,83 @@ sub FindStopIdListAsString {
 
     return '';
 
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub CreateNewShapesTable {
+    my $array_ref = shift;
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    $stmt = sprintf( "DROP TABLE IF EXISTS new_shapes;" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    $stmt = sprintf( "SELECT sql FROM sqlite_master WHERE type='table' AND name='shapes';" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+    @row  = $sth->fetchrow_array();
+    if ( $row[0] ) {
+        $row[0] =~ s/CREATE TABLE shapes/CREATE TABLE new_shapes/;
+        $stmt   = sprintf( "%s;", $row[0] );
+        $sth  = $dbh->prepare( $stmt );
+        $sth->execute();
+    }
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub FillNewShapesTable {
+    my $array_ref = shift;
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    foreach my $trip_id ( @{$array_ref} ) {
+        $stmt = "INSERT INTO new_shapes SELECT shapes.* FROM shapes JOIN trips ON trips.shape_id = shapes.shape_id WHERE trips.trip_id=?;";
+        $sth  = $dbh->prepare( $stmt );
+        $sth->execute( $trip_id );
+    }
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub RenameAndDropShapesTable {
+    my $array_ref = shift;
+
+    my $stmt         = '';
+    my $sth          = undef;
+    my @row          = ();
+
+    $stmt = sprintf( "DROP TABLE IF EXISTS shapes;" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    $stmt = sprintf( "ALTER TABLE new_shapes RENAME TO shapes;" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    return 0;
 }
 
 
