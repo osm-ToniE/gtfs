@@ -31,17 +31,17 @@ then
     TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
     echo $TARGET_DB
     
-    if [ "$D2" = "DE" ]
+    if [ "$D2" != "DE" ]
     then
-        ANALYSIS_LANG="--language=de"
+        ANALYSIS_LANG="--language=en"
     fi
 else
     TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
     echo $TARGET_DB
     
-    if [ "$D1" = "DE" ]
+    if [ "$D1" != "DE" ]
     then
-        ANALYSIS_LANG="--language=de"
+        ANALYSIS_LANG="--language=en"
     fi
 fi
 
@@ -55,8 +55,8 @@ gtfs-aggregate-ptna-sqlite.pl $*
 echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis $ANALYSIS_LANG"
 gtfs-analyze-ptna-sqlite.pl $ANALYSIS_LANG $*
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization"
-gtfs-normalize-ptna-sqlite.pl $*
+echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $ANALYSIS_LANG "
+gtfs-normalize-ptna-sqlite.pl $ANALYSIS_LANG $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -rtvu $DB $TARGET_DB"
 rsync -rtvu $DB $TARGET_DB

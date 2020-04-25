@@ -326,17 +326,18 @@ sub NormalizeString {
     my $normalized = $original;
     
     if ( $original ) {
-        $normalized =~ s/nchnerStr\./nchner Straße/g;
-        $normalized =~ s/Str\./Straße/g;
-        $normalized =~ s/str\./straße/g;
-        $normalized =~ s/Pl\./Platz/g;
-        $normalized =~ s/Abzw\./Abzweig/g;
-        $normalized =~ s/rstenfeldbr,/rstenfeldbruck,/g;
-        $normalized =~ s/rstenfeldb\.,/rstenfeldbruck,/g;
+        if ( $language eq 'de' ) {
+            $normalized =~ s/nchnerStr\./nchner Straße/g;
+            $normalized =~ s/Str\./Straße/g;
+            $normalized =~ s/str\./straße/g;
+            $normalized =~ s/Pl\./Platz/g;
+            $normalized =~ s/Abzw\./Abzweig/g;
+            $normalized =~ s/rstenfeldbr,/rstenfeldbruck,/g;
+            $normalized =~ s/rstenfeldb\.,/rstenfeldbruck,/g;
+        }
     }
     
     return $normalized;
 
 }
-    
-
+   
