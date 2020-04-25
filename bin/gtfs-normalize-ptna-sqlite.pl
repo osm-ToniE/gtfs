@@ -74,11 +74,15 @@ my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
 my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 
-my $start_time              = time();
+my $start_time = time();
 
 CreatePtnaNormalization();
 
+ClearNormalizationRouteLongName();
+
 my $normalized_routes = NormalizeRouteLongName();
+
+ClearNormalizationStopName();
 
 my $normalized_stops  = NormalizeStopName();
 
@@ -158,6 +162,38 @@ sub UpdatePtnaNormalization {
 #
 #
 
+sub ClearNormalizationRouteLongName {
+    my $stmt                    = '';
+    my $sth                     = undef;
+    my $has_normalized_column   = undef;
+    my @row                     = ();
+
+    $stmt = sprintf( "PRAGMA table_info(routes);" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    while ( @row = $sth->fetchrow_array() ) {
+        if ( $row[1] && $row[1] eq 'normalized_route_long_name' ) {
+            $has_normalized_column = 1;
+            last;
+        }
+    }
+
+    if ( $has_normalized_column ) {
+        $stmt = sprintf( "UPDATE routes SET normalized_route_long_name='' WHERE normalized_route_long_name!='';" );
+        $sth  = $dbh->prepare( $stmt );
+        $sth->execute();
+    }
+
+    return;
+}
+
+
+#############################################################################################
+#
+#
+#
+
 sub NormalizeRouteLongName {
     my $stmt                    = '';
     my $sth                     = undef;
@@ -173,8 +209,7 @@ sub NormalizeRouteLongName {
     printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
     
     $stmt = sprintf( "PRAGMA table_info(routes);" );
-
-    $sth = $dbh->prepare( $stmt );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -191,8 +226,7 @@ sub NormalizeRouteLongName {
     }
     
     $stmt = sprintf( "SELECT COUNT(*) FROM routes;" );
-
-    $sth = $dbh->prepare( $stmt );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     if ( @row = $sth->fetchrow_array() ) {
@@ -204,8 +238,7 @@ sub NormalizeRouteLongName {
     printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
     
     $stmt = sprintf( "SELECT route_long_name,route_id FROM routes;" );
-
-    $sth = $dbh->prepare( $stmt );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     
@@ -240,6 +273,38 @@ sub NormalizeRouteLongName {
 #
 #
 
+sub ClearNormalizationStopName {
+    my $stmt                    = '';
+    my $sth                     = undef;
+    my $has_normalized_column   = undef;
+    my @row                     = ();
+
+    $stmt = sprintf( "PRAGMA table_info(stops);" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    while ( @row = $sth->fetchrow_array() ) {
+        if ( $row[1] && $row[1] eq 'normalized_stop_name' ) {
+            $has_normalized_column = 1;
+            last;
+        }
+    }
+
+    if ( $has_normalized_column ) {
+        $stmt = sprintf( "UPDATE stops SET normalized_stop_name='' WHERE normalized_stop_name!='';" );
+        $sth  = $dbh->prepare( $stmt );
+        $sth->execute();
+    }
+
+    return;
+}
+
+
+#############################################################################################
+#
+#
+#
+
 sub NormalizeStopName {
     my $stmt                    = '';
     my $sth                     = undef;
@@ -253,10 +318,9 @@ sub NormalizeStopName {
     my $has_normalized_column   = 0;
 
     printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
-    
-    $stmt = sprintf( "PRAGMA table_info(stops);" );
 
-    $sth = $dbh->prepare( $stmt );
+    $stmt = sprintf( "PRAGMA table_info(stops);" );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -268,13 +332,12 @@ sub NormalizeStopName {
 
     if ( !$has_normalized_column ) {
         $stmt = sprintf( "ALTER TABLE stops ADD normalized_stop_name TEXT DEFAULT '';" );
-        $sth = $dbh->prepare( $stmt );
+        $sth  = $dbh->prepare( $stmt );
         $sth->execute();
     }
     
     $stmt = sprintf( "SELECT COUNT(*) FROM stops;" );
-
-    $sth = $dbh->prepare( $stmt );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     if ( @row = $sth->fetchrow_array() ) {
@@ -286,8 +349,7 @@ sub NormalizeStopName {
     printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
     
     $stmt = sprintf( "SELECT stop_name,stop_id FROM stops;" );
-
-    $sth = $dbh->prepare( $stmt );
+    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
