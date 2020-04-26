@@ -50,7 +50,7 @@ then
     sqlite3 $SQ_OPTIONS $DB ".import ../ptna.txt ptna"
     sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today', aggregated='', analyzed='', normalized='' WHERE id=1;"
 else
-    columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, ignore_calendar INTEGER DEFAULT 0, comment TEXT DEFAULT ''";
+    columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, ignore_calendar INTEGER DEFAULT 0, comment TEXT DEFAULT '', details TEXT DEFAULT ''";
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
 fi
