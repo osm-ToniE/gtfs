@@ -270,5 +270,3 @@ sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;"
 echo
 echo "PTNA settings"
 sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;"
-
-
