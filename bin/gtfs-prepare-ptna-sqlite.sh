@@ -110,7 +110,7 @@ echo "Table 'calendar'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar;"
 if [ -f calendar.txt ]
 then
-    columns=$(head -1 calendar.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
     fgrep -v service_id calendar.txt > calendar-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import calendar-wo-header.txt calendar"
@@ -154,7 +154,7 @@ echo "Table 'routes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS routes;"
 if [ -f routes.txt ]
 then
-    columns=$(head -1 routes.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
     fgrep -v route_id routes.txt > routes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE routes ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import routes-wo-header.txt routes"
@@ -175,7 +175,7 @@ echo "Table 'shapes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS shapes;"
 if [ -f shapes.txt ]
 then
-    columns=$(head -1 shapes.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
+    columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
     fgrep -v shape_id shapes.txt > shapes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE shapes ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import shapes-wo-header.txt shapes"
@@ -200,7 +200,7 @@ echo "Table 'stops'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stops;"
 if [ -f stops.txt ]
 then
-    columns=$(head -1 stops.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
     fgrep -v stop_id stops.txt > stops-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stops ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import stops-wo-header.txt stops"
@@ -221,7 +221,7 @@ echo "Table 'stop_times'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stop_times;"
 if [ -f stop_times.txt ]
 then
-    columns=$(head -1 stop_times.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
+    columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
     fgrep -v stop_id stop_times.txt > stop_times-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stop_times ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import stop_times.txt stop_times"
@@ -242,7 +242,7 @@ echo "Table 'trips'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS trips;"
 if [ -f trips.txt ]
 then
-    columns=$(head -1 trips.txt | sed -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
     fgrep -v trip_id trips.txt > trips-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import trips-wo-header.txt trips"
