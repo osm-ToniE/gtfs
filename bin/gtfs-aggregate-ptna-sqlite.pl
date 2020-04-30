@@ -214,9 +214,9 @@ sub FindValidTripIdsOfRouteId {
                           $route_id );
     } else {
         my ($sec,$min,$hour,$day,$month,$year) = localtime();
-    
+
         my $today = sprintf( "%04d%02d%02d", $year+1900, $month+1, $day );
-    
+
         $stmt = sprintf( "SELECT DISTINCT trips.trip_id
                           FROM            trips
                           JOIN            calendar ON trips.service_id = calendar.service_id
@@ -279,7 +279,7 @@ sub FindUniqueTripIds {
     my %stop_list_hash         = ();
     my $representative_trip_id = '';
     my $departure_time         = '';
-    
+
     my %collection_trip_id     = ();
 
     my $totals    = scalar( @{$array_ref} );
@@ -327,13 +327,13 @@ sub FindUniqueTripIds {
                           VALUES ( ?, ?, ? );"
                        );
         $sth   = $dbh->prepare( $stmt );
-        $sth->execute( $trip_id, 
+        $sth->execute( $trip_id,
                        join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'similars'}} ) ) ),
                        join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'departures'}} ) ) )
                      );
         printf STDERR "Trip: %06d, Unique: %06d, Total: %06d\r", $tripcount, --$uniques, $totals  if ( $verbose );
     }
-                       
+
     printf STDERR "\n"  if ( $verbose );
 
     return @ret_array;
@@ -415,11 +415,25 @@ sub FillNewShapesTable {
     my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
+    my $has_shape_id = 0;
 
-    foreach my $trip_id ( @{$array_ref} ) {
-        $stmt = "INSERT INTO new_shapes SELECT shapes.* FROM shapes JOIN trips ON trips.shape_id = shapes.shape_id WHERE trips.trip_id=?;";
-        $sth  = $dbh->prepare( $stmt );
-        $sth->execute( $trip_id );
+    $stmt = sprintf( "PRAGMA table_info(trips);" );
+    $sth  = $dbh->prepare( $stmt );
+    $sth->execute();
+
+    while ( @row = $sth->fetchrow_array() ) {
+        if ( $row[1] && $row[1] eq 'shape_id' ) {
+            $has_shape_id = 1;
+            last;
+        }
+    }
+
+    if ( $has_shape_id ) {
+        foreach my $trip_id ( @{$array_ref} ) {
+            $stmt = "INSERT INTO new_shapes SELECT shapes.* FROM shapes JOIN trips ON trips.shape_id = shapes.shape_id WHERE trips.trip_id=?;";
+            $sth  = $dbh->prepare( $stmt );
+            $sth->execute( $trip_id );
+        }
     }
 
     return 0;
@@ -840,4 +854,3 @@ sub Vacuum {
 
     return 0;
 }
-
