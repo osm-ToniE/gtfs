@@ -207,7 +207,7 @@ sub NormalizeRouteLongName {
     my $has_normalized_column   = 0;
 
     printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
-    
+
     $stmt = sprintf( "PRAGMA table_info(routes);" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -224,7 +224,7 @@ sub NormalizeRouteLongName {
         $sth = $dbh->prepare( $stmt );
         $sth->execute();
     }
-    
+
     $stmt = sprintf( "SELECT COUNT(*) FROM routes;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -236,34 +236,34 @@ sub NormalizeRouteLongName {
     }
 
     printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
-    
+
     $stmt = sprintf( "SELECT route_long_name,route_id FROM routes;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
-    
+
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] && $row[1]  ) {
             $original = decode( 'utf8',  $row[0] );
             $route_id = $row[1];
-            
+
             $normalized = NormalizeString( $original );
-            
+
             if ( $normalized ne $original ) {
                 $stmt = sprintf( "UPDATE routes SET normalized_route_long_name=? WHERE route_id=?;" );
                 $sth2  = $dbh->prepare( $stmt );
                 $sth2->execute( $normalized, $route_id );
-                
+
                 $number_of_normalized++;
-                
+
                 #printf STDERR "Route: %s -> %s\n", $original, $normalized;
                 printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
             }
         }
     }
-    
+
     printf STDERR "Routes normalized: %06d of %06d\n", $number_of_normalized, $number_of_routes     if ( $verbose );
-    
+
     return $number_of_normalized;
 }
 
@@ -335,7 +335,7 @@ sub NormalizeStopName {
         $sth  = $dbh->prepare( $stmt );
         $sth->execute();
     }
-    
+
     $stmt = sprintf( "SELECT COUNT(*) FROM stops;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -347,7 +347,7 @@ sub NormalizeStopName {
     }
 
     printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
-    
+
     $stmt = sprintf( "SELECT stop_name,stop_id FROM stops;" );
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
@@ -356,14 +356,14 @@ sub NormalizeStopName {
         if ( $row[0] && $row[1]  ) {
             $original = decode( 'utf8',  $row[0] );
             $stop_id  = $row[1];
-            
+
             $normalized = NormalizeString( $original );
-            
+
             if ( $normalized ne $original ) {
                 $stmt = sprintf( "UPDATE stops SET normalized_stop_name=? WHERE stop_id=?;" );
                 $sth2  = $dbh->prepare( $stmt );
                 $sth2->execute( $normalized, $stop_id );
-                
+
                 $number_of_normalized++;
 
                 #printf STDERR "Stop: %s -> %s\n", $original, $normalized;
@@ -371,9 +371,9 @@ sub NormalizeStopName {
             }
         }
     }
-    
+
     printf STDERR "Stops  normalized: %06d of %06d\n", $number_of_normalized, $number_of_stops     if ( $verbose );
-    
+
     return $number_of_normalized;
 }
 
@@ -386,20 +386,66 @@ sub NormalizeStopName {
 sub NormalizeString {
     my $original   = shift || '';
     my $normalized = $original;
-    
+
     if ( $original ) {
         if ( $language eq 'de' ) {
-            $normalized =~ s/nchnerStr\./nchner Straße/g;
-            $normalized =~ s/Str\./Straße/g;
-            $normalized =~ s/str\./straße/g;
-            $normalized =~ s/Pl\./Platz/g;
-            $normalized =~ s/Abzw\./Abzweig/g;
-            $normalized =~ s/rstenfeldbr,/rstenfeldbruck,/g;
-            $normalized =~ s/rstenfeldb\.,/rstenfeldbruck,/g;
+            $normalized =~ s/,/, /g;
+            $normalized =~ s/\(b\./(bei /g;
+            $normalized =~ s/nchnerStr\./nchner Straße /g;
+            $normalized =~ s/Str\./Straße /g;
+            $normalized =~ s/Str$/Straße/g;
+            $normalized =~ s/str$/straße/g;
+            $normalized =~ s/str\./straße /g;
+            $normalized =~ s/str$/straße/g;
+            $normalized =~ s/Pl\./Platz /g;
+            $normalized =~ s/Abzw\./Abzweig /g;
+            $normalized =~ s/rstenfeldbr,/rstenfeldbruck, /g;
+            $normalized =~ s/rstenfeldb\.,/rstenfeldbruck, /g;
+            $normalized =~ s/Gym./Gymnasium /g;
+            $normalized =~ s/Gymn./Gymnasium /g;
+            $normalized =~ s/Unterschlei.h./Unterschleißheim/g;
+            $normalized =~ s/Garch.,\s*Forschungsz./Garching, Forschungszentrum/g;
+            $normalized =~ s/A\.-Stifter/Adalbert-Stifter/g;
+            $normalized =~ s/Hans-Stie.b.-Stra.e\s*\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
+            $normalized =~ s/Aschheim,\s*Siedl\.Tassilo/Aschheim, Siedlung Tassilo/g;
+            $normalized =~ s/Max-Planck-Inst\./Max-Planck-Institut/g;
+            $normalized =~ s/Oberschl\./Oberschleißheim/g;
+            $normalized =~ s/Oberpf./Oberpaffenhofen/g;
+            $normalized =~ s/Brunnthal,\s*E\.-Sänger-Ring/Brunnthal, Eugen-Sänger-Ring/g;
+            $normalized =~ s/M\.-Haslbeck/Michael-Haslbeck/g;
+            $normalized =~ s/M\.\s*Schwaben,\s*Wittelsb\.Weg/Markt Schwaben, Wittelsbacher Weg/g;
+            $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
+            $normalized =~ s/Unter\.\s*Markt/Unterer Markt/g;
+            $normalized =~ s/Markt Indersdorf,\s*Rothbachbr\./Markt Indersdorf, Rothbachbrücke/g;
+            $normalized =~ s/Wiedenzh\./Wiedenzhausen/g;
+            $normalized =~ s/W.rmk./Würmkanal/g;
+            $normalized =~ s/Ludw.-Ganghofer/Ludwig-Ganghofer/g;
+            $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
+            $normalized =~ s/Parkpl\./Parkplatz/g;
+            $normalized =~ s/Lkr\./Lkr. /g;
+            $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
+            $normalized =~ s/R\.-Diesel/Rudolf-Diesel/g;
+            $normalized =~ s/J\.-u\.-R\.-Werner-Platz/Josef-und-Rosina-Werner-Platz/g;
+            $normalized =~ s/Buchenauer S\./Buchenauer Straße/g;
+            $normalized =~ s/Th\.-Heuss/Theodor-Heuss/g;
+            $normalized =~ s/K\.-Adenauer/Konrad-Adenauer/g;
+            $normalized =~ s/H\.-Tassilo-Realschule/Herzog-Tassilo-Realschule/g;
+            $normalized =~ s/Kerschenst\.Schule/Kerschensteiner Schule/g;
+            $normalized =~ s/Pestalozzisch\./Pestalozzischule/g;
+            $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
+            $normalized =~ s/Freising,\s*RS Gute .nger/Freising, Realschule Gute Änger/g;
+            $normalized =~ s/J\.-Dosch-Schule/Josef-Dosch-Schule/g;
+            $normalized =~ s/\s+/ /g;
+            $normalized =~ s/^\s//g;
+            $normalized =~ s/\s$//g;
+            $normalized =~ s/\s,/,/g;
+            $normalized =~ s/\( /(/g;
+            $normalized =~ s/ \)/)/g;
+            $normalized =~ s|/ |/|g;
+            $normalized =~ s| /|/|g;
         }
     }
-    
+
     return $normalized;
 
 }
-   
