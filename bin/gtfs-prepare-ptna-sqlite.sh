@@ -6,6 +6,8 @@ SQ_OPTIONS="-csv -header"
 
 rm -f $DB
 
+rm -f agency.txt calendar.txt calendar_dates.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
+
 today=$(date '+%Y-%m-%d')
 
 # basename $PWD should be the date of the release like: "/osm/ptna/work/gtfs-networks/DE/BY/MVV/2020-03-17"
@@ -26,15 +28,17 @@ unzip -o *.zip
 echo "Table 'osm'"
 
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS osm;"
+columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
 if [ -f ../osm.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import ../osm.txt osm"
     sqlite3 $SQ_OPTIONS $DB "UPDATE osm SET prepared='$today' WHERE id=1;"
 else
-    columns="id INTEGER DEFAULT 1 PRIMARY KEY, prepared TEXT DEFAULT '', network TEXT DEFAULT '', network_short TEXT DEFAULT '', network_guid TEXT DEFAULT '', gtfs_agency_is_operator INTEGER DEFAULT 0"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE osm ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO osm (id,prepared) VALUES (1,'$today');"
 fi
+#columns=$(echo $columns | sed -e "s/DEFAULT ''//gi" -e 's/DEFAULT [01]//gi' -e 's/TEXT//gi' -e 's/INTEGER//gi' -e 's/PRIMARY KEY//gi' -e 's/ //gi')
+#sqlite3 $SQ_OPTIONS $DB "SELECT $columns FROM osm;" > ../osm.txt
 sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
 
 
@@ -45,16 +49,18 @@ sqlite3 $SQ_OPTIONS $DB "SELECT * FROM osm;" > ../osm.txt
 echo "Table 'ptna'"
 
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna;"
+columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, ignore_calendar INTEGER DEFAULT 0, comment TEXT DEFAULT '', details TEXT DEFAULT ''"
 if [ -f ../ptna.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import ../ptna.txt ptna"
     sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today', aggregated='', analyzed='', normalized='' WHERE id=1;"
 else
-    columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, ignore_calendar INTEGER DEFAULT 0, comment TEXT DEFAULT '', details TEXT DEFAULT ''";
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
 fi
+#columns=$(echo $columns | sed -e "s/DEFAULT ''//gi" -e 's/DEFAULT [01]//gi' -e 's/TEXT//gi' -e 's/INTEGER//gi' -e 's/PRIMARY KEY//gi' -e 's/ //gi')
 sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET release_date='$released', has_shapes='0' WHERE id=1;"
+#sqlite3 $SQ_OPTIONS $DB "SELECT $columns FROM ptna;" > ../ptna.txt
 sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ../ptna.txt
 
 
@@ -110,7 +116,7 @@ echo "Table 'calendar'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar;"
 if [ -f calendar.txt ]
 then
-    columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar.txt > calendar-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import calendar-wo-header.txt calendar"
@@ -154,7 +160,7 @@ echo "Table 'routes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS routes;"
 if [ -f routes.txt ]
 then
-    columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v route_id routes.txt > routes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE routes ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import routes-wo-header.txt routes"
@@ -175,7 +181,7 @@ echo "Table 'shapes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS shapes;"
 if [ -f shapes.txt ]
 then
-    columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
+    columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
     fgrep -v shape_id shapes.txt > shapes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE shapes ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import shapes-wo-header.txt shapes"
@@ -200,7 +206,7 @@ echo "Table 'stops'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stops;"
 if [ -f stops.txt ]
 then
-    columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v stop_id stops.txt > stops-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stops ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import stops-wo-header.txt stops"
@@ -221,7 +227,7 @@ echo "Table 'stop_times'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stop_times;"
 if [ -f stop_times.txt ]
 then
-    columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//g')
+    columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
     fgrep -v stop_id stop_times.txt > stop_times-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stop_times ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import stop_times.txt stop_times"
@@ -242,7 +248,7 @@ echo "Table 'trips'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS trips;"
 if [ -f trips.txt ]
 then
-    columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//g' -e 's/,/ TEXT, /g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//g')
+    columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v trip_id trips.txt > trips-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import trips-wo-header.txt trips"
