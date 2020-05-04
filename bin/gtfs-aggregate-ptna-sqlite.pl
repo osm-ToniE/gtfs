@@ -721,6 +721,8 @@ sub StoreImprovements {
     my $trips_after         = 0;
     my $stop_times_before   = 0;
     my $stop_times_after    = 0;
+    my $shapes_before       = 0;
+    my $shapes_after        = 0;
 
     my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
@@ -742,7 +744,9 @@ sub StoreImprovements {
                                    'trips_before'       INTEGER DEFAULT 0,
                                    'trips_after'        INTEGER DEFAULT 0,
                                    'stop_times_before'  INTEGER DEFAULT 0,
-                                   'stop_times_after'   INTEGER DEFAULT 0
+                                   'stop_times_after'   INTEGER DEFAULT 0,
+                                   'shapes_before'      INTEGER DEFAULT 0,
+                                   'shapes_after'       INTEGER DEFAULT 0
                       );"
                    );
     $sth  = $dbh->prepare( $stmt );
@@ -784,10 +788,22 @@ sub StoreImprovements {
     @row                = $sth->fetchrow_array();
     $stop_times_after   = $row[0]   if ( defined($row[0]) );
 
+    $stmt               = sprintf( "SELECT COUNT(*) FROM shapes;" );
+    $sth                = $dbh->prepare( $stmt );
+    $sth->execute();
+    @row                = $sth->fetchrow_array();
+    $shapes_before      = $row[0]   if ( defined($row[0]) );
+
+    $stmt               = sprintf( "SELECT COUNT(*) FROM new_shapes;" );
+    $sth                = $dbh->prepare( $stmt );
+    $sth->execute();
+    @row                = $sth->fetchrow_array();
+    $shapes_after       = $row[0]   if ( defined($row[0]) );
+
     $stmt               = sprintf( "INSERT INTO ptna_aggregation
-                                           (id,date,routes_before,routes_after,trips_before,trips_after,stop_times_before,stop_times_after)
-                                    VALUES (1, '%s',%d,           %d,          %d,          %d,         %d,               %d              );",
-                                    $today, $routes_before, $routes_after, $trips_before, $trips_after, $stop_times_before, $stop_times_after
+                                           (id,date,routes_before,routes_after,trips_before,trips_after,stop_times_before,stop_times_after,shapes_before,shapes_after)
+                                    VALUES (1, '%s',%d,           %d,          %d,          %d,         %d,               %d,              %d,           %d          );",
+                                    $today, $routes_before, $routes_after, $trips_before, $trips_after, $stop_times_before, $stop_times_after, $shapes_before, $shapes_after
                                  );
     $sth                = $dbh->prepare( $stmt );
     $sth->execute();
