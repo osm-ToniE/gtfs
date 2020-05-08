@@ -76,7 +76,7 @@ if ( !(-f $DB_NAME && -w $DB_NAME) ) {
     exit 1;
 }
 
-my $dbh = DBI->connect( "DBI:SQLite:dbname=$DB_NAME", "", "", { RaiseError => 1 } ) or die $DBI::errstr;
+my $dbh = DBI->connect( "DBI:SQLite:dbname=$DB_NAME", "", "", { AutoCommit => 0, RaiseError => 1 } ) or die $DBI::errstr;
 
 
 ####################################################################################################################
@@ -136,27 +136,26 @@ exit 0;
 #
 
 sub FindRouteIdsOfAgency {
-    my $agency = shift;
+    my $agency       = shift;
 
-    my $stmt         = '';
     my $sth          = undef;
-    my $where_clause = '';
     my @row          = ();
     my @return_array = ();
 
     if ( $agency ) {
-        $where_clause = sprintf( "WHERE agency.agency_id='%s' OR agency.agency_name='%s'", $agency, $agency );
+        $sth = $dbh->prepare( "SELECT DISTINCT routes.route_id
+                               FROM            routes
+                               JOIN            agency ON routes.agency_id = agency.agency_id
+                               WHERE           agency.agency_id=? OR agency.agency_name=?
+                               ORDER BY        route_short_name;" );
+        $sth->execute( $agency, $agency );
+    } else {
+        $sth = $dbh->prepare( "SELECT DISTINCT routes.route_id
+                               FROM            routes
+                               JOIN            agency ON routes.agency_id = agency.agency_id
+                               ORDER BY        route_short_name;" );
+        $sth->execute();
     }
-
-    $stmt = sprintf( "SELECT DISTINCT routes.route_id
-                      FROM            routes
-                      JOIN            agency ON routes.agency_id = agency.agency_id
-                      %s
-                      ORDER BY        route_short_name;",
-                      $where_clause
-                   );
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
@@ -176,18 +175,14 @@ sub FindRouteIdsOfAgency {
 sub FindTripIdsOfRouteId {
     my $route_id     = shift || '-';
 
-    my $stmt         = '';
     my $sth          = undef;
     my @row          = ();
     my @return_array = ();
 
-    $stmt = sprintf( "SELECT DISTINCT trips.trip_id
-                      FROM            trips
-                      WHERE           trips.route_id='%s';",
-                      $route_id );
-
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
+    $sth = $dbh->prepare( "SELECT DISTINCT trips.trip_id
+                           FROM            trips
+                           WHERE           trips.route_id=?;" );
+    $sth->execute( $route_id );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
@@ -205,21 +200,16 @@ sub FindTripIdsOfRouteId {
 #
 
 sub FindStopIdListAsString {
-    my $trip_id      = shift || '-';
+    my $trip_id  = shift || '-';
 
-    my $stmt         = '';
-    my $sth          = undef;
-    my @row          = ();
+    my $sth      = undef;
+    my @row      = ();
 
-    $stmt = sprintf( "SELECT   GROUP_CONCAT(stop_id,'|')
-                      FROM     stop_times
-                      WHERE    trip_id='%s'
-                      ORDER BY CAST (stop_sequence AS INTEGER);",
-                      $trip_id
-                   );
-
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
+    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'|')
+                           FROM     stop_times
+                           WHERE    trip_id=?
+                           ORDER BY CAST (stop_sequence AS INTEGER);" );
+    $sth->execute( $trip_id );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
@@ -240,24 +230,19 @@ sub FindStopIdListAsString {
 #
 
 sub MarkSuspiciousEnd {
-    my $trip_id      = shift || '-';
+    my $trip_id  = shift || '-';
 
-    my $stmt         = '';
-    my $sth          = undef;
-    my @row          = ();
+    my $sth      = undef;
+    my @row      = ();
 
     # we are only interested in the last two stops of this trip
 
-    $stmt = sprintf( "SELECT   stop_times.stop_id,stops.stop_name
-                      FROM     stop_times
-                      JOIN     stops ON stop_times.stop_id = stops.stop_id
-                      WHERE    trip_id='%s'
-                      ORDER BY CAST (stop_times.stop_sequence AS INTEGER) DESC LIMIT 2;",
-                      $trip_id
-                   );
-
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
+    $sth = $dbh->prepare( "SELECT   stop_times.stop_id,stops.stop_name
+                           FROM     stop_times
+                           JOIN     stops ON stop_times.stop_id = stops.stop_id
+                           WHERE    trip_id=?
+                           ORDER BY CAST (stop_times.stop_sequence AS INTEGER) DESC LIMIT 2;" );
+    $sth->execute( $trip_id );
 
     my $last_stop_id          = '';
     my $last_stop_name        = '';
@@ -278,11 +263,10 @@ sub MarkSuspiciousEnd {
     if ( $last_stop_name && $second_last_stop_name &&
          $last_stop_name eq $second_last_stop_name    ) {
 
-        $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s (stop_name)?' WHERE trip_id='%s'", $today, $suspicious_end_for, $trip_id );
-        $sth   = $dbh->prepare( $stmt );
-        $sth->execute();
+        $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
+        $sth->execute( $today, $suspicious_end_for . ' (stop_name)?', $trip_id );
 
-        printf STDERR "Suspicious end per name for: %s\n", $trip_id  if ( $verbose );
+        printf STDERR "Suspicious end per name for: %s\n", $trip_id  if ( $verbose > 1 );
 
     } elsif ( $last_stop_id && $second_last_stop_id ) {
 
@@ -298,15 +282,17 @@ sub MarkSuspiciousEnd {
 
                 if (  $string2 eq $string1 ) {
 
-                    $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s (IFOPT)?' WHERE trip_id='%s'", $today, $suspicious_end_for, $trip_id );
-                    $sth   = $dbh->prepare( $stmt );
-                    $sth->execute();
+                    $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
+                    $sth->execute( $today, $suspicious_end_for . ' (IFOPT)?', $trip_id );
 
-                    printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $verbose );
+                    printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $verbose > 1 );
                 }
             }
         }
     }
+
+    $dbh->commit();
+
 }
 
 
@@ -317,15 +303,21 @@ sub MarkSuspiciousEnd {
 #
 
 sub MarkSubRoutes {
-    my $hash_ref    = shift;
+    my $hash_ref        = shift;
 
-    my $stoplist1           = '';
-    my $stoplist2           = '';
-    my @subroute_of         = ();
+    my $stoplist1       = '';
+    my $stoplist2       = '';
+    my @subroute_of     = ();
 
     if ( $hash_ref ) {
 
         my @stop_lists = keys( %{$hash_ref} );
+
+        my $sthS = $dbh->prepare( "SELECT   ptna_comment
+                                   FROM     trips
+                                   WHERE    trip_id=?;" );
+
+        my $sthU = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
 
         foreach $stoplist1 (@stop_lists) {
 
@@ -342,29 +334,23 @@ sub MarkSubRoutes {
 
             if ( scalar(@subroute_of) ) {
 
-                my $stmt = sprintf( "SELECT   ptna_comment
-                                     FROM     trips
-                                     WHERE    trip_id='%s';",
-                                     ${$hash_ref}{$stoplist1}
-                                  );
+                $sthS->execute( ${$hash_ref}{$stoplist1} );
 
-                my $sth = $dbh->prepare( $stmt );
-                $sth->execute();
-
-                my @row = $sth->fetchrow_array();
+                my @row = $sthS->fetchrow_array();
                 my $existing_comment = '';
                 if ( $row[0] ) {
                         $existing_comment = $row[0] . "\n";
                 }
 
-                $stmt  = sprintf( "UPDATE trips SET ptna_changedate='%s',ptna_comment='%s%s %s' WHERE trip_id='%s'", $today, $existing_comment, $subroute_of, join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
-                $sth   = $dbh->prepare( $stmt );
-                $sth->execute();
+                $sthU->execute( $today, $existing_comment . $subroute_of . ' ' . join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
 
                 printf STDERR "%s is sub-route of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $verbose > 1 );
             }
         }
     }
+
+    $dbh->commit();
+
 }
 
 
@@ -374,41 +360,35 @@ sub MarkSubRoutes {
 #
 
 sub CreatePtnaAnalysis {
-    my $stmt         = '';
-    my $sth          = undef;
-    my @row          = ();
+
+    my $sth = undef;
+    my @row = ();
 
     my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
     my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 
-
-    $stmt = sprintf( "DROP TABLE IF EXISTS ptna_analysis;" );
-    $sth  = $dbh->prepare( $stmt );
+    $sth = $dbh->prepare( "DROP TABLE IF EXISTS ptna_analysis;" );
     $sth->execute();
 
-    $stmt = sprintf( "CREATE TABLE ptna_analysis (
-                                   'id'                    INTEGER DEFAULT 0 PRIMARY KEY,
-                                   'date'                  TEXT,
-                                   'duration'              INTEGER DEFAULT 0,
-                                   'count_subroute'        INTEGER DEFAULT 0,
-                                   'count_suspicious_end'  INTEGER DEFAULT 0
-                      );"
-                   );
-    $sth  = $dbh->prepare( $stmt );
+    $sth = $dbh->prepare( "CREATE TABLE ptna_analysis (
+                                        'id'                    INTEGER DEFAULT 0 PRIMARY KEY,
+                                        'date'                  TEXT,
+                                        'duration'              INTEGER DEFAULT 0,
+                                        'count_subroute'        INTEGER DEFAULT 0,
+                                        'count_suspicious_end'  INTEGER DEFAULT 0 );"
+                         );
     $sth->execute();
 
-    $stmt = sprintf( "INSERT INTO ptna_analysis
-                             (id,date)
-                      VALUES (1, '%s');",
-                      $today
-                   );
-    $sth  = $dbh->prepare( $stmt );
-    $sth->execute();
+    $sth = $dbh->prepare( "INSERT INTO ptna_analysis
+                                  (id,date)
+                           VALUES (1, ?);" );
+    $sth->execute( $today );
 
-    $stmt  = sprintf( "UPDATE ptna SET analyzed='%s' WHERE id=1;", $today );
-    $sth   = $dbh->prepare( $stmt );
-    $sth->execute();
+    $sth   = $dbh->prepare( "UPDATE ptna SET analyzed=? WHERE id=1;" );
+    $sth->execute( $today );
+
+    $dbh->commit();
 
     return;
 }
@@ -421,14 +401,11 @@ sub CreatePtnaAnalysis {
 
 sub ClearAllPtnaCommentsForTrips {
 
-    my $stmt    = '';
-    my $sth     = undef;
-    my @row     = ();
+    my $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate='',ptna_is_invalid='',ptna_is_wrong='',ptna_comment='';" );
 
-
-    $stmt = sprintf( "UPDATE trips SET ptna_changedate='',ptna_is_invalid='',ptna_is_wrong='',ptna_comment='';" );
-    $sth  = $dbh->prepare( $stmt );
     $sth->execute();
+
+    $dbh->commit();
 
 }
 
@@ -446,7 +423,7 @@ sub UpdatePtnaAnalysis {
     my @row     = ();
 
 
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%s%%';", $subroute_of );
+    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%%%s%%';", $subroute_of );
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
     @row = $sth->fetchrow_array();
@@ -455,7 +432,7 @@ sub UpdatePtnaAnalysis {
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%s%%';", $suspicious_end_for );
+    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%%%s%%';", $suspicious_end_for );
     $sth = $dbh->prepare( $stmt );
     $sth->execute();
     @row = $sth->fetchrow_array();
@@ -468,7 +445,7 @@ sub UpdatePtnaAnalysis {
     $sth  = $dbh->prepare( $stmt );
     $sth->execute();
 
+    $dbh->commit();
+
     return 0;
 }
-
-
