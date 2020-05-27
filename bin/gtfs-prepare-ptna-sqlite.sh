@@ -6,19 +6,38 @@ SQ_OPTIONS="-csv -header"
 
 rm -f $DB
 
-rm -f agency.txt calendar.txt calendar_dates.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
-
-today=$(date '+%Y-%m-%d')
-
-# basename $PWD should be the date of the release like: "/osm/ptna/work/gtfs-networks/DE/BY/MVV/2020-03-17"
-
-released=$(basename $PWD)
+rm -f agency.txt calendar.txt calendar_dates.txt feed_info.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
 
 #
 # unzip the GTFS file, overwriting existing ones
 #
 
 unzip -o *.zip
+
+today=$(date '+%Y-%m-%d')
+
+# $PWD should include the date of the release like: "/osm/ptna/work/gtfs-networks/DE/BY/MVV/2020-03-17"
+# otherwise, the date is taken from the "time of last data modification" from some files of the zip
+# if everything fails, the current day will be taken
+
+release_date=$(basename $PWD)
+
+if [ $(echo $release_date | grep -c '\d\d\d\d-\d\d-\d\d') eq 0 ]
+then
+    if [ -f feed_info.txt ]
+    then
+        release_date=$(date --date="$(stat --format=%y feed_info.txt)" '+%Y-%m-%d')
+    elif [ -f agency.txt ]
+    then
+        release_date=$(date --date="$(stat --format=%y agency.txt)" '+%Y-%m-%d')
+    elif [ -f routes.txt ]
+    then
+        release_date=$(date --date="$(stat --format=%y routes.txt)" '+%Y-%m-%d')
+    else
+        release_date=$(date '+%Y-%m-%d')
+    fi
+fi
+
 
 
 #
@@ -50,11 +69,11 @@ sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna;"
 if [ -f ../ptna.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import ../ptna.txt ptna"
-    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today', aggregated='', analyzed='', normalized='' WHERE id=1;"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET prepared='$today', aggregated='', analyzed='', normalized='', release_date='$release_date' WHERE id=1;"
 else
     columns="id INTEGER DEFAULT 1 PRIMARY KEY, network_name TEXT DEFAULT '', network_name_url TEXT DEFAULT '', prepared TEXT DEFAULT '', aggregated TEXT DEFAULT '', analyzed TEXT DEFAULT '', normalized TEXT DEFAULT '', feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '', release_date TEXT DEFAULT '', release_url TEXT DEFAULT '', license TEXT DEFAULT '', license_url TEXT DEFAULT '', original_license TEXT DEFAULT '', original_license_url TEXT DEFAULT '', has_shapes INTEGER DEFAULT 0, ignore_calendar INTEGER DEFAULT 0, comment TEXT DEFAULT '', details TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna ($columns);"
-    sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared) VALUES (1,'$today');"
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO ptna (id,prepared,release_date) VALUES (1,'$today','$release_date');"
     sqlite3 $SQ_OPTIONS $DB "SELECT * FROM ptna;" > ../ptna.txt
 fi
 

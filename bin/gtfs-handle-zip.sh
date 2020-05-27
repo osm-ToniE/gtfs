@@ -16,13 +16,6 @@ DB="ptna-gtfs-sqlite.db"
 
 WORK_BASE_DIR="/osm/ptna/work"
 
-release_date=$(basename $PWD)
-
-if [ $(echo $release_date | grep -c '\d\d\d\d-\d\d-\d\d') eq 0 ]
-then
-    release_date=$(date '%Y-%m-%d')
-fi
-
 network_dir=$(dirname $PWD)
 
 D3=$(basename $network_dir)
@@ -64,9 +57,6 @@ gtfs-analyze-ptna-sqlite.pl $ANALYSIS_LANG $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $ANALYSIS_LANG "
 gtfs-normalize-ptna-sqlite.pl $ANALYSIS_LANG $*
-
-echo $(date '+%Y-%m-%d %H:%M:%S') "update release_date = $release_date"
-sqlite3 -header -csv $DB "update ptna set release_date='$release_date' where id=1;"
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -rtvu $DB $TARGET_DB"
 rsync -rtvu $DB $TARGET_DB
