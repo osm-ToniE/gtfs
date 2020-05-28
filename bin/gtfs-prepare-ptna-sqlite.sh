@@ -22,7 +22,7 @@ today=$(date '+%Y-%m-%d')
 
 release_date=$(basename $PWD)
 
-if [ $(echo $release_date | grep -c '\d\d\d\d-\d\d-\d\d') eq 0 ]
+if [ $(echo $release_date | egrep -c '[0-9]{4}-[01][0-9]-[0123][0-9]') = 0 ]
 then
     if [ -f feed_info.txt ]
     then
