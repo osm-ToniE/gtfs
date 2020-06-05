@@ -93,7 +93,10 @@ echo "Table 'agency'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    sqlite3 $SQ_OPTIONS $DB ".import agency.txt agency"
+    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    fgrep -v service_id agency.txt > agency-wo-header.txt
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_is_wrong   TEXT DEFAULT '';"
