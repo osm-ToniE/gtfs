@@ -114,10 +114,11 @@ sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar_dates;"
 if [ -f calendar_dates.txt ]
 then
     sqlite3 $SQ_OPTIONS $DB ".import calendar_dates.txt calendar_dates"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar_dates ADD ptna_is_wrong   TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar_dates ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_wrong   TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
 else
     columns="service_id TEXT PRIMARY KEY,date TEXT DEFAULT '',exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns);"
@@ -202,10 +203,11 @@ then
     fgrep -v shape_id shapes.txt > shapes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE shapes ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import shapes-wo-header.txt shapes"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_changedate TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_is_invalid TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_is_wrong   TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE shapes ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_changedate TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_is_invalid TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_is_wrong   TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_shape_id ON  shapes (shape_id);"
     sqlite3 $SQ_OPTIONS $DB "UPDATE ptna SET has_shapes=(SELECT COUNT(*) FROM shapes);"
     rm -f shapes-wo-header.txt
 else
@@ -248,10 +250,11 @@ then
     fgrep -v stop_id stop_times.txt > stop_times-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stop_times ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import stop_times.txt stop_times"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stop_times ADD ptna_changedate TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stop_times ADD ptna_is_invalid TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stop_times ADD ptna_is_wrong   TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stop_times ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_changedate TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_is_invalid TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_is_wrong   TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_comment    TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_trip_id ON  stop_times (trip_id);"
     rm -f stop_times-wo-header.txt
 fi
 
@@ -269,11 +272,12 @@ then
     fgrep -v trip_id trips.txt > trips-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import trips-wo-header.txt trips"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_changedate      TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_invalid      TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_is_wrong        TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "ALTER TABLE trips ADD ptna_comment         TEXT DEFAULT '';"
-    rm -f trips-wo-header.txt
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_changedate      TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_is_invalid      TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_is_wrong        TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_comment         TEXT DEFAULT '';"
+    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_route_id ON  trips (route_id);"
+     rm -f trips-wo-header.txt
 fi
 
 sqlite3 $SQ_OPTIONS $DB ".schema"
