@@ -93,14 +93,15 @@ echo "Table 'agency'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-    fgrep -v service_id agency.txt > agency-wo-header.txt
+    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    fgrep -v agency_id agency.txt > agency-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_is_wrong   TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_comment    TEXT DEFAULT '';"
+    rm -f agency-wo-header.txt
 fi
 
 
@@ -113,12 +114,15 @@ echo "Table 'calendar_dates'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar_dates;"
 if [ -f calendar_dates.txt ]
 then
-    sqlite3 $SQ_OPTIONS $DB ".import calendar_dates.txt calendar_dates"
+    columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
+    fgrep -v service_id calendar_dates.txt > calendar_dates-wo-header.txt
+     sqlite3 $SQ_OPTIONS $DB ".import calendar_dates-wo-header.txt calendar_dates"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_wrong   TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_comment    TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
+    rm -f calendar_dates-wo-header.txt
 else
     columns="service_id TEXT PRIMARY KEY,date TEXT DEFAULT '',exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns);"
