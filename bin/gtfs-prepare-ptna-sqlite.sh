@@ -116,12 +116,12 @@ if [ -f calendar_dates.txt ]
 then
     columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar_dates.txt > calendar_dates-wo-header.txt
-     sqlite3 $SQ_OPTIONS $DB ".import calendar_dates-wo-header.txt calendar_dates"
+    sqlite3 $SQ_OPTIONS $DB ".import calendar_dates-wo-header.txt calendar_dates"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_wrong   TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_comment    TEXT DEFAULT '';"
-    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
+#    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
     rm -f calendar_dates-wo-header.txt
 else
     columns="service_id TEXT PRIMARY KEY,date TEXT DEFAULT '',exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
