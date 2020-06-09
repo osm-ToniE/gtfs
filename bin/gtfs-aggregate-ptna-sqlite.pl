@@ -554,6 +554,9 @@ sub RenameAndDropShapesTable {
     $sth  = $dbh->prepare( "ALTER TABLE new_shapes RENAME TO shapes;" );
     $sth->execute();
 
+    $sth = $dbh->prepare( "CREATE INDEX idx_shape_id ON  shapes (shape_id);" );
+    $sth->execute();
+
     $dbh->commit();
 
     return 0;
@@ -625,6 +628,9 @@ sub RenameAndDropStopTimesTable {
     $sth = $dbh->prepare( "ALTER TABLE new_stop_times RENAME TO stop_times;" );
     $sth->execute();
 
+    $sth = $dbh->prepare( "CREATE INDEX idx_trip_id ON  stop_times (trip_id);" );
+    $sth->execute();
+
     $dbh->commit();
 
     return 0;
@@ -694,6 +700,9 @@ sub RenameAndDropTripsTable {
     $sth->execute();
 
     $sth = $dbh->prepare( "ALTER TABLE new_trips RENAME TO trips;" );
+    $sth->execute();
+
+    $sth = $dbh->prepare( "CREATE INDEX idx_route_id ON  trips (route_id);" );
     $sth->execute();
 
     $dbh->commit();
