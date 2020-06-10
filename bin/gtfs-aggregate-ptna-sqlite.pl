@@ -312,7 +312,7 @@ sub CreatePtnaTripsTable {
     $sth = $dbh->prepare( "DROP TABLE IF EXISTS ptna_trips;" );
     $sth->execute();
 
-    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '');" );
+    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_service_ids TEXT DEFAULT '');" );
     $sth->execute();
 
     $dbh->commit();
@@ -341,6 +341,7 @@ sub FindUniqueTripIds {
     my $representative_trip_id = '';
     my $departure_time         = '';
     my $route_id               = '-';
+    my $service_id             = '-';
 
     my %collection_trip_id     = ();
 
@@ -350,10 +351,9 @@ sub FindUniqueTripIds {
 
     printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
 
-    $sthR = $dbh->prepare( "SELECT   route_id
+    $sthR = $dbh->prepare( "SELECT   route_id,service_id
                             FROM     trips
-                            WHERE    trip_id=?
-                            LIMIT    1;"       );
+                            WHERE    trip_id=?;" );
 
     $sthD = $dbh->prepare( "SELECT   departure_time
                             FROM     stop_times
@@ -366,8 +366,9 @@ sub FindUniqueTripIds {
 
         $sthR->execute( $trip_id );
 
-        @row      = $sthR->fetchrow_array();
-        $route_id = $row[0] || '-';
+        @row        = $sthR->fetchrow_array();
+        $route_id   = $row[0] || '-';
+        $service_id = $row[1] || '-';
 
         $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
@@ -388,22 +389,24 @@ sub FindUniqueTripIds {
         @row = $sthD->fetchrow_array();
         $departure_time = $row[0] || '-';
 
-        $collection_trip_id{$representative_trip_id}{'similars'}{$trip_id}          = 1;
-        $collection_trip_id{$representative_trip_id}{'departures'}{$departure_time} = 1;
+        push( @{$collection_trip_id{$representative_trip_id}{'similars'}},   $trip_id        );
+        push( @{$collection_trip_id{$representative_trip_id}{'departures'}}, $departure_time );
+        push( @{$collection_trip_id{$representative_trip_id}{'service_id'}}, $service_id     );
     }
 
     printf STDERR "\n"                                          if ( $verbose );
     printf STDERR "%s Start Storing ptna_trips ...\n", get_time();
 
     $sthI = $dbh->prepare( "INSERT INTO ptna_trips
-                                   ( trip_id, list_trip_ids, list_departure_times )
-                            VALUES ( ?, ?, ? );" );
+                                   ( trip_id, list_trip_ids, list_departure_times, list_service_ids )
+                            VALUES ( ?, ?, ?, ? );" );
 
     my $stored = 0;
     foreach my $trip_id ( @ret_array ) {
         $sthI->execute( $trip_id,
-                        join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'similars'}} ) ) ),
-                        join( '|', sort( keys ( %{$collection_trip_id{$trip_id}{'departures'}} ) ) )
+                        join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
+                        join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
+                        join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} )
                      );
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, ++$stored, $totals  if ( $verbose );
     }
