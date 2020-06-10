@@ -116,6 +116,7 @@ if [ -f calendar_dates.txt ]
 then
     columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar_dates.txt > calendar_dates-wo-header.txt
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns TEXT);"
     sqlite3 $SQ_OPTIONS $DB ".import calendar_dates-wo-header.txt calendar_dates"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
