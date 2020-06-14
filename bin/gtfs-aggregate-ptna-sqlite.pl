@@ -37,13 +37,13 @@ use Getopt::Long;
 my $debug                    = 0;
 my $verbose                  = 0;
 my $agency                   = undef;
-my $ignore_calendar          = undef;
+my $consider_calendar        = undef;
 my $language                 = 'de';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
             'agency=s'              =>  \$agency,                # --agency=
-            'ignore-calendar'       =>  \$ignore_calendar,       # --ignore-calendar
+            'consider-calendar'     =>  \$consider_calendar,     # --consider-calendar
             'language=s'            =>  \$language,              # --language=de
           );
 
@@ -250,13 +250,7 @@ sub FindValidTripIdsOfRouteId {
     my @row          = ();
     my @return_array = ();
 
-    if ( $ignore_calendar ) {
-        $sth = $dbh->prepare( "SELECT DISTINCT trip_id
-                               FROM            trips
-                               WHERE           route_id=?;"
-                            );
-        $sth->execute( $route_id );
-    } else {
+    if ( $consider_calendar ) {
         my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
         my $today = sprintf( "%04d%02d%02d", $year+1900, $month+1, $day );
@@ -267,6 +261,12 @@ sub FindValidTripIdsOfRouteId {
                                WHERE           trips.route_id=? AND ? <= calendar.end_date;"
                             );
         $sth->execute( $route_id, $today );
+    } else {
+        $sth = $dbh->prepare( "SELECT DISTINCT trip_id
+                               FROM            trips
+                               WHERE           route_id=?;"
+                            );
+        $sth->execute( $route_id );
     }
 
     while ( @row = $sth->fetchrow_array() ) {

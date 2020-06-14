@@ -39,7 +39,7 @@ else
     TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
     echo $TARGET_DB
 
-    if [ "$D1" != "DE" ]
+    if [ "$D1" != "DE" -a "$D1" != "CH" ]
     then
         ANALYSIS_LANG="--language=en"
     fi
