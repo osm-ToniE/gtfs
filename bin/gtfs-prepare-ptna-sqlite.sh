@@ -122,10 +122,10 @@ then
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_wrong   TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_comment    TEXT DEFAULT '';"
-#    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON  calendar_dates (service_id);"
     rm -f calendar_dates-wo-header.txt
 else
-    columns="service_id TEXT PRIMARY KEY,date TEXT DEFAULT '',exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
+    columns="service_id TEXT, date TEXT DEFAULT '', exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns);"
 fi
 
@@ -149,7 +149,7 @@ then
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar ADD ptna_comment    TEXT DEFAULT '';"
     rm -f calendar-wo-header.txt
 else
-    columns="service_id TEXT PRIMARY KEY,monday INTEGER DEFAULT 0,tuesday INTEGER DEFAULT 0,wednesday INTEGER DEFAULT 0,thursday INTEGER DEFAULT 0,friday INTEGER DEFAULT 0,saturday INTEGER DEFAULT 0,sunday INTEGER DEFAULT 0,start_dateTEXT DEFAULT '',end_dateTEXT DEFAULT '', ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
+    columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_dateTEXT DEFAULT '', end_dateTEXT DEFAULT '', ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
 fi
 
