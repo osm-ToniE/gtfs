@@ -312,7 +312,7 @@ sub CreatePtnaTripsTable {
     $sth = $dbh->prepare( "DROP TABLE IF EXISTS ptna_trips;" );
     $sth->execute();
 
-    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_service_ids TEXT DEFAULT '');" );
+    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '');" );
     $sth->execute();
 
     $dbh->commit();
@@ -333,6 +333,7 @@ sub FindUniqueTripIds {
 
     my $sthR         = undef;
     my $sthD         = undef;
+    my $sthA         = undef;
     my $sthI         = undef;
     my @row          = ();
 
@@ -340,6 +341,11 @@ sub FindUniqueTripIds {
     my %stop_list_hash         = ();
     my $representative_trip_id = '';
     my $departure_time         = '';
+    my $arrival_time           = '';
+    my $departure_secs         = 0;
+    my $arrival_secs           = 0;
+    my $duration               = '';
+    my $duration_secs          = 0;
     my $route_id               = '-';
     my $service_id             = '-';
 
@@ -358,7 +364,12 @@ sub FindUniqueTripIds {
     $sthD = $dbh->prepare( "SELECT   departure_time
                             FROM     stop_times
                             WHERE    trip_id=?
-                            ORDER BY CAST (stop_sequence AS INTEGER) LIMIT 1;" );
+                            ORDER BY CAST (stop_sequence AS INTEGER) ASC  LIMIT 1;" );
+
+    $sthA = $dbh->prepare( "SELECT   arrival_time
+                            FROM     stop_times
+                            WHERE    trip_id=?
+                            ORDER BY CAST (stop_sequence AS INTEGER) DESC LIMIT 1;" );
 
     foreach my $trip_id ( @trip_ids_are_valid  ) {
 
@@ -387,10 +398,28 @@ sub FindUniqueTripIds {
         $sthD->execute( $trip_id );
 
         @row = $sthD->fetchrow_array();
-        $departure_time = $row[0] || '-';
+        $departure_time = $row[0] || '00:00:00';
+
+        $sthA->execute( $trip_id );
+
+        @row = $sthA->fetchrow_array();
+        $arrival_time = $row[0] || '00:00:00';
+
+        $duration = '?:??';
+        if ( $departure_time =~ m/^(\d\d):(\d\d):(\d\d)$/ ) {
+            $departure_secs = $1 * 3600 + $2 * 60 + $3;
+            $departure_time = $1 . ':' . $2;
+            if ( $arrival_time =~ m/^(\d\d):(\d\d):(\d\d)$/ ) {
+                $arrival_secs  = $1 * 3600 + $2 * 60 + $3;
+                $arrival_time  = $1 . ':' . $2;
+                $duration_secs = $arrival_secs - $departure_secs;
+                $duration = sprintf( "%d:%02d", $duration_secs / 3600, ($duration_secs % 3600) / 60 );
+            }
+        }
 
         push( @{$collection_trip_id{$representative_trip_id}{'similars'}},   $trip_id        );
         push( @{$collection_trip_id{$representative_trip_id}{'departures'}}, $departure_time );
+        push( @{$collection_trip_id{$representative_trip_id}{'durations'}},  $duration       );
         push( @{$collection_trip_id{$representative_trip_id}{'service_id'}}, $service_id     );
     }
 
@@ -398,14 +427,15 @@ sub FindUniqueTripIds {
     printf STDERR "%s Start Storing ptna_trips ...\n", get_time();
 
     $sthI = $dbh->prepare( "INSERT INTO ptna_trips
-                                   ( trip_id, list_trip_ids, list_departure_times, list_service_ids )
-                            VALUES ( ?, ?, ?, ? );" );
+                                   ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids )
+                            VALUES ( ?, ?, ?, ?, ? );" );
 
     my $stored = 0;
     foreach my $trip_id ( @ret_array ) {
         $sthI->execute( $trip_id,
                         join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
                         join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
+                        join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
                         join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} )
                      );
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, ++$stored, $totals  if ( $verbose );
