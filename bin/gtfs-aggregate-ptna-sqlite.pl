@@ -408,11 +408,10 @@ sub FindUniqueTripIds {
         $duration = '?:??';
         if ( $departure_time =~ m/^(\d{1,2}):(\d\d):(\d\d)$/ ) {
             $departure_secs = $1 * 3600 + $2 * 60 + $3;
-            $departure_time = sprintf( "%02d:%02d", $1, $2 );
             if ( $arrival_time =~ m/^(\d{1,2}):(\d\d):(\d\d)$/ ) {
                 $arrival_secs  = $1 * 3600 + $2 * 60 + $3;
                 $duration_secs = $arrival_secs - $departure_secs;
-                $duration = sprintf( "%d:%02d", $duration_secs / 3600, ($duration_secs % 3600) / 60 );
+                $duration = sprintf( "%d:%02d:%02d", $duration_secs / 3600, ($duration_secs % 3600) / 60, $duration_secs % 60 );
             }
         }
 
