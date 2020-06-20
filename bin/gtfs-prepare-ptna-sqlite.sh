@@ -93,9 +93,9 @@ echo "Table 'agency'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v agency_id agency.txt > agency-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE agency ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -114,9 +114,9 @@ echo "Table 'calendar_dates'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar_dates;"
 if [ -f calendar_dates.txt ]
 then
-    columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
+    columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/$/ TEXT/g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar_dates.txt > calendar_dates-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar_dates ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import calendar_dates-wo-header.txt calendar_dates"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE calendar_dates ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -139,9 +139,9 @@ echo "Table 'calendar'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar;"
 if [ -f calendar.txt ]
 then
-    columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar.txt > calendar-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import calendar-wo-header.txt calendar"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -183,9 +183,9 @@ echo "Table 'routes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS routes;"
 if [ -f routes.txt ]
 then
-    columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v route_id routes.txt > routes-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE routes ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE routes ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import routes-wo-header.txt routes"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -204,9 +204,9 @@ echo "Table 'shapes'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS shapes;"
 if [ -f shapes.txt ]
 then
-    columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
+    columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
     fgrep -v shape_id shapes.txt > shapes-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE shapes ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE shapes ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import shapes-wo-header.txt shapes"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE shapes       ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -230,9 +230,9 @@ echo "Table 'stops'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stops;"
 if [ -f stops.txt ]
 then
-    columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v stop_id stops.txt > stops-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stops ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stops ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import stops-wo-header.txt stops"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stops ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE stops ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -251,9 +251,9 @@ echo "Table 'stop_times'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS stop_times;"
 if [ -f stop_times.txt ]
 then
-    columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
+    columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
     fgrep -v stop_id stop_times.txt > stop_times-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stop_times ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE stop_times ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import stop_times.txt stop_times"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE stop_times  ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -273,9 +273,9 @@ echo "Table 'trips'"
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS trips;"
 if [ -f trips.txt ]
 then
-    columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v trip_id trips.txt > trips-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns TEXT);"
+    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE trips ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import trips-wo-header.txt trips"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_changedate      TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER  TABLE trips        ADD ptna_is_invalid      TEXT DEFAULT '';"
