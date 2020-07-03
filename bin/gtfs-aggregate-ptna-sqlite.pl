@@ -430,9 +430,13 @@ sub FindUniqueTripIds {
                                    ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids )
                             VALUES ( ?, ?, ?, ?, ? );" );
 
+    my @new_ret_array = ();
+    my $best_trip_id  = '';
     my $stored = 0;
     foreach my $trip_id ( @ret_array ) {
-        $sthI->execute( $trip_id,
+        $best_trip_id = GetTripIdWithBestServiceInterval( @{$collection_trip_id{$trip_id}{'similars'}} );
+        push( @new_ret_array, $best_trip_id );
+        $sthI->execute( $best_trip_id,
                         join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
                         join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
                         join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
@@ -445,7 +449,7 @@ sub FindUniqueTripIds {
 
     $dbh->commit();
 
-    return @ret_array;
+    return @new_ret_array;
 }
 
 
@@ -473,6 +477,40 @@ sub FindStopIdListAsString {
     }
 
     return '';
+
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub GetTripIdWithBestServiceInterval {
+    my @trip_id_array  = @_;
+
+    my $sth = undef;
+    my @row = ();
+    my $where_clause = join( '', map{'? OR trip_id='} @trip_id_array );
+       $where_clause =~ s/ OR trip_id=$//;
+    my $sql = sprintf( "SELECT trips.trip_id
+                        FROM   trips
+                        JOIN   calendar ON trips.service_id = calendar.service_id
+                        WHERE  trip_id=%s
+                        ORDER  BY calendar.end_date DESC, calendar.start_date ASC LIMIT 1;", $where_clause );
+#    printf STDERR "%s\n", $sql;
+    $sth = $dbh->prepare( $sql );
+    $sth->execute( @trip_id_array );
+
+    while ( @row = $sth->fetchrow_array() ) {
+        if ( $row[0]  ) {
+            printf STDERR "%s -> %s\n", $trip_id_array[0], $row[0] if ( $trip_id_array[0] != $row[0] );
+            return $row[0];
+        }
+    }
+
+    return '';
+
 
 }
 
