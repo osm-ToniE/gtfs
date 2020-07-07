@@ -489,6 +489,11 @@ sub FindStopIdListAsString {
 sub GetTripIdWithBestServiceInterval {
     my @trip_id_array  = @_;
 
+    if ( scalar(@trip_id_array) > 900 ) {
+        printf STDERR "GetTripIdWithBestServiceInterval( %s, ... ): too many trip_ids %d, limiting to 900\n", $trip_id_array[0], scalar(@trip_id_array);
+        @trip_id_array = splice( @trip_id_array, 0, 900 );
+    }
+
     my $sth = undef;
     my @row = ();
     my $where_clause = join( '', map{'? OR trip_id='} @trip_id_array );
@@ -504,7 +509,7 @@ sub GetTripIdWithBestServiceInterval {
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0]  ) {
-            printf STDERR "%s -> %s\n", $trip_id_array[0], $row[0] if ( $trip_id_array[0] != $row[0] );
+            # printf STDERR "%s -> %s\n", $trip_id_array[0], $row[0] if ( $trip_id_array[0] != $row[0] );
             return $row[0];
         }
     }
