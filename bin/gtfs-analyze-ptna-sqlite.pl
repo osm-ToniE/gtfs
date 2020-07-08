@@ -325,7 +325,7 @@ sub MarkSuspiciousStart {
         }
 
         $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-        $sth->execute( $today, $existing_comment . $suspicious_start_for . ' (stop_name)?', $trip_id );
+        $sth->execute( $today, $existing_comment . '::SUSPSTART::' . $suspicious_start_for . ' (stop_name)?', $trip_id );
 
         printf STDERR "Suspicious start per name for: %s\n", $trip_id  if ( $debug );
 
@@ -356,7 +356,7 @@ sub MarkSuspiciousStart {
                     }
 
                     $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-                    $sth->execute( $today, $existing_comment . $suspicious_start_for . ' (IFOPT)?', $trip_id );
+                    $sth->execute( $today, $existing_comment . '::SUSPSTART::' . $suspicious_start_for . ' (IFOPT)?', $trip_id );
 
                     printf STDERR "Suspicious start per IFOPT for: %s\n", $trip_id  if ( $debug );
                 }
@@ -426,7 +426,7 @@ sub MarkSuspiciousEnd {
 
         $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
 
-        $sth->execute( $today, $existing_comment . $suspicious_end_for . ' (stop_name)?', $trip_id );
+        $sth->execute( $today, $existing_comment . '::SUSPEND::' . $suspicious_end_for . ' (stop_name)?', $trip_id );
 
         printf STDERR "Suspicious end per name for: %s\n", $trip_id  if ( $debug  );
 
@@ -457,7 +457,7 @@ sub MarkSuspiciousEnd {
                     }
 
                     $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-                    $sth->execute( $today, $existing_comment . $suspicious_end_for . ' (IFOPT)?', $trip_id );
+                    $sth->execute( $today, $existing_comment . '::SUSPEND::' . $suspicious_end_for . ' (IFOPT)?', $trip_id );
 
                     printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $debug  );
                 }
@@ -516,7 +516,7 @@ sub MarkSubRoutesBasedOnId {
                     $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                 }
 
-                $sthU->execute( $today, $existing_comment . $subroute_of . ' ' . join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
+                $sthU->execute( $today, $existing_comment . '::SUBR::' . $subroute_of . ' ' . join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
 
                 printf STDERR "%s is sub-route of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $debug );
             }
@@ -564,7 +564,7 @@ sub MarkIdenticalRoutesBasedOnName {
                         $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                     }
 
-                    $sthU->execute( $today, $existing_comment . $different_ids . ' ' . join(', ',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
+                    $sthU->execute( $today, $existing_comment . '::IDENT::' . $different_ids . ' ' . join(', ',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
 
                     printf STDERR "%s have same stop names: %s\n", $trip_id, join( ', ', @{${$name_hash_ref}{$stopnamelist}} ) if ( $verbose );
                 }
