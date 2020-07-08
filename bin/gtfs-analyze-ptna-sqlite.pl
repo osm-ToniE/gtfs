@@ -316,10 +316,12 @@ sub MarkSuspiciousStart {
                                 FROM     trips
                                 WHERE    trip_id=?;" );
 
+        $sthS->execute( $trip_id );
+
         @row = $sthS->fetchrow_array();
         $existing_comment = '';
         if ( $row[0] ) {
-            $existing_comment = $row[0] . "\n";
+            $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
         }
 
         $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
@@ -345,10 +347,12 @@ sub MarkSuspiciousStart {
                                             FROM     trips
                                             WHERE    trip_id=?;" );
 
+                    $sthS->execute( $trip_id );
+
                     @row = $sthS->fetchrow_array();
                     $existing_comment = '';
                     if ( $row[0] ) {
-                        $existing_comment = $row[0] . "\n";
+                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                     }
 
                     $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
@@ -412,10 +416,12 @@ sub MarkSuspiciousEnd {
                                 FROM     trips
                                 WHERE    trip_id=?;" );
 
+        $sthS->execute( $trip_id );
+
         @row = $sthS->fetchrow_array();
         $existing_comment = '';
         if ( $row[0] ) {
-            $existing_comment = $row[0] . "\n";
+            $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
         }
 
         $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
@@ -442,10 +448,12 @@ sub MarkSuspiciousEnd {
                                             FROM     trips
                                             WHERE    trip_id=?;" );
 
+                    $sthS->execute( $trip_id );
+
                     @row = $sthS->fetchrow_array();
                     $existing_comment = '';
                     if ( $row[0] ) {
-                        $existing_comment = $row[0] . "\n";
+                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                     }
 
                     $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
@@ -505,7 +513,7 @@ sub MarkSubRoutesBasedOnId {
                 my @row = $sthS->fetchrow_array();
                 my $existing_comment = '';
                 if ( $row[0] ) {
-                    $existing_comment = $row[0] . "\n";
+                    $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                 }
 
                 $sthU->execute( $today, $existing_comment . $subroute_of . ' ' . join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
@@ -553,7 +561,7 @@ sub MarkIdenticalRoutesBasedOnName {
                     my @row = $sthS->fetchrow_array();
                     my $existing_comment = '';
                     if ( $row[0] ) {
-                        $existing_comment = $row[0] . "\n";
+                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
                     }
 
                     $sthU->execute( $today, $existing_comment . $different_ids . ' ' . join(', ',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
