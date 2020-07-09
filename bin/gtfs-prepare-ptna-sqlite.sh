@@ -187,6 +187,10 @@ then
     fgrep -v route_id routes.txt > routes-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE routes ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import routes-wo-header.txt routes"
+    if [ $(head -1 routes.txt | fgrep -c agency_id) == 0 ]
+    then
+        sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
+    fi
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_is_invalid TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_is_wrong   TEXT DEFAULT '';"
