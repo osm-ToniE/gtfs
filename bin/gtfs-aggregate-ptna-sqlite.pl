@@ -175,19 +175,22 @@ sub FindRouteIdsOfAgency {
 
     my $stmt         = '';
     my $sth          = undef;
+    my $join_clause  = '';
     my $where_clause = '';
     my @row          = ();
     my @return_array = ();
 
     if ( $agency ) {
+        $join_clause  = "JOIN agency ON routes.agency_id = agency.agency_id";
         $where_clause = sprintf( "WHERE agency.agency_id='%s' OR agency.agency_name='%s'", $agency, $agency );
     }
 
     $stmt = sprintf( "SELECT DISTINCT routes.route_id
                       FROM            routes
-                      JOIN            agency ON routes.agency_id = agency.agency_id
+                      %s
                       %s
                       ORDER BY        route_short_name;",
+                      $join_clause,
                       $where_clause
                    );
     $sth = $dbh->prepare( $stmt );
