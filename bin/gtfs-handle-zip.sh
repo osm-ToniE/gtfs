@@ -12,7 +12,35 @@
 # ../ptna.txt
 #
 
-ANALYSIS_LANG="--language=de"
+use_language="de"
+
+network_dir=$(dirname $PWD)
+
+D3=$(basename $network_dir)
+
+D2_path=$(dirname $network_dir)
+D2=$(basename $D2_path)
+
+D1_path=$(dirname $D2_path)
+D1=$(basename $D1_path)
+
+if [ "$D1" = "gtfs-networks" ]
+then
+    TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
+    FORMER_DB="$WORK_BASE_DIR/$D2/$D2-$D3-prev-$DB"
+    COUNTRY=$D2
+else
+    TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
+    FORMER_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-prev-$DB"
+    COUNTRY=$D1
+fi
+
+if [ "$COUNTRY" = "DE" -o "$COUNTRY" = "CH" ]
+then
+    use_language="de"
+else
+    use_language="en"
+fi
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start preparation $*"
 gtfs-prepare-ptna-sqlite.sh $*
@@ -20,8 +48,8 @@ gtfs-prepare-ptna-sqlite.sh $*
 echo $(date '+%Y-%m-%d %H:%M:%S') "start aggregation $*"
 gtfs-aggregate-ptna-sqlite.pl $*
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis $ANALYSIS_LANG $*"
-gtfs-analyze-ptna-sqlite.pl $ANALYSIS_LANG $*
+echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis --language=$use_language $*"
+gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $ANALYSIS_LANG $*"
-gtfs-normalize-ptna-sqlite.pl $ANALYSIS_LANG $*
+echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization --language=$use_language $*"
+gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
