@@ -149,8 +149,12 @@ then
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE calendar ADD ptna_comment    TEXT DEFAULT '';"
     rm -f calendar-wo-header.txt
 else
-    columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_dateTEXT DEFAULT '', end_dateTEXT DEFAULT '', ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
+    columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date TEXT DEFAULT '', end_date TEXT DEFAULT '', ptna_changedate TEXT DEFAULT '', ptna_is_invalid TEXT DEFAULT '', ptna_is_wrong TEXT DEFAULT '', ptna_comment TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1);"
+    sqlite3 $SQ_OPTIONS $DB "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1);"
+    sqlite3 $SQ_OPTIONS $DB "SELECT * from calendar;"
 fi
 
 
@@ -190,6 +194,10 @@ then
     if [ $(head -1 routes.txt | fgrep -c agency_id) == 0 ]
     then
         sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
+        if [ $(sqlite3 $DB "SELECT COUNT(agency_id) FROM agency;") == 1 ]
+        then
+            sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id=(SELECT agency_id FROM agency);"
+        fi
     fi
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_changedate TEXT DEFAULT '';"
     sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD ptna_is_invalid TEXT DEFAULT '';"
@@ -291,14 +299,17 @@ fi
 
 sqlite3 $SQ_OPTIONS $DB ".schema"
 
+echo
 echo "Test for route_id from routes"
-sqlite3 $SQ_OPTIONS $DB "SELECT route_id FROM routes WHERE route_id='1';"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM routes LIMIT 1;"
 
+echo
 echo "Test for trip_id from trips"
-sqlite3 $SQ_OPTIONS $DB "SELECT trip_id FROM trips WHERE trip_id='1';"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM trips LIMIT 1;"
 
+echo
 echo "Test for route_id and trip_id from trips"
-sqlite3 $SQ_OPTIONS $DB "SELECT route_id,trip_id FROM trips WHERE trip_id='1';"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM trips LIMIT 1;"
 
 echo
 echo "OSM settings"
