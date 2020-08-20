@@ -436,16 +436,20 @@ sub FindUniqueTripIds {
     my @new_ret_array = ();
     my $best_trip_id  = '';
     my $stored = 0;
+    my %have_seen_trip_id = ();
     foreach my $trip_id ( @ret_array ) {
         $best_trip_id = GetTripIdWithBestServiceInterval( @{$collection_trip_id{$trip_id}{'similars'}} );
-        push( @new_ret_array, $best_trip_id );
-        $sthI->execute( $best_trip_id,
-                        join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
-                        join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
-                        join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
-                        join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} )
-                     );
-        printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, ++$stored, $totals  if ( $verbose );
+        unless ( $have_seen_trip_id{$best_trip_id} ) {
+            push( @new_ret_array, $best_trip_id );
+            $sthI->execute( $best_trip_id,
+                            join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
+                            join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
+                            join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
+                            join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} )
+                        );
+            printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, ++$stored, $totals  if ( $verbose );
+        }
+        $have_seen_trip_id{$best_trip_id} = 1;
     }
 
     printf STDERR "\n"  if ( $verbose );
