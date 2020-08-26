@@ -13,7 +13,16 @@ DB="ptna-gtfs-sqlite.db"
 
 WORK_BASE_DIR="/osm/ptna/work"
 
-network_dir=$(dirname $PWD)
+GTFS_DIR=$PWD
+
+RELEASE_DATE=$(sqlite3 $DB "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+
+if [ -n "$RELEASE_DATE" ]
+then
+    RELEASE_DATE=$(basename $GTFS_DIR)
+fi
+
+network_dir=$(dirname $GTFS_DIR)
 
 D3=$(basename $network_dir)
 
@@ -25,14 +34,18 @@ D1=$(basename $D1_path)
 
 if [ "$D1" = "gtfs-networks" ]
 then
-    TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
-    PREVIOUS_DB="$WORK_BASE_DIR/$D2/$D2-$D3-previous-$DB"
-    LONGTERM_DB="$WORK_BASE_DIR/$D2/$D2-$D3-long-term-$DB"
+    TARGET_DIR="$WORK_BASE_DIR/$D2"
+    TARGET_SYM="$D2-$D3-$DB"
+    PREVIOUS_SYM="$D2-$D3-previous-$DB"
+    #LONGTERM_SYM="$D2-$D3-long-term-$DB"
+    WITHDATE_DB="$D2-$D3-$RELEASE_DATE-$DB"
     COUNTRY=$D2
 else
-    TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
-    PREVIOUS_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-previous-$DB"
-    LONGTERM_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-long-term-$DB"
+    TARGET_DIR="$WORK_BASE_DIR/$D1/$D2"
+    TARGET_SYM="$D1-$D2-$D3-$DB"
+    PREVIOUS_SYM="$D1-$D2-$D3-previous-$DB"
+    #LONGTERM_SYM="$D1-$D2-$D3-long-term-$DB"
+    WITHDATE_DB="$D1-$D2-$D3-$RELEASE_DATE-$DB"
     COUNTRY=$D1
 fi
 
@@ -43,49 +56,68 @@ else
     use_language=en
 fi
 
-if [ "$1" = "-lt" ]
+echo
+echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as with 'date' = $RELEASE_DATE"
+
+echo
+echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB"
+rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB
+
+cd $TARGET_DIR
+
+if [ "$1" = "-n" ]
 then
-    echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as Long-Term"
 
-    if [ "$use_language" = "de" ]
+    echo
+    echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as 'newest'"
+
+    former_newest=$(readlink $TARGET_SYM)
+
+    echo
+    echo $(date '+%Y-%m-%d %H:%M:%S') "remove symbolic link 'newest' (rm -f $TARGET_SYM)"
+    rm -f $TARGET_SYM
+
+    echo
+    echo $(date '+%Y-%m-%d %H:%M:%S') "set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
+    ln -s $WITHDATE_DB $TARGET_SYM
+
+    if [ -n "$former_newest" ]
     then
-        new_comment="Dieses ist Langzeit-Version der GTFS-Daten"
-    else
-        new_comment="This is the long-term version of the GTFS data"
-    fi
+        echo
+        echo $(date '+%Y-%m-%d %H:%M:%S') "remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
+        rm -f $PREVIOUS_SYM
 
-    sqlite3 previous.db "UPDATE ptna set comment='$new_comment' WHERE id=1;"
+        echo
+        echo $(date '+%Y-%m-%d %H:%M:%S') "set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
+        ln -s $former_newest $PREVIOUS_SYM
 
-    sqlite3 previous.db "SELECT comment FROM ptna WHERE id=1;"
-
-    echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $DB $LONGTERM_DB"
-    rsync -tvu $DB $LONGTERM_DB
-else
-    if [ -f $TARGET_DB ]
-    then
-        rm -f previous.db
-
-        echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $TARGET_DB previous.db"
-        rsync -tvu $TARGET_DB previous.db
-
-        old_release_date=$(sqlite3 previous.db "SELECT release_date FROM ptna WHERE id=1;")
-        echo $(date '+%Y-%m-%d %H:%M:%S') "Release date of former DB: $old_release_date"
+        RELEASE_DATE=$(sqlite3 $PREVIOUS_SYM "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
         if [ "$use_language" = "de" ]
         then
-            new_comment="Dieses ist eine ältere Version der GTFS-Daten: $old_release_date"
+            new_comment="Dieses ist eine ältere Version der GTFS-Daten: $RELEASE_DATE"
         else
-            new_comment="This is an older version of the GTFS data: $old_release_date"
+            new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
         fi
 
-        sqlite3 previous.db "UPDATE ptna set comment='$new_comment' WHERE id=1;"
-
-        sqlite3 previous.db "SELECT comment FROM ptna WHERE id=1;"
-
-        echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu previous.db $PREVIOUS_DB"
-        rsync -tvu previous.db $PREVIOUS_DB
+        echo
+        echo $(date '+%Y-%m-%d %H:%M:%S') "update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
+        sqlite3 $PREVIOUS_SYM "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
     fi
 
-    echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $DB $TARGET_DB"
-    rsync -tvu $DB $TARGET_DB
+elif [ "$1" = "-o" ]
+then
+    if [ "$use_language" = "de" ]
+    then
+        new_comment="Dieses ist eine ältere Version der GTFS-Daten: $RELEASE_DATE"
+    else
+        new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
+    fi
+
+    echo
+    echo $(date '+%Y-%m-%d %H:%M:%S') "update comment='$new_comment' for this old version $WITHDATE_DB"
+    sqlite3 $WITHDATE_DB "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+
 fi
+
+cd $GTFS_DIR
