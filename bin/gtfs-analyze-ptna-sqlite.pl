@@ -230,8 +230,8 @@ sub FindStopIdListAsString {
     $sth->execute( $trip_id );
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
-            return $row[0];
+        if ( $row[0] ) {
+            return '|' . $row[0] . '|';
         }
     }
 
@@ -259,8 +259,8 @@ sub FindStopNameListAsString {
     $sth->execute( $trip_id );
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
-            return $row[0];
+        if ( $row[0] ) {
+            return '|' . $row[0] . '|';
         }
     }
 
