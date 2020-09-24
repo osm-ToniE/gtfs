@@ -401,6 +401,8 @@ sub NormalizeString {
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
             $normalized =~ s/Brunnthal,\s*E\.-Sänger-Ring/Brunnthal, Eugen-Sänger-Ring/g;
             $normalized =~ s/M\.-Haslbeck/Michael-Haslbeck/g;
+            $normalized =~ s/W\.-Heisenberg-W\./Werner-Heisenberg-Weg/g;
+            $normalized =~ s/Wernh\.-v\.-Braun/Wernher-von-Braun/g;
             $normalized =~ s/M\.\s*Schwaben,\s*Wittelsb\.Weg/Markt Schwaben, Wittelsbacher Weg/g;
             $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
             $normalized =~ s/Unter\.\s*Markt/Unterer Markt/g;
