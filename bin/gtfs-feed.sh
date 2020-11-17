@@ -105,7 +105,7 @@ then
 
                 if [ "$touch_n_e" = "true" ]
                 then
-                    echo "touch $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                    touch $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db
                 fi
             fi
         fi
