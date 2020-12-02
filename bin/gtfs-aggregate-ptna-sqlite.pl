@@ -95,7 +95,6 @@ printf STDERR "%s Found valid trips: %d\n", get_time(), scalar(@trip_ids_are_val
 
 printf STDERR "%s Find  Unique Trip-IDs\n", get_time();
 CreatePtnaTripsTable();
-CreateTempTripsTable();
 @unique_trip_ids = FindUniqueTripIds( \@trip_ids_are_valid );
 printf STDERR "%s Found Unique Trip-IDs: %d \n", get_time(), scalar(@unique_trip_ids);
 
@@ -279,27 +278,6 @@ sub FindValidTripIdsOfRouteId {
     }
 
     return @return_array;
-}
-
-
-#############################################################################################
-#
-#
-#
-
-sub CreateTempTripsTable {
-
-    my $sth = undef;
-
-    $sth = $dbh_temp->prepare( "DROP TABLE IF EXISTS temp_trips;" );
-    $sth->execute();
-
-    $sth = $dbh_temp->prepare( "CREATE TABLE temp_trips (stop_list TEXT DEFAULT '' PRIMARY KEY UNIQUE, trip_id TEXT DEFAULT '');" );
-    $sth->execute();
-
-    $dbh_temp->commit();
-
-    return 0;
 }
 
 
@@ -494,35 +472,57 @@ sub FindStopIdListAsString {
 #
 
 sub GetTripIdWithBestServiceInterval {
-    my @trip_id_array  = @_;
+    my @trip_id_array   = @_;
 
-    if ( scalar(@trip_id_array) > 900 ) {
-        printf STDERR "GetTripIdWithBestServiceInterval( %s, ... ): too many trip_ids %d, limiting to 900\n", $trip_id_array[0], scalar(@trip_id_array);
-        @trip_id_array = splice( @trip_id_array, 0, 900 );
-    }
+    my $ret_val         = '';
 
-    my $sth = undef;
-    my @row = ();
-    my $where_clause = join( '', map{'? OR trip_id='} @trip_id_array );
-       $where_clause =~ s/ OR trip_id=$//;
-    my $sql = sprintf( "SELECT trips.trip_id
-                        FROM   trips
-                        JOIN   calendar ON trips.service_id = calendar.service_id
-                        WHERE  trip_id=%s
-                        ORDER  BY calendar.end_date DESC, calendar.start_date ASC LIMIT 1;", $where_clause );
-#    printf STDERR "%s\n", $sql;
-    $sth = $dbh->prepare( $sql );
-    $sth->execute( @trip_id_array );
+    my @work_array      = ();
+    my $original_size   = scalar(@trip_id_array);
+    my $remaining       = 0;
+    my $best_start_date = 99991231;
+    my $best_end_date   = 19700101;
 
-    while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
-            # printf STDERR "%s -> %s\n", $trip_id_array[0], $row[0] if ( $trip_id_array[0] != $row[0] );
-            return $row[0];
+    while ( scalar(@trip_id_array) ) {
+
+        if ( scalar(@trip_id_array) > 900 ) {
+            #printf STDERR "GetTripIdWithBestServiceInterval( 0 => %s, ..., 899 => %s, 900 => %s, 901 => %s ): many trip_ids %d, limiting to 900\n", $trip_id_array[0], $trip_id_array[899], $trip_id_array[900], $trip_id_array[901], scalar(@trip_id_array);
+            @work_array     = splice( @trip_id_array, 0, 900 );
+            $remaining      = scalar(@trip_id_array) - 900;
+            @trip_id_array  = splice( @trip_id_array, 0, -$remaining );
+        } else {
+            #printf STDERR "GetTripIdWithBestServiceInterval( 0 => %s, ..., %d => %s ): trip_ids %d\n", $trip_id_array[0], $#trip_id_array,  $trip_id_array[$#trip_id_array], scalar(@trip_id_array);
+            @work_array     = @trip_id_array;
+            @trip_id_array  = ();
+            $remaining      = 0;
+        }
+
+        my $sth = undef;
+        my @row = ();
+        my $where_clause = join( '', map{'? OR trip_id='} @work_array );
+        $where_clause =~ s/ OR trip_id=$//;
+        my $sql = sprintf( "SELECT trips.trip_id, calendar.start_date, calendar.end_date
+                            FROM   trips
+                            JOIN   calendar ON trips.service_id = calendar.service_id
+                            WHERE  trip_id=%s
+                            ORDER  BY calendar.end_date DESC, calendar.start_date ASC LIMIT 1;", $where_clause );
+        #printf STDERR "%s\n", $sql;
+        $sth = $dbh->prepare( $sql );
+        $sth->execute( @work_array );
+
+        while ( @row = $sth->fetchrow_array() ) {
+            if ( $row[0] ) {
+                #printf STDERR "??? trip_id = %s: start_date = %s, end_date = %s, out of = %s\n", $row[0], $row[1], $row[2], scalar(@work_array) if ( $original_size > 900 );
+                if ( $row[1] < $best_start_date && $row[2] > $best_end_date ) {
+                    $ret_val         = $row[0];
+                    $best_start_date = $row[1];
+                    $best_end_date   = $row[2]
+                }
+            }
         }
     }
 
-    return '';
-
+    #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_val, $best_start_date, $best_end_date  if ( $original_size > 900 );
+    return $ret_val;
 
 }
 
