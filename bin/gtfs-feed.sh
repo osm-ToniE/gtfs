@@ -108,6 +108,13 @@ then
                     touch $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db
                 fi
             fi
+        else
+            if [ -z "$RELEASE_DATE" ]
+            then
+                echo "$FEED_NAME - unknown release date"
+            else
+                echo "$PWD - unknown feed name"
+            fi
         fi
     else
         FEED_NAME=$(echo $PWD | sed -e "s|^$GTFS_FEEDS_LOC/||" -e 's|/|-|g')
