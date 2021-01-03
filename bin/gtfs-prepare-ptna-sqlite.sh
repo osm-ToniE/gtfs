@@ -6,7 +6,7 @@ SQ_OPTIONS="-csv -header"
 
 rm -f $DB
 
-rm -f agency.txt calendar.txt calendar_dates.txt feed_info.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
+#rm -f agency.txt calendar.txt calendar_dates.txt fare_attributes.txt fare_rules.txt feed_info.txt frequencies.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
 
 #
 # unzip the GTFS file, overwriting existing ones
