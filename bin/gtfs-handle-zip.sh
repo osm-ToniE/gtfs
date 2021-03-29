@@ -48,8 +48,8 @@ gtfs-prepare-ptna-sqlite.sh $*
 echo $(date '+%Y-%m-%d %H:%M:%S') "start aggregation $*"
 gtfs-aggregate-ptna-sqlite.pl $*
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis --language=$use_language $*"
-gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
+echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis $*"
+gtfs-analyze-ptna-sqlite.pl $*
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization --language=$use_language $*"
-gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
+echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $*"
+gtfs-normalize-ptna-sqlite.pl $*

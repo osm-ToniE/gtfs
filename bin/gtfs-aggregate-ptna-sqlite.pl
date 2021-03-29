@@ -602,10 +602,10 @@ sub RenameAndDropShapesTable {
 
     my $sth = undef;
 
-    $sth  = $dbh->prepare( "DROP TABLE IF EXISTS shapes;" );
+    $sth = $dbh->prepare( "DROP TABLE IF EXISTS shapes;" );
     $sth->execute();
 
-    $sth  = $dbh->prepare( "ALTER TABLE new_shapes RENAME TO shapes;" );
+    $sth = $dbh->prepare( "ALTER TABLE new_shapes RENAME TO shapes;" );
     $sth->execute();
 
     $sth = $dbh->prepare( "CREATE INDEX idx_shape_id ON  shapes (shape_id);" );

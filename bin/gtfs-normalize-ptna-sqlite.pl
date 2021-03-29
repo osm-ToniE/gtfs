@@ -160,7 +160,7 @@ sub ClearNormalizationRouteLongName {
     my $has_normalized_column   = undef;
     my @row                     = ();
 
-    $sth = $dbh->prepare( "PRAGMA table_info(routes);" );
+    $sth = $dbh->prepare( "PRAGMA table_info(ptna_routes);" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -171,7 +171,7 @@ sub ClearNormalizationRouteLongName {
     }
 
     if ( $has_normalized_column ) {
-        $sth  = $dbh->prepare( "UPDATE routes SET normalized_route_long_name='' WHERE normalized_route_long_name!='';" );
+        $sth  = $dbh->prepare( "UPDATE ptna_routes SET normalized_route_long_name='' WHERE normalized_route_long_name!='';" );
         $sth->execute();
     }
 
@@ -200,7 +200,7 @@ sub NormalizeRouteLongName {
 
     printf STDERR "Routes normalized: %06d of %06d\r", $number_of_normalized, $number_of_routes     if ( $verbose );
 
-    $sth = $dbh->prepare( "PRAGMA table_info(routes);" );
+    $sth = $dbh->prepare( "PRAGMA table_info(ptna_routes);" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -211,7 +211,7 @@ sub NormalizeRouteLongName {
     }
 
     if ( !$has_normalized_column ) {
-        $sth = $dbh->prepare( "ALTER TABLE routes ADD normalized_route_long_name TEXT DEFAULT '';" );
+        $sth = $dbh->prepare( "ALTER TABLE ptna_routes ADD normalized_route_long_name TEXT DEFAULT '';" );
         $sth->execute();
     }
 
@@ -229,7 +229,7 @@ sub NormalizeRouteLongName {
     $sth = $dbh->prepare( "SELECT route_long_name,route_id FROM routes;" );
     $sth->execute();
 
-    $sth2 = $dbh->prepare( "UPDATE routes SET normalized_route_long_name=? WHERE route_id=?;" );
+    $sth2 = $dbh->prepare( "INSERT OR IGNORE INTO ptna_routes (normalized_route_long_name,route_id) VALUES (?,?);" );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] && $row[1]  ) {
@@ -269,7 +269,7 @@ sub ClearNormalizationStopName {
     my @row                     = ();
 
 
-    $sth = $dbh->prepare( "PRAGMA table_info(stops);" );
+    $sth = $dbh->prepare( "PRAGMA table_info(ptna_stops);" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -280,7 +280,7 @@ sub ClearNormalizationStopName {
     }
 
     if ( $has_normalized_column ) {
-        $sth = $dbh->prepare( "UPDATE stops SET normalized_stop_name='' WHERE normalized_stop_name!='';" );
+        $sth = $dbh->prepare( "UPDATE ptna_stops SET normalized_stop_name='' WHERE normalized_stop_name!='';" );
         $sth->execute();
     }
 
@@ -309,7 +309,7 @@ sub NormalizeStopName {
 
     printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
 
-    $sth = $dbh->prepare( "PRAGMA table_info(stops);" );
+    $sth = $dbh->prepare( "PRAGMA table_info(ptna_stops);" );
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -320,7 +320,7 @@ sub NormalizeStopName {
     }
 
     if ( !$has_normalized_column ) {
-        $sth = $dbh->prepare( "ALTER TABLE stops ADD normalized_stop_name TEXT DEFAULT '';" );
+        $sth = $dbh->prepare( "ALTER TABLE ptna_stops ADD normalized_stop_name TEXT DEFAULT '';" );
         $sth->execute();
     }
 
@@ -338,7 +338,7 @@ sub NormalizeStopName {
     $sth = $dbh->prepare( "SELECT stop_name,stop_id FROM stops;" );
     $sth->execute();
 
-    $sth2 = $dbh->prepare( "UPDATE stops SET normalized_stop_name=? WHERE stop_id=?;" );
+    $sth2 = $dbh->prepare( "INSERT OR IGNORE INTO ptna_stops (normalized_stop_name,stop_id) VALUES (?,?);" );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] && $row[1]  ) {

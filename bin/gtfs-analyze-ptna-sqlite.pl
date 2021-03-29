@@ -51,25 +51,6 @@ if ( $ARGV[0] ) {
     $DB_NAME = $ARGV[0];
 }
 
-
-####################################################################################################################
-#
-#
-#
-
-my $subroute_of          = "Sub-route of";
-my $different_ids        = "Trips have identical Stop-Names but different Stop-Ids";
-my $suspicious_start_for = "Suspicious start of itinerary: are there any passengers between 1st and 2nd stop";
-my $suspicious_end_for   = "Suspicious end of itinerary: does the vehicle make a u-turn with or without passengers";
-
-if ( $language eq 'de' ) {
-    $subroute_of          = "Teilroute von";
-    $different_ids        = "Fahrten haben identische Stop-Namen aber unterschiedliche Stop-Ids";
-    $suspicious_start_for = "Verdächtiger Anfang der Fahrt: werden zwischen erster und zweiter Haltestelle Passagiere befördert";
-    $suspicious_end_for   = "Verdächtiges Ende der Fahrt: wendet das Fahrzeug an der Endhaltestelle mit oder ohne Passagiere";
-}
-
-
 ####################################################################################################################
 #
 #
@@ -312,29 +293,26 @@ sub MarkSuspiciousStart {
     if ( $first_stop_name && $second_stop_name &&
          $first_stop_name eq $second_stop_name    ) {
 
-        $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                FROM     trips
-                                WHERE    trip_id=?;" );
-
-        $sthS->execute( $trip_id );
-
-        @row = $sthS->fetchrow_array();
-        $existing_comment = '';
-        if ( $row[0] ) {
-            $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-        }
-
-        $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-        $sth->execute( $today, $existing_comment . '::SUSPSTART::' . $suspicious_start_for . ' (stop_name)?', $trip_id );
+        $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_start='stop_name' WHERE trip_id=?;" );
+        $sth->execute( $trip_id );
+        $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_start) VALUES (?,'stop_name');" );
+        $sth->execute( $trip_id );
 
         printf STDERR "Suspicious start per name for: %s\n", $trip_id  if ( $debug );
 
     } elsif ( $first_stop_id && $second_stop_id ) {
 
-        # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
+        if ( $first_stop_id eq $second_stop_id ) {
 
-        if ( $first_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+            $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_start='stop_id' WHERE trip_id=?;" );
+            $sth->execute( $trip_id );
+            $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_start) VALUES (?,'stop_id');" );
+            $sth->execute( $trip_id );
 
+            printf STDERR "Suspicious start per stop_id for: %s\n", $trip_id  if ( $debug  );
+
+        } elsif ( $first_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+            # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
             my $string1 = $1 . ':' . $2 . ':' . $3;
 
             if ( $second_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
@@ -343,20 +321,10 @@ sub MarkSuspiciousStart {
 
                 if (  $string2 eq $string1 ) {
 
-                    $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                            FROM     trips
-                                            WHERE    trip_id=?;" );
-
-                    $sthS->execute( $trip_id );
-
-                    @row = $sthS->fetchrow_array();
-                    $existing_comment = '';
-                    if ( $row[0] ) {
-                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-                    }
-
-                    $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-                    $sth->execute( $today, $existing_comment . '::SUSPSTART::' . $suspicious_start_for . ' (IFOPT)?', $trip_id );
+                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_start='stop_id' WHERE trip_id=?;" );
+                    $sth->execute( $trip_id );
+                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_start) VALUES (?,'stop_id');" );
+                    $sth->execute( $trip_id );
 
                     printf STDERR "Suspicious start per IFOPT for: %s\n", $trip_id  if ( $debug );
                 }
@@ -412,30 +380,26 @@ sub MarkSuspiciousEnd {
     if ( $last_stop_name && $second_last_stop_name &&
          $last_stop_name eq $second_last_stop_name    ) {
 
-        $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                FROM     trips
-                                WHERE    trip_id=?;" );
-
-        $sthS->execute( $trip_id );
-
-        @row = $sthS->fetchrow_array();
-        $existing_comment = '';
-        if ( $row[0] ) {
-            $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-        }
-
-        $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-
-        $sth->execute( $today, $existing_comment . '::SUSPEND::' . $suspicious_end_for . ' (stop_name)?', $trip_id );
+        $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_end='stop_name' WHERE trip_id=?;" );
+        $sth->execute( $trip_id );
+        $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_end) VALUES (?,'stop_name');" );
+        $sth->execute( $trip_id );
 
         printf STDERR "Suspicious end per name for: %s\n", $trip_id  if ( $debug  );
 
     } elsif ( $last_stop_id && $second_last_stop_id ) {
 
-        # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
+        if ( $last_stop_id eq $second_last_stop_id ) {
 
-        if ( $second_last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+            $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_end='stop_id' WHERE trip_id=?;" );
+            $sth->execute( $trip_id );
+            $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_end) VALUES (?,'stop_id');" );
+            $sth->execute( $trip_id );
 
+            printf STDERR "Suspicious end per stop_id for: %s\n", $trip_id  if ( $debug  );
+
+        } elsif ( $second_last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
+            # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
             my $string1 = $1 . ':' . $2 . ':' . $3;
 
             if ( $last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
@@ -444,20 +408,10 @@ sub MarkSuspiciousEnd {
 
                 if (  $string2 eq $string1 ) {
 
-                    $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                            FROM     trips
-                                            WHERE    trip_id=?;" );
-
-                    $sthS->execute( $trip_id );
-
-                    @row = $sthS->fetchrow_array();
-                    $existing_comment = '';
-                    if ( $row[0] ) {
-                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-                    }
-
-                    $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
-                    $sth->execute( $today, $existing_comment . '::SUSPEND::' . $suspicious_end_for . ' (IFOPT)?', $trip_id );
+                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_end='IFOPT' WHERE trip_id=?;" );
+                    $sth->execute( $trip_id );
+                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_end) VALUES (?,'IFOPT');" );
+                    $sth->execute( $trip_id );
 
                     printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $debug  );
                 }
@@ -487,11 +441,8 @@ sub MarkSubRoutesBasedOnId {
 
         my @stop_lists = keys( %{$hash_ref} );
 
-        my $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                   FROM     trips
-                                   WHERE    trip_id=?;" );
-
-        my $sthU = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
+        my $sthU = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET subroute_of=? WHERE trip_id=?;" );
+        my $sthI = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (subroute_of,trip_id) VALUES (?,?);" );
 
         foreach $stoplist1 (@stop_lists) {
 
@@ -508,15 +459,8 @@ sub MarkSubRoutesBasedOnId {
 
             if ( scalar(@subroute_of) ) {
 
-                $sthS->execute( ${$hash_ref}{$stoplist1} );
-
-                my @row = $sthS->fetchrow_array();
-                my $existing_comment = '';
-                if ( $row[0] ) {
-                    $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-                }
-
-                $sthU->execute( $today, $existing_comment . '::SUBR::' . $subroute_of . ' ' . join(', ',@subroute_of), ${$hash_ref}{$stoplist1} );
+                $sthU->execute( join(',',@subroute_of), ${$hash_ref}{$stoplist1} );
+                $sthI->execute( join(',',@subroute_of), ${$hash_ref}{$stoplist1} );
 
                 printf STDERR "%s is sub-route of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $debug );
             }
@@ -544,11 +488,8 @@ sub MarkIdenticalRoutesBasedOnName {
 
        my @stop_name_lists = keys( %{$name_hash_ref} );
 
-        my $sthS = $dbh->prepare( "SELECT   ptna_comment
-                                   FROM     trips
-                                   WHERE    trip_id=?;" );
-
-        my $sthU = $dbh->prepare( "UPDATE trips SET ptna_changedate=?,ptna_comment=? WHERE trip_id=?;" );
+        my $sthU = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET same_names_but_different_ids=? WHERE trip_id=?;" );
+        my $sthI = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (same_names_but_different_ids,trip_id) VALUES (?,?);" );
 
         foreach $stopnamelist (@stop_name_lists) {
 
@@ -556,15 +497,8 @@ sub MarkIdenticalRoutesBasedOnName {
 
                 foreach $trip_id ( @{${$name_hash_ref}{$stopnamelist}} ) {
 
-                    $sthS->execute( $trip_id );
-
-                    my @row = $sthS->fetchrow_array();
-                    my $existing_comment = '';
-                    if ( $row[0] ) {
-                        $existing_comment = decode( 'utf8',  $row[0] ) . "\n";
-                    }
-
-                    $sthU->execute( $today, $existing_comment . '::IDENT::' . $different_ids . ' ' . join(', ',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
+                    $sthU->execute( join(',',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
+                    $sthI->execute( join(',',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
 
                     printf STDERR "%s have same stop names: %s\n", $trip_id, join( ', ', @{${$name_hash_ref}{$stopnamelist}} ) if ( $verbose );
                 }
@@ -595,13 +529,9 @@ sub CreatePtnaAnalysis {
     $sth->execute();
 
     $sth = $dbh->prepare( "CREATE TABLE ptna_analysis (
-                                        'id'                                    INTEGER DEFAULT 0 PRIMARY KEY,
-                                        'date'                                  TEXT,
-                                        'duration'                              INTEGER DEFAULT 0,
-                                        'count_subroute'                        INTEGER DEFAULT 0,
-                                        'count_same_names_but_different_ids'    INTEGER DEFAULT 0,
-                                        'count_suspicious_start'                INTEGER DEFAULT 0,
-                                        'count_suspicious_end'                  INTEGER DEFAULT 0 );"
+                                        'id'          INTEGER DEFAULT 0 PRIMARY KEY,
+                                        'date'        TEXT,
+                                        'duration'    INTEGER DEFAULT 0 );"
                          );
     $sth->execute();
 
@@ -626,7 +556,7 @@ sub CreatePtnaAnalysis {
 
 sub ClearAllPtnaCommentsForTrips {
 
-    my $sth = $dbh->prepare( "UPDATE trips SET ptna_changedate='',ptna_is_invalid='',ptna_is_wrong='',ptna_comment='';" );
+    my $sth = $dbh->prepare( "DELETE FROM ptna_trips_comments;" );
 
     $sth->execute();
 
@@ -646,39 +576,6 @@ sub UpdatePtnaAnalysis {
     my $stmt    = '';
     my $sth     = undef;
     my @row     = ();
-
-
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%%%s%%';", $subroute_of );
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
-    @row = $sth->fetchrow_array();
-    $stmt = sprintf( "UPDATE ptna_analysis SET count_subroute='%s' WHERE id=1;", $row[0] );
-    $sth  = $dbh->prepare( $stmt );
-    $sth->execute();
-
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips  WHERE ptna_comment LIKE '%%%s%%';", $different_ids );
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
-    @row = $sth->fetchrow_array();
-    $stmt = sprintf( "UPDATE ptna_analysis SET count_same_names_but_different_ids='%s' WHERE id=1;", $row[0] );
-    $sth  = $dbh->prepare( $stmt );
-    $sth->execute();
-
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips WHERE ptna_comment LIKE '%%%s%%';", $suspicious_start_for );
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
-    @row = $sth->fetchrow_array();
-    $stmt = sprintf( "UPDATE ptna_analysis SET count_suspicious_start='%s' WHERE id=1;", $row[0] );
-    $sth  = $dbh->prepare( $stmt );
-    $sth->execute();
-
-    $stmt = sprintf( "SELECT COUNT(*) FROM trips WHERE ptna_comment LIKE '%%%s%%';", $suspicious_end_for );
-    $sth = $dbh->prepare( $stmt );
-    $sth->execute();
-    @row = $sth->fetchrow_array();
-    $stmt = sprintf( "UPDATE ptna_analysis SET count_suspicious_end='%s' WHERE id=1;", $row[0] );
-    $sth  = $dbh->prepare( $stmt );
-    $sth->execute();
 
     $stmt = sprintf( "UPDATE ptna_analysis SET duration=%d WHERE id=1;", $seconds );
     $sth  = $dbh->prepare( $stmt );
