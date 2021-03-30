@@ -101,6 +101,7 @@ printf STDERR "%s Found Unique Trip-IDs: %d \n", get_time(), scalar(@unique_trip
 printf STDERR "%s Create new Tables\n", get_time();
 CreateNewShapesTable();
 CreateNewStopTimesTable();
+CreateNewStopsTable();
 CreateNewTripsTable();
 CreateNewRoutesTable();
 printf STDERR "%s New Tables created\n", get_time();
@@ -112,6 +113,10 @@ printf STDERR "%s New Shapes Table filled\n", get_time();
 printf STDERR "%s Fill New Stop Times Table\n", get_time();
 FillNewStopTimesTable( \@unique_trip_ids );
 printf STDERR "%s New Stop Times Table filled\n", get_time();
+
+printf STDERR "%s Fill New Stops Table\n", get_time();
+FillNewStopsTable();        # no parameter, will read stop_ids from from new_stop_times to findvalid stop_ids
+printf STDERR "%s New Stops Table filled\n", get_time();
 
 printf STDERR "%s Fill New Trips Table\n", get_time();
 FillNewTripsTable(     \@unique_trip_ids );
@@ -125,6 +130,7 @@ StoreImprovements();
 
 printf STDERR "%s Rename New Tables\n", get_time();
 RenameAndDropShapesTable();
+RenameAndDropStopsTable();
 RenameAndDropStopTimesTable();
 RenameAndDropTripsTable();
 RenameAndDropRoutesTable();
@@ -622,6 +628,74 @@ sub RenameAndDropShapesTable {
 #
 #
 
+sub CreateNewStopsTable {
+
+    my $sth = undef;
+    my @row = ();
+
+    $sth = $dbh->prepare( "DROP TABLE IF EXISTS new_stops;" );
+    $sth->execute();
+
+    $sth = $dbh->prepare( "SELECT sql FROM sqlite_master WHERE type='table' AND name='stops';" );
+    $sth->execute();
+
+    @row = $sth->fetchrow_array();
+
+    if ( $row[0] ) {
+        $row[0] =~ s/CREATE TABLE stops/CREATE TABLE new_stops/;
+        $sth    = $dbh->prepare( $row[0] );
+        $sth->execute();
+    }
+
+    $dbh->commit();
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub FillNewStopsTable {
+
+    my $sth       = $dbh->prepare( "INSERT INTO new_stops SELECT * FROM stops WHERE stop_id IN ( SELECT DISTINCT stop_id FROM new_stop_times );" );
+
+    $sth->execute();
+
+    $dbh->commit();
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub RenameAndDropStopsTable {
+
+    my $sth = undef;
+
+    $sth = $dbh->prepare( "DROP TABLE IF EXISTS stops;" );
+    $sth->execute();
+
+    $sth = $dbh->prepare( "ALTER TABLE new_stops RENAME TO stops;" );
+    $sth->execute();
+
+    $dbh->commit();
+
+    return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
 sub CreateNewStopTimesTable {
 
     my $sth = undef;
@@ -860,6 +934,8 @@ sub StoreImprovements {
     my $routes_after        = 0;
     my $trips_before        = 0;
     my $trips_after         = 0;
+    my $stops_before        = 0;
+    my $stops_after         = 0;
     my $stop_times_before   = 0;
     my $stop_times_after    = 0;
     my $shapes_before       = 0;
@@ -882,6 +958,8 @@ sub StoreImprovements {
                                    'routes_after'       INTEGER DEFAULT 0,
                                    'trips_before'       INTEGER DEFAULT 0,
                                    'trips_after'        INTEGER DEFAULT 0,
+                                   'stops_before'       INTEGER DEFAULT 0,
+                                   'stops_after'        INTEGER DEFAULT 0,
                                    'stop_times_before'  INTEGER DEFAULT 0,
                                    'stop_times_after'   INTEGER DEFAULT 0,
                                    'shapes_before'      INTEGER DEFAULT 0,
@@ -909,6 +987,16 @@ sub StoreImprovements {
     @row                = $sth->fetchrow_array();
     $trips_after        = $row[0]   if ( defined($row[0]) );
 
+    $sth                = $dbh->prepare( "SELECT COUNT(*) FROM stops;" );
+    $sth->execute();
+    @row                = $sth->fetchrow_array();
+    $stops_before       = $row[0]   if ( defined($row[0]) );
+
+    $sth                = $dbh->prepare( "SELECT COUNT(*) FROM new_stops;" );
+    $sth->execute();
+    @row                = $sth->fetchrow_array();
+    $stops_after        = $row[0]   if ( defined($row[0]) );
+
     $sth                = $dbh->prepare( "SELECT COUNT(*) FROM stop_times;" );
     $sth->execute();
     @row                = $sth->fetchrow_array();
@@ -930,9 +1018,9 @@ sub StoreImprovements {
     $shapes_after       = $row[0]   if ( defined($row[0]) );
 
     $sth                = $dbh->prepare( "INSERT INTO ptna_aggregation
-                                                 (id,date,routes_before,routes_after,trips_before,trips_after,stop_times_before,stop_times_after,shapes_before,shapes_after)
-                                          VALUES (1, ?,   ?,            ?,           ?,           ?,          ?,                ?,               ?,            ?           );" );
-    $sth->execute( $today, $routes_before, $routes_after, $trips_before, $trips_after, $stop_times_before, $stop_times_after, $shapes_before, $shapes_after );
+                                                 (id,date,routes_before,routes_after,trips_before,trips_after,stops_before,stops_after,stop_times_before,stop_times_after,shapes_before,shapes_after)
+                                          VALUES (1, ?,   ?,            ?,           ?,           ?,          ?,           ?,          ?,                ?,               ?,            ?           );" );
+    $sth->execute( $today, $routes_before, $routes_after, $trips_before, $trips_after, $stops_before, $stops_after, $stop_times_before, $stop_times_after, $shapes_before, $shapes_after );
 
     $sth                = $dbh->prepare( "UPDATE ptna SET aggregated=? WHERE id=1;" );
     $sth->execute( $today );

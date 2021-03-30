@@ -171,7 +171,7 @@ sub ClearNormalizationRouteLongName {
     }
 
     if ( $has_normalized_column ) {
-        $sth  = $dbh->prepare( "UPDATE ptna_routes SET normalized_route_long_name='' WHERE normalized_route_long_name!='';" );
+        $sth  = $dbh->prepare( "UPDATE ptna_routes SET normalized_route_long_name='' WHERE normalized_route_long_name != '';" );
         $sth->execute();
     }
 
@@ -280,7 +280,7 @@ sub ClearNormalizationStopName {
     }
 
     if ( $has_normalized_column ) {
-        $sth = $dbh->prepare( "UPDATE ptna_stops SET normalized_stop_name='' WHERE normalized_stop_name!='';" );
+        $sth = $dbh->prepare( "UPDATE ptna_stops SET normalized_stop_name='' WHERE normalized_stop_name != '';" );
         $sth->execute();
     }
 
