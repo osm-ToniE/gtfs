@@ -7,7 +7,7 @@
 # expected files: get_release_date.sh, get_release_url.sh, cleanup.sh
 #
 
-TEMP=$(getopt -o cdDfTuv --long clean,date-print,date-check,feed-print,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
+TEMP=$(getopt -o acdDfnoPTuv --long analyze,clean,date-print,date-check,feed-print,new,old,publish,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
 
 if [ $? != 0 ] ; then echo $(date "+%Y-%m-%d %H:%M:%S") "Terminating..."  >> /dev/stderr ; exit 2 ; fi
 
@@ -15,13 +15,17 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -c|--clean)                 clean=true         ; shift ;;
-        -d|--date)                  date_print=true    ; shift ;;
-        -D|--date-check)            date_check=true    ; shift ;;
-        -f|--feed)                  feed_print=true    ; shift ;;
-        -T|--touch-non-existent)    touch_n_e=true     ; shift ;;
-        -u|--url)                   url_print=true     ; shift ;;
-        -v|--verbose)               verbose='-v'       ; shift ;;
+        -a|--analyzed)              analyze=true        ; shift ;;
+        -c|--clean)                 clean=true          ; shift ;;
+        -d|--date-print)            date_print=true     ; shift ;;
+        -D|--date-check)            date_check=true     ; shift ;;
+        -f|--feed)                  feed_print=true     ; shift ;;
+        -n|--new)                   publish_as_new='-n' ; shift ;;
+        -o|--old)                   publish_as_old='-o' ; shift ;;
+        -P|--publish)               publish=true        ; shift ;;
+        -T|--touch-non-existent)    touch_n_e=true      ; shift ;;
+        -u|--url-print)             url_print=true      ; shift ;;
+        -v|--verbose)               verbose='-v'        ; shift ;;
         --) shift ; break ;;
         *) echo $(date "+%Y-%m-%d %H:%M:%S") "Internal error!" >> /dev/stderr ; exit 3 ;;
     esac
@@ -143,11 +147,54 @@ fi
 
 if [ "$url_print"  = "true" ]
 then
-    if [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Retrieving Release-URL" >> /dev/stderr
-    [ -f ./get-release-url.sh ]
+    [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Retrieving Release-URL" >> /dev/stderr
+    if [ -f ./get-release-url.sh ]
     then
         ./get-release-url.sh $verbose
     else
         echo manually >> /dev/stderr
+    fi
+fi
+
+#
+#
+#
+
+if [ "$analyze"  = "true" ]
+then
+    [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Analyzing GTFS package" >> /dev/stderr
+    if [ -f ./get-release-url.sh -a -f ./get_release-date.sh ]
+    then
+        rd=$(./get-release-date.sh)
+        ru=$(./get-release-url.sh)
+        if [ -n "$rd" -a -n "$ru" ]
+            [ -d "$rd" ] || mkdir $rd
+            cd $rd
+            wget --user-agent "PTNA script on https://ptna.openstreetmap.de" -O gtfs.zip "$ru"
+            gtfs-handle-zip.sh
+            cd ..
+        else
+            echo failed >> /dev/stderr
+        fi
+    else
+        echo manually >> /dev/stderr
+    fi
+fi
+
+#
+#
+#
+
+if [ "$publish"  = "true" ]
+then
+    [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Publishing data" >> /dev/stderr
+    rd=$(./get-release-date.sh)
+    if [ -n "$rd" -a -d "$rd" ]
+    then
+        cd $rd
+        gtfs-publish.sh $publish_as_new $publish_as_old
+        cd ..
+    else
+        echo failed >> /dev/stderr
     fi
 fi
