@@ -167,6 +167,7 @@ then
     fgrep -v agency_id agency.txt | egrep -v '^\s*$' > agency-wo-header.txt
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
     rm -f agency-wo-header.txt
 fi
 
@@ -253,6 +254,7 @@ then
             sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id=(SELECT agency_id FROM agency);"
         fi
     fi
+    sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id='???' WHERE agency_id='';"
     rm -f routes-wo-header.txt
 fi
 
