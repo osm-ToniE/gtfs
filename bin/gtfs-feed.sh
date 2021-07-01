@@ -168,6 +168,7 @@ then
         rd=$(./get-release-date.sh)
         ru=$(./get-release-url.sh)
         if [ -n "$rd" -a -n "$ru" ]
+        then
             [ -d "$rd" ] || mkdir $rd
             cd $rd
             wget --user-agent "PTNA script on https://ptna.openstreetmap.de" -O gtfs.zip "$ru"
