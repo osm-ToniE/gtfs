@@ -15,7 +15,7 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -a|--analyzed)              analyze=true        ; shift ;;
+        -a|--analyze)               analyze=true        ; shift ;;
         -c|--clean)                 clean=true          ; shift ;;
         -d|--date-print)            date_print=true     ; shift ;;
         -D|--date-check)            date_check=true     ; shift ;;
@@ -163,7 +163,7 @@ fi
 if [ "$analyze"  = "true" ]
 then
     [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Analyzing GTFS package" >> /dev/stderr
-    if [ -f ./get-release-url.sh -a -f ./get_release-date.sh ]
+    if [ -f ./get-release-url.sh -a -f ./get-release-date.sh ]
     then
         rd=$(./get-release-date.sh)
         ru=$(./get-release-url.sh)
