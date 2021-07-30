@@ -94,6 +94,8 @@ then
             elif [ -f $PTNA_WORK_LOC/$SUB_DIR/$FEED_NAME-ptna-gtfs-sqlite.db ]
             then
                 WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
+            else
+                WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
             fi
 
             if [ -f $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
