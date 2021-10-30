@@ -104,11 +104,11 @@ then
                 then
                     echo $FEED_NAME - $RELEASE_DATE - OK
                 else
-                    youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                    youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
                     echo $FEED_NAME - $youngest_real versus $RELEASE_DATE - empty file
                 fi
             else
-                youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
                 echo $FEED_NAME - $youngest_real versus $RELEASE_DATE - not yet analyzed
 
                 if [ "$touch_n_e" = "true" ]
