@@ -24,6 +24,27 @@ use DBI;
 #
 #
 
+my %route_type_may_have_only_two_stops = (
+                                            '4'    => 'Ferry',
+                                            '5'    => 'Cable tram',
+                                            '6'    => 'Aerialway',
+                                            '7'    => 'Funicular',
+                                            '108'  => 'Rail Shuttle (Within Complex)',
+                                            '711'  => 'Shuttle Bus',
+                                            '907'  => 'Aerial Lift Service',
+                                            '1000' => 'Water Transport Service',
+                                            '1100' => 'Air Service',
+                                            '1200' => 'Ferry Service',
+                                            '1300' => 'Aerial Lift Service',
+                                            '1400' => 'Funicular Service',
+                                            '1502' => 'Water Taxi Service'
+                                         );
+
+#############################################################################################
+#
+#
+#
+
 my $DB_NAME = "ptna-gtfs-sqlite.db";
 
 
@@ -107,6 +128,8 @@ foreach my $route_id ( @route_ids_of_agency ) {
         MarkSuspiciousStart( $trip_id );
 
         MarkSuspiciousEnd( $trip_id );
+
+        MarkSuspiciousNumberOfStops( $trip_id );
 
         $stop_id_list    = FindStopIdListAsString( $trip_id );
 
@@ -261,9 +284,7 @@ sub MarkSuspiciousStart {
     my $trip_id  = shift || '-';
 
     my $sth      = undef;
-    my $sthS     = undef;
     my @row      = ();
-    my $existing_comment = '';
 
     # we are only interested in the first two stops of this trip
 
@@ -348,9 +369,7 @@ sub MarkSuspiciousEnd {
     my $trip_id = shift || '-';
 
     my $sth     = undef;
-    my $sthS    = undef;
     my @row     = ();
-    my $existing_comment = '';
 
     # we are only interested in the last two stops of this trip
 
@@ -421,6 +440,52 @@ sub MarkSuspiciousEnd {
 
     $dbh->commit();
 
+}
+
+
+#############################################################################################
+#
+# check for suspicious number of stops for vehicles other than ferries, funicular, aerialway
+# Only 2 Stops? Is this really a route of a trip for the empty bus to the next job
+#
+
+sub MarkSuspiciousNumberOfStops {
+    my $trip_id = shift || '-';
+
+    my $sth     = undef;
+    my @row     = ();
+
+    # we are only interested in the number of stops for vehicles other than ferries, funicular, aerialway
+
+    $sth = $dbh->prepare( "SELECT   route_type
+                           FROM     routes
+                           JOIN     trips ON routes.route_id = trips.route_id
+                           WHERE    trip_id=?;" );
+    $sth->execute( $trip_id );
+
+    @row = $sth->fetchrow_array();
+
+    if ( scalar(@row) && !exists($route_type_may_have_only_two_stops{$row[0]}) ) {
+
+        $sth = $dbh->prepare( "SELECT   COUNT(stop_times.stop_id)
+                               FROM     stop_times
+                               JOIN     stops ON stop_times.stop_id = stops.stop_id
+                               WHERE    trip_id=?;" );
+        $sth->execute( $trip_id );
+
+        @row = $sth->fetchrow_array();
+        if ( scalar(@row) && $row[0] == 2 ) {
+
+            $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_number_of_stops='2' WHERE trip_id=?;" );
+            $sth->execute( $trip_id );
+            $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_number_of_stops) VALUES (?,'2');" );
+            $sth->execute( $trip_id );
+
+            printf STDERR "Suspicious number of stops for: %s\n", $trip_id  if ( $debug  );
+
+            $dbh->commit();
+        }
+    }
 }
 
 
