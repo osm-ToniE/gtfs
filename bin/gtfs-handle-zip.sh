@@ -53,3 +53,9 @@ gtfs-analyze-ptna-sqlite.pl $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $*"
 gtfs-normalize-ptna-sqlite.pl $*
+
+if [ -f ../post-process-ptna-sqlite.sh ]
+then
+    echo $(date '+%Y-%m-%d %H:%M:%S') "start post processing $*"
+    ../post-process-ptna-sqlite.sh
+fi
