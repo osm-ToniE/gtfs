@@ -102,14 +102,14 @@ then
             then
                 if [ -s $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
                 then
-                    echo $FEED_NAME - $RELEASE_DATE - OK
+                    printf "%-30s - %s - OK\n" $FEED_NAME $RELEASE_DATE
                 else
                     youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                    echo $FEED_NAME - $youngest_real versus $RELEASE_DATE - empty file
+                    printf "%-30s - %s versus %s - empty file\n" $FEED_NAME $youngest_real $RELEASE_DATE
                 fi
             else
                 youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                echo $FEED_NAME - $youngest_real versus $RELEASE_DATE - not yet analyzed
+                printf "%-30s - %s versus %s - not yet analyzed\n" $FEED_NAME $youngest_real $RELEASE_DATE
 
                 if [ "$touch_n_e" = "true" ]
                 then
@@ -119,14 +119,14 @@ then
         else
             if [ -z "$RELEASE_DATE" ]
             then
-                echo "$FEED_NAME - unknown release date"
+                printf "%-30s - unknown release date\n" $FEED_NAME
             else
-                echo "$PWD - unknown feed name"
+                printf "%-30s - unknown feed name\n" $PWD
             fi
         fi
     else
         FEED_NAME=$(echo $PWD | sed -e "s|^$GTFS_FEEDS_LOC/||" -e 's|/|-|g')
-        echo $FEED_NAME - manually >> /dev/stderr
+        printf "%-30s - manually\n" $FEED_NAME >> /dev/stderr
     fi
 fi
 
