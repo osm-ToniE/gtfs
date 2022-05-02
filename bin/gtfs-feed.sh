@@ -7,7 +7,9 @@
 # expected files: get_release_date.sh, get_release_url.sh, cleanup.sh
 #
 
-TEMP=$(getopt -o acdDfnoPTuv --long analyze,clean,date-print,date-check,feed-print,new,old,publish,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
+WORK_BASE_DIR="/osm/ptna/work"
+
+TEMP=$(getopt -o acdDEfnoPTuv --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
 
 if [ $? != 0 ] ; then echo $(date "+%Y-%m-%d %H:%M:%S") "Terminating..."  >> /dev/stderr ; exit 2 ; fi
 
@@ -19,6 +21,7 @@ while true ; do
         -c|--clean)                 clean=true          ; shift ;;
         -d|--date-print)            date_print=true     ; shift ;;
         -D|--date-check)            date_check=true     ; shift ;;
+        -E|--clean-empty)           clean_empty=true    ; shift ;;
         -f|--feed)                  feed_print=true     ; shift ;;
         -n|--new)                   publish_as_new='-n' ; shift ;;
         -o|--old)                   publish_as_old='-o' ; shift ;;
@@ -202,4 +205,16 @@ then
     else
         echo failed >> /dev/stderr
     fi
+fi
+
+
+if [ "$clean_empty"  = "true" ]
+then
+    [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Clean up older empty databases" >> /dev/stderr
+
+    feed=$(./get-feed-name.sh)
+
+    current=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db")
+
+    find $WORK_BASE_DIR -name "${feed}-*.db" -size 0c ! -newer $current -exec rm {} \;
 fi
