@@ -305,7 +305,7 @@ sub CreatePtnaTripsTable {
     $sth = $dbh->prepare( "DROP TABLE IF EXISTS ptna_trips;" );
     $sth->execute();
 
-    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '');" );
+    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '', min_start_date TEXT DEFAULT '', max_end_date TEXT DEFAULT '');" );
     $sth->execute();
 
     $dbh->commit();
@@ -420,22 +420,26 @@ sub FindUniqueTripIds {
     printf STDERR "%s Start Storing ptna_trips ...\n", get_time();
 
     $sthI = $dbh->prepare( "INSERT INTO ptna_trips
-                                   ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids )
-                            VALUES ( ?, ?, ?, ?, ? );" );
+                                   ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids, min_start_date, max_end_date )
+                            VALUES ( ?, ?, ?, ?, ?, ?, ? );" );
 
     my @new_ret_array = ();
     my $best_trip_id  = '';
+    my $start_date  = '';
+    my $end_date  = '';
     my $stored = 0;
     my %have_seen_trip_id = ();
     foreach my $trip_id ( @ret_array ) {
-        $best_trip_id = GetTripIdWithBestServiceInterval( @{$collection_trip_id{$trip_id}{'similars'}} );
+        ($best_trip_id,$start_date,$end_date) = GetTripIdAndDatesWithBestServiceInterval( @{$collection_trip_id{$trip_id}{'similars'}} );
         unless ( $have_seen_trip_id{$best_trip_id} ) {
             push( @new_ret_array, $best_trip_id );
-            $sthI->execute( $best_trip_id,
+             $sthI->execute( $best_trip_id,
                             join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
                             join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
                             join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
-                            join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} )
+                            join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} ),
+                            $start_date,
+                            $end_date
                         );
             printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, ++$stored, $totals  if ( $verbose );
         }
@@ -483,10 +487,10 @@ sub FindStopIdListAsString {
 #
 #
 
-sub GetTripIdWithBestServiceInterval {
+sub GetTripIdAndDatesWithBestServiceInterval {
     my @trip_id_array   = @_;
 
-    my $ret_val         = '';
+    my @ret_array         = ('','99991231','19700101');
 
     my @work_array      = ();
     my $original_size   = scalar(@trip_id_array);
@@ -497,12 +501,12 @@ sub GetTripIdWithBestServiceInterval {
     while ( scalar(@trip_id_array) ) {
 
         if ( scalar(@trip_id_array) > 900 ) {
-            #printf STDERR "GetTripIdWithBestServiceInterval( 0 => %s, ..., 899 => %s, 900 => %s, 901 => %s ): many trip_ids %d, limiting to 900\n", $trip_id_array[0], $trip_id_array[899], $trip_id_array[900], $trip_id_array[901], scalar(@trip_id_array);
+            #printf STDERR "GetTripIdAndDatesWithBestServiceInterval( 0 => %s, ..., 899 => %s, 900 => %s, 901 => %s ): many trip_ids %d, limiting to 900\n", $trip_id_array[0], $trip_id_array[899], $trip_id_array[900], $trip_id_array[901], scalar(@trip_id_array);
             @work_array     = splice( @trip_id_array, 0, 900 );
             $remaining      = scalar(@trip_id_array) - 900;
             @trip_id_array  = splice( @trip_id_array, 0, -$remaining );
         } else {
-            #printf STDERR "GetTripIdWithBestServiceInterval( 0 => %s, ..., %d => %s ): trip_ids %d\n", $trip_id_array[0], $#trip_id_array,  $trip_id_array[$#trip_id_array], scalar(@trip_id_array);
+            #printf STDERR "GetTripIdAndDatesWithBestServiceInterval( 0 => %s, ..., %d => %s ): trip_ids %d\n", $trip_id_array[0], $#trip_id_array,  $trip_id_array[$#trip_id_array], scalar(@trip_id_array);
             @work_array     = @trip_id_array;
             @trip_id_array  = ();
             $remaining      = 0;
@@ -524,17 +528,17 @@ sub GetTripIdWithBestServiceInterval {
         while ( @row = $sth->fetchrow_array() ) {
             if ( $row[0] ) {
                 #printf STDERR "??? trip_id = %s: start_date = %s, end_date = %s, out of = %s\n", $row[0], $row[1], $row[2], scalar(@work_array) if ( $original_size > 900 );
-                if ( $row[1] < $best_start_date && $row[2] > $best_end_date ) {
-                    $ret_val         = $row[0];
-                    $best_start_date = $row[1];
-                    $best_end_date   = $row[2]
+                if ( $row[1] < $ret_array[1] && $row[2] > $ret_array[2] ) {
+                    $ret_array[0] = $row[0];
+                    $ret_array[1] = $row[1];
+                    $ret_array[2] = $row[2]
                 }
             }
         }
     }
 
-    #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_val, $best_start_date, $best_end_date  if ( $original_size > 900 );
-    return $ret_val;
+    #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_array[0], $$ret_array[1], $$ret_array[2]  if ( $original_size > 900 );
+    return @ret_array;
 
 }
 
