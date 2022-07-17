@@ -164,10 +164,19 @@ sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
     columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-    fgrep -v agency_id agency.txt | egrep -v '^\s*$' > agency-wo-header.txt
+    if [ $(head -1 agency.txt | fgrep -c agency_id) == 1 ]
+    then
+        fgrep -v agency_id agency.txt | egrep -v '^\s*$' > agency-wo-header.txt
+    else
+        columns="agency_id TEXT PRIMARY KEY,$columns"
+        fgrep -v agency_name agency.txt | egrep -v '^\s*$' | awk '{printf("%d,%s\n", NR, $0)}' > agency-wo-header.txt
+    fi
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
-    sqlite3 $SQ_OPTIONS $DB "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
+    if [ $(cat agency-wo-header.txt | wc -l) == 0 ]
+    then
+        sqlite3 $SQ_OPTIONS $DB "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
+    fi
     rm -f agency-wo-header.txt
 fi
 
@@ -249,7 +258,7 @@ then
     if [ $(head -1 routes.txt | fgrep -c agency_id) == 0 ]
     then
         sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
-        if [ $(sqlite3 $DB "SELECT COUNT(agency_id) FROM agency;") == 1 ]
+        if [ "$(sqlite3 $DB "SELECT COUNT(agency_id) FROM agency;")" == 1 ]
         then
             sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id=(SELECT agency_id FROM agency);"
         fi
@@ -335,6 +344,10 @@ then
 fi
 
 sqlite3 $SQ_OPTIONS $DB ".schema"
+
+echo
+echo "Test for agency_id from agency"
+sqlite3 $SQ_OPTIONS $DB "SELECT * FROM agency LIMIT 2;"
 
 echo
 echo "Test for route_id from routes"
