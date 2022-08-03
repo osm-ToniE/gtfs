@@ -173,10 +173,7 @@ then
     fi
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE agency ($columns);"
     sqlite3 $SQ_OPTIONS $DB ".import agency-wo-header.txt agency"
-    if [ $(cat agency-wo-header.txt | wc -l) == 0 ]
-    then
-        sqlite3 $SQ_OPTIONS $DB "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
-    fi
+    sqlite3 $SQ_OPTIONS $DB "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
     rm -f agency-wo-header.txt
 fi
 
@@ -258,10 +255,6 @@ then
     if [ $(head -1 routes.txt | fgrep -c agency_id) == 0 ]
     then
         sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
-        if [ "$(sqlite3 $DB "SELECT COUNT(agency_id) FROM agency;")" == 1 ]
-        then
-            sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id=(SELECT agency_id FROM agency);"
-        fi
     fi
     sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id='???' WHERE agency_id='';"
     rm -f routes-wo-header.txt
