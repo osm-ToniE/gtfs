@@ -112,7 +112,15 @@ then
                 fi
             else
                 youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                printf "%-30s - %s versus %s - not yet analyzed\n" $FEED_NAME $youngest_real $RELEASE_DATE
+
+                youngest_real_Ym=$(echo $youngest_real | cut -c 1-7)
+                RELEASE_DATE_Ym=$(echo $RELEASE_DATE | cut -c 1-7)
+                if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
+                then
+                    printf "%-30s - %s versus %s - same month\n" $FEED_NAME $youngest_real $RELEASE_DATE
+                else
+                    printf "%-30s - %s versus %s - not yet analyzed\n" $FEED_NAME $youngest_real $RELEASE_DATE
+                fi
 
                 if [ "$touch_n_e" = "true" ]
                 then
