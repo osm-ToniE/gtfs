@@ -100,6 +100,7 @@ then
             else
                 WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
             fi
+            mkdir -p $WORK_LOC 2> /dev/null
 
             if [ -f $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
             then
