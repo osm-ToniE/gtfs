@@ -61,6 +61,7 @@ echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as with 'date' = $RELEASE_DATE"
 
 echo
 echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB"
+mkdir -p $TARGET_DIR 2> /dev/null
 rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB
 
 cd $TARGET_DIR
