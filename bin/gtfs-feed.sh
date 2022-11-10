@@ -225,5 +225,5 @@ then
 
     current=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db")
 
-    find $WORK_BASE_DIR -name "${feed}-*.db" -size 0c ! -newer $current -exec rm {} \;
+    find $WORK_BASE_DIR -name "${feed}-20*.db" -size 0c ! -newer $current -exec rm {} \;
 fi
