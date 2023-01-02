@@ -186,10 +186,25 @@ then
         if [ -n "$rd" -a -n "$ru" ]
         then
             [ -d "$rd" ] || mkdir $rd
-            cd $rd
-            wget --user-agent "PTNA script on https://ptna.openstreetmap.de" -O gtfs.zip "$ru"
-            gtfs-handle-zip.sh
-            cd ..
+            if [ -f ./get-release-file.sh ]
+            then
+                ./get-release-file.sh > $rd/gtfs.zip
+            else
+                wget --user-agent "PTNA script on https://ptna.openstreetmap.de" -O $rd/gtfs.zip "$ru"
+            fi
+            if [ -f $rd/gtfs.zip -a -s $rd/gtfs.zip ]
+            then
+                if [ "$(file $rd/gtfs.zip | egrep -c -i 'zip[^:]')" == 1 ]
+                then
+                    cd $rd
+                    gtfs-handle-zip.sh
+                    cd ..
+                else
+                    echo "failed (file not Zip)"  >> /dev/stderr
+                fi
+            else
+                echo "failed (file is empty)" >> /dev/stderr
+            fi
         else
             echo failed >> /dev/stderr
         fi
