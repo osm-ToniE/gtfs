@@ -39,6 +39,7 @@ my $verbose                  = 0;
 my $agency                   = undef;
 my $consider_calendar        = undef;
 my $language                 = 'de';
+my $list_separator           = '|';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
@@ -84,6 +85,10 @@ my @unique_trip_ids                 = ();
 #
 #
 #
+
+printf STDERR "%s Get list separator\n", get_time();
+$list_separator = GetListSeparator();
+printf STDERR "%s List separator: %s\n", get_time(), $list_separator;
 
 printf STDERR "%s Find  Route-IDs of agency out of %d total\n", get_time(), CountAllRoutes();
 @route_ids_of_agency = FindRouteIdsOfAgency( $agency );
@@ -149,6 +154,26 @@ printf STDERR "%s Update Ptna Aggregation done\n", get_time();
 ShowImprovements();
 
 exit 0;
+
+
+#############################################################################################
+#
+#
+#
+
+sub GetListSeparator {
+
+    my $sth = $dbh->prepare( "SELECT * FROM ptna LIMIT 1;" );
+    my $row = undef;
+
+    $sth->execute();
+    $row                = $sth->fetchrow_hashref();
+    if ( exists($$row{'list_separator'}) and $$row{'list_separator'} ) {
+        return $$row{'list_separator'};
+    } else {
+        return $list_separator;
+    }
+}
 
 
 #############################################################################################
@@ -434,10 +459,10 @@ sub FindUniqueTripIds {
         unless ( $have_seen_trip_id{$best_trip_id} ) {
             push( @new_ret_array, $best_trip_id );
              $sthI->execute( $best_trip_id,
-                            join( '|', @{$collection_trip_id{$trip_id}{'similars'}}   ),
-                            join( '|', @{$collection_trip_id{$trip_id}{'departures'}} ),
-                            join( '|', @{$collection_trip_id{$trip_id}{'durations'}}  ),
-                            join( '|', @{$collection_trip_id{$trip_id}{'service_id'}} ),
+                            join( $list_separator, @{$collection_trip_id{$trip_id}{'similars'}}   ),
+                            join( $list_separator, @{$collection_trip_id{$trip_id}{'departures'}} ),
+                            join( $list_separator, @{$collection_trip_id{$trip_id}{'durations'}}  ),
+                            join( $list_separator, @{$collection_trip_id{$trip_id}{'service_id'}} ),
                             $start_date,
                             $end_date
                         );
@@ -465,7 +490,7 @@ sub FindStopIdListAsString {
     my $sth          = undef;
     my @row          = ();
 
-    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'|')
+    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'$list_separator')
                            FROM     stop_times
                            WHERE    trip_id=?
                            ORDER BY CAST (stop_sequence AS INTEGER);" );

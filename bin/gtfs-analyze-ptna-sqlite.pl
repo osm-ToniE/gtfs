@@ -60,6 +60,7 @@ my $verbose                  = 0;
 my $agency                   = undef;
 my $consider_calendar        = undef;
 my $language                 = 'de';
+my $list_separator           = '|';
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
@@ -94,6 +95,9 @@ my ($sec,$min,$hour,$day,$month,$year) = localtime();
 
 my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 
+
+$list_separator = GetListSeparator();
+printf STDERR "List separator: %s\n", $list_separator;
 
 CreatePtnaAnalysis();
 
@@ -150,6 +154,26 @@ foreach my $route_id ( @route_ids_of_agency ) {
 UpdatePtnaAnalysis( time() - $start_time );
 
 exit 0;
+
+
+#############################################################################################
+#
+#
+#
+
+sub GetListSeparator {
+
+    my $sth = $dbh->prepare( "SELECT * FROM ptna LIMIT 1;" );
+    my $row = undef;
+
+    $sth->execute();
+    $row                = $sth->fetchrow_hashref();
+    if ( exists($$row{'list_separator'}) and $$row{'list_separator'} ) {
+        return $$row{'list_separator'};
+    } else {
+        return $list_separator;
+    }
+}
 
 
 ####################################################################################################################
@@ -227,7 +251,7 @@ sub FindStopIdListAsString {
     my $sth      = undef;
     my @row      = ();
 
-    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'|')
+    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'$list_separator')
                            FROM     stop_times
                            WHERE    trip_id=?
                            ORDER BY CAST (stop_sequence AS INTEGER);" );
@@ -235,7 +259,7 @@ sub FindStopIdListAsString {
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] ) {
-            return '|' . $row[0] . '|';
+            return $list_separator . $row[0] . $list_separator;
         }
     }
 
@@ -255,7 +279,7 @@ sub FindStopNameListAsString {
     my $sth      = undef;
     my @row      = ();
 
-    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stops.stop_name,'|')
+    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stops.stop_name,'$list_separator')
                            FROM     stop_times
                            JOIN     stops ON stop_times.stop_id = stops.stop_id
                            WHERE    trip_id=?
@@ -264,7 +288,7 @@ sub FindStopNameListAsString {
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] ) {
-            return '|' . $row[0] . '|';
+            return $list_separator . $row[0] . $list_separator;
         }
     }
 
