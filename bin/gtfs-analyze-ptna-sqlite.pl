@@ -164,12 +164,10 @@ exit 0;
 sub GetListSeparator {
 
     my $sth = $dbh->prepare( "SELECT * FROM ptna LIMIT 1;" );
-    my $row = undef;
-
-    $sth->execute();
-    $row                = $sth->fetchrow_hashref();
-    if ( exists($$row{'list_separator'}) and $$row{'list_separator'} ) {
-        return $$row{'list_separator'};
+       $sth->execute();
+    my $hash_ref = $sth->fetchrow_hashref();
+    if ( exists($hash_ref->{'list_separator'}) and $hash_ref->{'list_separator'} ) {
+        return $hash_ref->{'list_separator'};
     } else {
         return $list_separator;
     }

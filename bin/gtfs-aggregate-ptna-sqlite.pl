@@ -164,12 +164,10 @@ exit 0;
 sub GetListSeparator {
 
     my $sth = $dbh->prepare( "SELECT * FROM ptna LIMIT 1;" );
-    my $row = undef;
-
-    $sth->execute();
-    $row                = $sth->fetchrow_hashref();
-    if ( exists($$row{'list_separator'}) and $$row{'list_separator'} ) {
-        return $$row{'list_separator'};
+       $sth->execute();
+    my $hash_ref = $sth->fetchrow_hashref();
+    if ( exists($hash_ref->{'list_separator'}) and $hash_ref->{'list_separator'} ) {
+        return $hash_ref->{'list_separator'};
     } else {
         return $list_separator;
     }
@@ -562,7 +560,7 @@ sub GetTripIdAndDatesWithBestServiceInterval {
         }
     }
 
-    #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_array[0], $$ret_array[1], $$ret_array[2]  if ( $original_size > 900 );
+    #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_array[0], $ret_array[1], $ret_array[2]  if ( $original_size > 900 );
     return @ret_array;
 
 }
