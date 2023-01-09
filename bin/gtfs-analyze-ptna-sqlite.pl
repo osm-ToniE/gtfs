@@ -135,6 +135,8 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
         MarkSuspiciousNumberOfStops( $trip_id );
 
+        MarkSuspiciousTripDuration( $trip_id );
+
         $stop_id_list    = FindStopIdListAsString( $trip_id );
 
         $stop_id_hash_of_route_id{$stop_id_list} = $trip_id   if ( $stop_id_list );
@@ -507,6 +509,50 @@ sub MarkSuspiciousNumberOfStops {
 
             $dbh->commit();
         }
+    }
+}
+
+
+#############################################################################################
+#
+# check for suspicious travel time of trip
+#
+
+sub MarkSuspiciousTripDuration {
+    my $trip_id = shift || '-';
+
+    my $sthd    = undef;
+    my $stha    = undef;
+    my @rowd     = ();
+    my @rowa     = ();
+
+    $sthd = $dbh->prepare( "SELECT   departure_time
+                            FROM     stop_times
+                            WHERE    trip_id=?
+                            ORDER BY CAST (stop_sequence AS INTEGER) ASC
+                            LIMIT 1;" );
+    $sthd->execute( $trip_id );
+
+    $stha = $dbh->prepare( "SELECT   arrival_time
+                            FROM     stop_times
+                            WHERE    trip_id=?
+                            ORDER BY CAST (stop_sequence AS INTEGER) DESC
+                            LIMIT 1;" );
+    $stha->execute( $trip_id );
+
+    @rowd = $sthd->fetchrow_array();
+    @rowa = $stha->fetchrow_array();
+    if ( scalar(@rowd) && $rowd[0] &&
+         scalar(@rowa) && $rowa[0] &&
+         $rowd[0] eq $rowa[0]         ) {
+        $sthd = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_trip_duration='0:00' WHERE trip_id=?;" );
+        $sthd->execute( $trip_id );
+        $sthd = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_trip_duration) VALUES (?,'0:00');" );
+        $sthd->execute( $trip_id );
+
+        printf STDERR "Suspicious trip duration for: %s\n", $trip_id  if ( $debug  );
+
+        $dbh->commit();
     }
 }
 
