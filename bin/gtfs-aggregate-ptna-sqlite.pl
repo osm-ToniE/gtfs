@@ -491,7 +491,7 @@ sub FindStopIdListAsString {
     $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'$list_separator')
                            FROM     stop_times
                            WHERE    trip_id=?
-                           ORDER BY CAST (stop_sequence AS INTEGER);" );
+                           ORDER BY CAST (stop_sequence AS INTEGER) ASC;" );
     $sth->execute( $trip_id );
 
     while ( @row = $sth->fetchrow_array() ) {
@@ -762,7 +762,7 @@ sub CreateNewStopTimesTable {
 sub FillNewStopTimesTable {
     my $array_ref = shift;
 
-    my $sth       = $dbh->prepare( "INSERT INTO new_stop_times SELECT * FROM stop_times WHERE stop_times.trip_id=?;" );
+    my $sth       = $dbh->prepare( "INSERT INTO new_stop_times SELECT * FROM stop_times WHERE stop_times.trip_id=? ORDER BY CAST(stop_sequence AS INTEGER) ASC;" );
 
     foreach my $trip_id ( @{$array_ref} ) {
         $sth->execute( $trip_id );
