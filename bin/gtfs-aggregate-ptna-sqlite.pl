@@ -762,6 +762,8 @@ sub CreateNewStopTimesTable {
 sub FillNewStopTimesTable {
     my $array_ref = shift;
 
+    # GTFS reference states that the stops within a trip must be sorted ascending.
+    # however, there was some wrong GTFS feed data in the past: ensure that the stops are sorted ascending by stop_sequence
     my $sth       = $dbh->prepare( "INSERT INTO new_stop_times SELECT * FROM stop_times WHERE stop_times.trip_id=? ORDER BY CAST(stop_sequence AS INTEGER) ASC;" );
 
     foreach my $trip_id ( @{$array_ref} ) {
