@@ -206,14 +206,21 @@ sqlite3 $SQ_OPTIONS $DB "CREATE INDEX idx_service_id ON calendar_dates (service_
 echo "Table 'calendar'"
 
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS calendar;"
+rm -f calendar-wo-header.txt
+touch calendar-wo-header.txt
 if [ -f calendar.txt ]
 then
     columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     fgrep -v service_id calendar.txt | egrep -v '^\s*$' > calendar-wo-header.txt
-    sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
-    sqlite3 $SQ_OPTIONS $DB ".import calendar-wo-header.txt calendar"
-    rm -f calendar-wo-header.txt
-else
+
+    if [ $(stat -c%s calendar-wo-header.txt) -gt 0 ]
+    then
+        sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
+        sqlite3 $SQ_OPTIONS $DB ".import calendar-wo-header.txt calendar"
+    fi
+fi
+if [ $(stat -c%s calendar-wo-header.txt) -eq 0 ]
+then
     columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date TEXT DEFAULT '', end_date TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS $DB "CREATE TABLE calendar ($columns);"
     sqlite3 $SQ_OPTIONS $DB "INSERT INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
@@ -221,6 +228,7 @@ else
     sqlite3 $SQ_OPTIONS $DB "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1);"
     sqlite3 $SQ_OPTIONS $DB "SELECT * from calendar;"
 fi
+rm -f calendar-wo-header.txt
 
 
 #
@@ -256,6 +264,7 @@ then
     then
         sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
     fi
+    sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET route_short_name = route_long_name WHERE route_short_name='';"
     sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id='???' WHERE agency_id='';"
     rm -f routes-wo-header.txt
 fi
