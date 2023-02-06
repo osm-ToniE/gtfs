@@ -1,0 +1,5 @@
+Perl Modules
+- POSIX
+- Encode
+- utf8
+- DBI
