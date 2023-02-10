@@ -351,6 +351,11 @@ sub FindUniqueTripIds {
     my $sthD         = undef;
     my $sthA         = undef;
     my $sthI         = undef;
+    my $sth_tempD    = undef;
+    my $sth_tempC    = undef;
+    my $sth_tempI    = undef;
+    my $sth_tempS    = undef;
+
     my @row          = ();
 
     my $stop_id_list_as_string = '';
@@ -364,8 +369,6 @@ sub FindUniqueTripIds {
     my $duration_secs          = 0;
     my $route_id               = '-';
     my $service_id             = '-';
-
-    my %collection_trip_id     = ();
 
     my $totals    = scalar( @{$array_ref} );
     my $tripcount = 0;
@@ -386,6 +389,16 @@ sub FindUniqueTripIds {
                             FROM     stop_times
                             WHERE    trip_id=?
                             ORDER BY CAST (stop_sequence AS INTEGER) DESC LIMIT 1;" );
+
+    $sth_tempD = $dbh_temp->prepare( "DROP TABLE IF EXISTS FindUniqueTripIds;" );
+    $sth_tempC = $dbh_temp->prepare( "CREATE TABLE         FindUniqueTripIds (trip_id TEXT DEFAULT '', similar TEXT DEFAULT '', departure TEXT DEFAULT '', duration TEXT DEFAULT '', service_id TEXT DEFAULT '');" );
+    $sth_tempD->execute();
+    $sth_tempC->execute();
+    $sth_tempI = $dbh_temp->prepare( "CREATE INDEX idx_FindUniqueTripIds ON FindUniqueTripIds (trip_id);" );
+    $sth_tempI->execute();
+    $sth_tempI = $dbh_temp->prepare( "INSERT INTO          FindUniqueTripIds (trip_id, similar, departure, duration, service_id) VALUES ( ?, ?, ?, ?, ?);" );
+    $sth_tempS = $dbh_temp->prepare( "SELECT * FROM        FindUniqueTripIds WHERE trip_id=? ORDER BY departure;" );
+    $dbh_temp->commit();
 
     foreach my $trip_id ( @trip_ids_are_valid  ) {
 
@@ -433,10 +446,7 @@ sub FindUniqueTripIds {
             }
         }
 
-        push( @{$collection_trip_id{$representative_trip_id}{'similars'}},   $trip_id        );
-        push( @{$collection_trip_id{$representative_trip_id}{'departures'}}, $departure_time );
-        push( @{$collection_trip_id{$representative_trip_id}{'durations'}},  $duration       );
-        push( @{$collection_trip_id{$representative_trip_id}{'service_id'}}, $service_id     );
+        $sth_tempI->execute( $representative_trip_id, $trip_id, $departure_time, $duration, $service_id );
     }
 
     printf STDERR "\n"                                          if ( $verbose );
@@ -452,15 +462,32 @@ sub FindUniqueTripIds {
     my $end_date  = '';
     my $stored = 0;
     my %have_seen_trip_id = ();
+    my $hash_ref    = undef;
+    my @similars    = ();
+    my @departures  = ();
+    my @durations   = ();
+    my @service_ids = ();
     foreach my $trip_id ( @ret_array ) {
-        ($best_trip_id,$start_date,$end_date) = GetTripIdAndDatesWithBestServiceInterval( @{$collection_trip_id{$trip_id}{'similars'}} );
+        @similars    = ();
+        @departures  = ();
+        @durations   = ();
+        @service_ids = ();
+        $sth_tempS->execute( $trip_id );
+        while ( $hash_ref = $sth_tempS->fetchrow_hashref() ) {
+            push( @similars,    $hash_ref->{'similar'}      );
+            push( @departures,  $hash_ref->{'departure'}    );
+            push( @durations,   $hash_ref->{'duration'}     );
+            push( @service_ids, $hash_ref->{'service_id'}   );
+        }
+        ($best_trip_id,$start_date,$end_date) = GetTripIdAndDatesWithBestServiceInterval( @similars );
         unless ( $have_seen_trip_id{$best_trip_id} ) {
             push( @new_ret_array, $best_trip_id );
-             $sthI->execute( $best_trip_id,
-                            join( $list_separator, @{$collection_trip_id{$trip_id}{'similars'}}   ),
-                            join( $list_separator, @{$collection_trip_id{$trip_id}{'departures'}} ),
-                            join( $list_separator, @{$collection_trip_id{$trip_id}{'durations'}}  ),
-                            join( $list_separator, @{$collection_trip_id{$trip_id}{'service_id'}} ),
+
+            $sthI->execute( $best_trip_id,
+                            join( $list_separator, @similars    ),
+                            join( $list_separator, @departures  ),
+                            join( $list_separator, @durations   ),
+                            join( $list_separator, @service_ids ),
                             $start_date,
                             $end_date
                         );
@@ -472,6 +499,9 @@ sub FindUniqueTripIds {
     printf STDERR "\n"  if ( $verbose );
 
     $dbh->commit();
+
+    $sth_tempD->execute();
+    $dbh_temp->commit();
 
     return @new_ret_array;
 }
