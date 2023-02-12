@@ -220,14 +220,20 @@ fi
 if [ "$publish"  = "true" ]
 then
     [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Publishing data" >> /dev/stderr
-    rd=$(./get-release-date.sh)
-    if [ -n "$rd" -a -d "$rd" ]
+    db=$(find . -maxdepth 2 -name ptna-gtfs-sqlite.db | sort | tail -1)
+    if [ -n "$db" ]
     then
-        cd $rd
-        gtfs-publish.sh $publish_as_new $publish_as_old
-        cd ..
+        rd=$(dirname $db)
+        if [ -n "$rd" -a -d "$rd" ]
+        then
+            cd $rd
+            gtfs-publish.sh $publish_as_new $publish_as_old
+            cd ..
+        else
+            echo "failed for directory '$rd'" >> /dev/stderr
+        fi
     else
-        echo failed >> /dev/stderr
+            echo "failed: 'ptna-gtfs-sqlite.db' not found" >> /dev/stderr
     fi
 fi
 
