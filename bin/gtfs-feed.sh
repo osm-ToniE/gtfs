@@ -72,8 +72,9 @@ then
     [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Checking Release-Date against existing feeds" >> /dev/stderr
     if [ -f ./get-release-date.sh -a -f ./get-feed-name.sh ]
     then
-        RELEASE_DATE=$(./get-release-date.sh)
         FEED_NAME=$(./get-feed-name.sh)
+        printf "%-30s - " $FEED_NAME
+        RELEASE_DATE=$(./get-release-date.sh)
 
         if [ -n "$RELEASE_DATE" -a -n "$FEED_NAME" ]
         then
@@ -106,10 +107,10 @@ then
             then
                 if [ -s $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
                 then
-                    printf "%-30s - %s - OK\n" $FEED_NAME $RELEASE_DATE
+                    printf "%s - OK\n" $RELEASE_DATE
                 else
                     youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                    printf "%-30s - %s versus %s - empty file\n" $FEED_NAME $youngest_real $RELEASE_DATE
+                    printf "%s versus %s - empty file\n" $youngest_real $RELEASE_DATE
                 fi
             else
                 youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
@@ -118,9 +119,9 @@ then
                 RELEASE_DATE_Ym=$(echo $RELEASE_DATE | cut -c 1-7)
                 if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
                 then
-                    printf "%-30s - %s versus %s - same month\n" $FEED_NAME $youngest_real $RELEASE_DATE
+                    printf "%s versus %s - same month\n" $youngest_real $RELEASE_DATE
                 else
-                    printf "%-30s - %s versus %s - not yet analyzed\n" $FEED_NAME $youngest_real $RELEASE_DATE
+                    printf "%s versus %s - not yet analyzed\n" $youngest_real $RELEASE_DATE
                 fi
 
                 if [ "$touch_n_e" = "true" ]
