@@ -73,69 +73,70 @@ then
     if [ -f ./get-release-date.sh -a -f ./get-feed-name.sh ]
     then
         FEED_NAME=$(./get-feed-name.sh)
-        printf "%-30s - " $FEED_NAME
-        RELEASE_DATE=$(./get-release-date.sh)
 
-        if [ -n "$RELEASE_DATE" -a -n "$FEED_NAME" ]
+        if [ -n "$FEED_NAME" ]
         then
-            # on the web and in the work directory, the data will be stored in sub-directories
-            # FEED_NAME=DE-BY-MVV --> stored in SUB_DIR=DE/BY
-            # FEED_NAME=DE-BW-DING-SWU --> stored in SUB_DIR=DE/BW
-            # FEED_NAME=DE-SPNV --> stored in SUB_DIR=DE
+            printf "%-30s - " $FEED_NAME
+            RELEASE_DATE=$(./get-release-date.sh)
 
-            # PREFIX=FR-IDF-entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF-entre-seine-et-foret
-            SUB_DIR=${FEED_NAME/-//}
-            # SUB_DIR=FR/IDF-entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF/entre-seine-et-foret
-            SUB_DIR=${SUB_DIR/-//}
-            # SUB_DIR=FR/IDF/entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF
-            SUB_DIR="${SUB_DIR%/*}"
-
-            COUNTRY_DIR="${FEED_NAME%%-*}"
-
-            if [ -f $PTNA_WORK_LOC/$COUNTRY_DIR/$FEED_NAME-ptna-gtfs-sqlite.db ]
+            if [ -n "$RELEASE_DATE" ]
             then
-                WORK_LOC="$PTNA_WORK_LOC/$COUNTRY_DIR"
-            elif [ -f $PTNA_WORK_LOC/$SUB_DIR/$FEED_NAME-ptna-gtfs-sqlite.db ]
-            then
-                WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
-            else
-                WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
-            fi
-            mkdir -p $WORK_LOC 2> /dev/null
+                # on the web and in the work directory, the data will be stored in sub-directories
+                # FEED_NAME=DE-BY-MVV --> stored in SUB_DIR=DE/BY
+                # FEED_NAME=DE-BW-DING-SWU --> stored in SUB_DIR=DE/BW
+                # FEED_NAME=DE-SPNV --> stored in SUB_DIR=DE
 
-            if [ -f $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
-            then
-                if [ -s $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
+                # PREFIX=FR-IDF-entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF-entre-seine-et-foret
+                SUB_DIR=${FEED_NAME/-//}
+                # SUB_DIR=FR/IDF-entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF/entre-seine-et-foret
+                SUB_DIR=${SUB_DIR/-//}
+                # SUB_DIR=FR/IDF/entre-seine-et-foret --> changed into in SUB_DIR=FR/IDF
+                SUB_DIR="${SUB_DIR%/*}"
+
+                COUNTRY_DIR="${FEED_NAME%%-*}"
+
+                if [ -f $PTNA_WORK_LOC/$COUNTRY_DIR/$FEED_NAME-ptna-gtfs-sqlite.db ]
                 then
-                    printf "%s - OK\n" $RELEASE_DATE
+                    WORK_LOC="$PTNA_WORK_LOC/$COUNTRY_DIR"
+                elif [ -f $PTNA_WORK_LOC/$SUB_DIR/$FEED_NAME-ptna-gtfs-sqlite.db ]
+                then
+                    WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
+                else
+                    WORK_LOC="$PTNA_WORK_LOC/$SUB_DIR"
+                fi
+                mkdir -p $WORK_LOC 2> /dev/null
+
+                if [ -f $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
+                then
+                    if [ -s $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db ]
+                    then
+                        printf "%s - OK\n" $RELEASE_DATE
+                    else
+                        youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                        printf "%s versus %s - empty file\n" $youngest_real $RELEASE_DATE
+                    fi
                 else
                     youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                    printf "%s versus %s - empty file\n" $youngest_real $RELEASE_DATE
+
+                    youngest_real_Ym=$(echo $youngest_real | cut -c 1-7)
+                    RELEASE_DATE_Ym=$(echo $RELEASE_DATE | cut -c 1-7)
+                    if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
+                    then
+                        printf "%s versus %s - same month\n" $youngest_real $RELEASE_DATE
+                    else
+                        printf "%s versus %s - not yet analyzed\n" $youngest_real $RELEASE_DATE
+                    fi
+
+                    if [ "$touch_n_e" = "true" ]
+                    then
+                        touch $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db
+                    fi
                 fi
             else
-                youngest_real=$(find $WORK_LOC/ -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-
-                youngest_real_Ym=$(echo $youngest_real | cut -c 1-7)
-                RELEASE_DATE_Ym=$(echo $RELEASE_DATE | cut -c 1-7)
-                if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
-                then
-                    printf "%s versus %s - same month\n" $youngest_real $RELEASE_DATE
-                else
-                    printf "%s versus %s - not yet analyzed\n" $youngest_real $RELEASE_DATE
-                fi
-
-                if [ "$touch_n_e" = "true" ]
-                then
-                    touch $WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db
-                fi
+                printf "unknown release date\n"
             fi
         else
-            if [ -z "$RELEASE_DATE" ]
-            then
-                printf "%-30s - unknown release date\n" $FEED_NAME
-            else
-                printf "%-30s - unknown feed name\n" $PWD
-            fi
+            printf "%-30s - unknown feed name: %s\n" $PWD
         fi
     else
         FEED_NAME=$(echo $PWD | sed -e "s|^$GTFS_FEEDS_LOC/||" -e 's|/|-|g')
