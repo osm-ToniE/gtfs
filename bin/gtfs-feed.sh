@@ -222,7 +222,7 @@ fi
 if [ "$publish"  = "true" ]
 then
     [ -n "$verbose" ] && echo $(date "+%Y-%m-%d %H:%M:%S") "Publishing data" >> /dev/stderr
-    db=$(find . -maxdepth 2 -name ptna-gtfs-sqlite.db | sort | tail -1)
+    db=$(find . -maxdepth 2 -mindepth 1 -name ptna-gtfs-sqlite.db | sort | tail -1)
     if [ -n "$db" ]
     then
         rd=$(dirname $db)
