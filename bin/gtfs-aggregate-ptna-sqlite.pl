@@ -328,7 +328,7 @@ sub CreatePtnaTripsTable {
     $sth = $dbh->prepare( "DROP TABLE IF EXISTS ptna_trips;" );
     $sth->execute();
 
-    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '', min_start_date TEXT DEFAULT '', max_end_date TEXT DEFAULT '');" );
+    $sth = $dbh->prepare( "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '', min_start_date TEXT DEFAULT '', max_end_date TEXT DEFAULT '', rides INTEGER DEFAULT 0, sum_rides INTEGER DEFAULT 0);" );
     $sth->execute();
 
     $dbh->commit();

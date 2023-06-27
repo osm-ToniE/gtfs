@@ -18,6 +18,8 @@ use Encode;
 
 use DBI;
 
+use Date::Calc qw( Delta_Days );
+
 
 #############################################################################################
 #
@@ -96,15 +98,19 @@ my ($sec,$min,$hour,$day,$month,$year) = localtime();
 my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 
 
+printf STDERR "%s Get list separator\n", get_time();
 $list_separator = GetListSeparator();
-printf STDERR "List separator: %s\n", $list_separator;
+printf STDERR "%s List separator: %s\n", get_time(), $list_separator;
 
+printf STDERR "%s CreatePtnaAnalysis\n", get_time();
 CreatePtnaAnalysis();
 
+printf STDERR "%s ClearAllPtnaCommentsForTrips\n", get_time();
 ClearAllPtnaCommentsForTrips();
 
 my $start_time                  = time();
 
+printf STDERR "%s FindRouteIdsOfAgency\n", get_time();
 my @route_ids_of_agency         = FindRouteIdsOfAgency( $agency );
 
 my @trip_ids_of_route_id        = ();
@@ -119,6 +125,7 @@ my $stop_name_list              = '';
 
 printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $debug );
 
+printf STDERR "%s Loop over route_ids\n", get_time();
 foreach my $route_id ( @route_ids_of_agency ) {
 
     @trip_ids_of_route_id       = FindTripIdsOfRouteId( $route_id );
@@ -152,6 +159,12 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
     MarkIdenticalRoutesBasedOnName( \%stop_name_hash_of_route_id );
 }
+printf STDERR "%s Loop over route_ids ...done\n", get_time();
+
+printf STDERR "%s Calculate Rides\n", get_time();
+FindNumberOfRidesForTripIds();
+CalculateSumRidesOfLongestTrip();
+printf STDERR "%s Calculate Rides ... done\n", get_time();
 
 UpdatePtnaAnalysis( time() - $start_time );
 
@@ -607,6 +620,163 @@ sub MarkSubRoutesBasedOnId {
 
 #############################################################################################
 #
+#
+#
+
+sub FindNumberOfRidesForTripIds {
+
+    my %service_id_service_days = ();
+    my $hash_ref                = undef;
+    my @row                     = ();
+    my $service_id              = undef;
+    my $start_date              = undef;
+    my $end_date                = undef;
+    my $service_days            = undef;
+    my $on_days_of_week         = undef;
+    my $trip_id                 = undef;
+    my $list_service_ids        = undef;
+    my @array_service_ids       = ();
+    my $rides                   = undef;
+
+    my $sthC  = $dbh->prepare( "SELECT   *
+                                FROM     calendar;" );
+
+    my $sthCA = $dbh->prepare( "SELECT   COUNT(exception_type)
+                                FROM     calendar_dates
+                                WHERE    service_id=? AND exception_type=1;" );
+
+    my $sthCN = $dbh->prepare( "SELECT   COUNT(exception_type)
+                                FROM     calendar_dates
+                                WHERE    service_id=? AND exception_type=2;" );
+
+    my $sthUR = $dbh->prepare( "UPDATE   ptna_trips SET rides=? WHERE trip_id=?;" );
+
+    my $sthP  = $dbh->prepare( "SELECT   trip_id, list_service_ids
+                                FROM     ptna_trips;" );
+
+    #
+    # for each service_id, calculate the number of days where the service is provided
+    #
+    $sthC->execute();
+
+    while ( $hash_ref = $sthC->fetchrow_hashref() ) {
+        $service_id = $hash_ref->{'service_id'};
+        $start_date = $hash_ref->{'start_date'};
+        $end_date   = $hash_ref->{'end_date'};
+        $service_days = Delta_Days(substr($start_date,0,4),substr($start_date,4,2),substr($start_date,6,2),
+                                   substr($end_date,0,4),  substr($end_date,4,2),  substr($end_date,6,2)    );
+        #printf STDERR "FindNumberOfRidesForTripIds: %s - %s = %d days\n", $start_date, $end_date, $service_days;
+        $on_days_of_week  = $hash_ref->{'monday'};
+        $on_days_of_week += $hash_ref->{'tuesday'};
+        $on_days_of_week += $hash_ref->{'wednesday'};
+        $on_days_of_week += $hash_ref->{'thursday'};
+        $on_days_of_week += $hash_ref->{'friday'};
+        $on_days_of_week += $hash_ref->{'saturday'};
+        $on_days_of_week += $hash_ref->{'sunday'};
+        $service_days     = ceil( $service_days * $on_days_of_week / 7 );
+        if ( $service_days < 1 && $on_days_of_week > 0 ) {
+            $service_days = $on_days_of_week;
+        }
+        #printf STDERR "FindNumberOfRidesForTripIds: %s - %s = %d days with %d of week\n", $start_date, $end_date, $service_days, $on_days_of_week;
+
+        $sthCA->execute($service_id);
+        @row  = $sthCA->fetchrow_array();
+        if ( scalar(@row) ) {
+            $service_days += $row[0];
+        }
+        $sthCN->execute($service_id);
+        @row  = $sthCN->fetchrow_array();
+        if ( scalar(@row) ) {
+            $service_days -= $row[0];
+        }
+        $service_id_service_days{$service_id} = $service_days;
+        #printf STDERR "FindNumberOfRidesForTripIds: \$service_id_service_days{%s} = %d\n", $service_id, $service_id_service_days{$service_id};
+    }
+
+    #
+    # foreach representative trip_id take the service_ids of the represented trips and calculate the number of rides
+    # service_ids will appear multiple times, each trip_id defines a single ride
+    # store the number of rides per representatice trip_id in the db
+    #
+    $sthP->execute();
+
+    while ( $hash_ref = $sthP->fetchrow_hashref() ) {
+        $trip_id          = $hash_ref->{'trip_id'};
+        $list_service_ids = $hash_ref->{'list_service_ids'};
+        #printf STDERR "FindNumberOfRidesForTripIds: \$list_service_ids{%s} = %s\n", $trip_id, $list_service_ids;
+        $rides            = 0;
+        if ( $list_separator eq '|' ) {
+            @array_service_ids = split('\|',$list_service_ids)
+        } else {
+            @array_service_ids = split($list_separator,$list_service_ids)
+        }
+        foreach $service_id ( @array_service_ids ) {
+        #    printf STDERR "    %s: %d += %d\n", $service_id, $rides, $service_id_service_days{$service_id};
+            $rides += $service_id_service_days{$service_id};
+        }
+        #printf STDERR "    \$rides{%s} = %d\n", $trip_id, $rides;
+        $sthUR->execute($rides,$trip_id);
+    }
+}
+
+
+#############################################################################################
+#
+#
+# sum up the rides provided by the longest trip
+# longest trip: is not sub-route of another trip
+#               has sub-routes, add their "rides": "sum_rides" = "rides" + sum("rides" of sub-routes)
+#
+
+sub CalculateSumRidesOfLongestTrip {
+
+    my $hash_refT   = undef;
+    my $hash_refSR  = undef;
+    my $trip_id     = undef;
+    my $rides       = 0;
+    my $sum_rides   = 0;
+    my $subroute_of = undef;
+
+    my $sthUS = $dbh->prepare( "UPDATE    ptna_trips SET sum_rides=? WHERE trip_id=?;" );
+
+    my $sthT  = $dbh->prepare( "SELECT    ptna_trips.trip_id AS tripid, rides, subroute_of
+                                FROM      ptna_trips
+                                LEFT JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id;" );
+
+    my $sthSR = $dbh->prepare( "SELECT    SUM(rides) AS sum_rides
+                                FROM      ptna_trips
+                                JOIN      ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
+                                WHERE     subroute_of=? OR subroute_of LIKE ? OR subroute_of LIKE ? OR subroute_of LIKE ?;" );
+
+    #
+    # select all representative trip_ids
+    #
+    $sthT->execute();
+
+    while ( $hash_refT = $sthT->fetchrow_hashref() ) {
+        $trip_id     = $hash_refT->{'tripid'};
+        $rides       = $hash_refT->{'rides'}       || 0;
+        $subroute_of = $hash_refT->{'subroute_of'} || '';
+        #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s'\n", $trip_id, $rides, $subroute_of;
+
+        if ( $subroute_of eq '' ) {
+            $sthSR->execute( $trip_id, $trip_id.',%', '%,'.$trip_id, '%,'.$trip_id.',%');
+            while ( $hash_refSR = $sthSR->fetchrow_hashref() ) {
+                $sum_rides = $hash_refSR->{'sum_rides'} || 0;
+                if ( $sum_rides > 0 ) {
+                    $sum_rides += $rides;
+                    $sthUS->execute( $sum_rides, $trip_id );
+                    #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s', sum_rides = %d\n", $trip_id, $rides, $subroute_of, $sum_rides;
+                }
+            }
+        }
+    }
+
+}
+
+
+#############################################################################################
+#
 # check whether we find sub-routes of this route here.
 # I.e. a stop-list which is a sub-string of another stop-list
 #
@@ -717,4 +887,17 @@ sub UpdatePtnaAnalysis {
     $dbh->commit();
 
     return 0;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub get_time {
+
+    my ($sec,$min,$hour,$day,$month,$year) = localtime();
+
+    return sprintf( "%04d-%02d-%02d %02d:%02d:%02d", $year+1900, $month+1, $day, $hour, $min, $sec );
 }
