@@ -712,7 +712,9 @@ sub FindNumberOfRidesForTripIds {
         }
         foreach $service_id ( @array_service_ids ) {
         #    printf STDERR "    %s: %d += %d\n", $service_id, $rides, $service_id_service_days{$service_id};
-            $rides += $service_id_service_days{$service_id};
+            if ( $service_id_service_days{$service_id} ) {      # key might not exist
+                $rides += $service_id_service_days{$service_id};
+            }
         }
         #printf STDERR "    \$rides{%s} = %d\n", $trip_id, $rides;
         $sthUR->execute($rides,$trip_id);
