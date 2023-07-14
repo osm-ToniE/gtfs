@@ -741,6 +741,7 @@ sub CalculateSumRidesOfLongestTrip {
     my $sum_rides   = 0;
     my $subroute_of = undef;
     my $count       = 0;
+    my $updated     = 0;
 
     my $sthUS = $dbh->prepare( "UPDATE    ptna_trips SET sum_rides=? WHERE trip_id=?;" );
 
@@ -772,10 +773,14 @@ sub CalculateSumRidesOfLongestTrip {
                 if ( $sum_rides > 0 ) {
                     $sum_rides += $rides;
                     $sthUS->execute( $sum_rides, $trip_id );
+                    $updated++;
                     printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $count, $trip_id, $rides, $sum_rides, ' ';
                 }
             }
         }
+    }
+    if ( $updated ) {
+        printf STDERR "\n";
     }
 
 }
