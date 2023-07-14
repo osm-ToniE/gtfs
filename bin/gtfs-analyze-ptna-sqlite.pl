@@ -159,9 +159,9 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
     MarkIdenticalRoutesBasedOnName( \%stop_name_hash_of_route_id );
 }
-printf STDERR "%s Loop over route_ids ...done\n", get_time();
+printf STDERR "%s Loop over route_ids ... done\n", get_time();
 
-printf STDERR "%s Calculate Rides\n", get_time();
+printf STDERR "%s Calculate Rides ... be patient\n", get_time();
 FindNumberOfRidesForTripIds();
 CalculateSumRidesOfLongestTrip();
 printf STDERR "%s Calculate Rides ... done\n", get_time();
@@ -659,6 +659,7 @@ sub FindNumberOfRidesForTripIds {
     #
     $sthC->execute();
 
+    #printf STDERR "%s FindNumberOfRidesForTripIds() - calculate service days\n", get_time();
     while ( $hash_ref = $sthC->fetchrow_hashref() ) {
         $service_id = $hash_ref->{'service_id'};
         $start_date = $hash_ref->{'start_date'};
@@ -700,6 +701,7 @@ sub FindNumberOfRidesForTripIds {
     #
     $sthP->execute();
 
+    #printf STDERR "%s FindNumberOfRidesForTripIds() - calculate rides\n", get_time();
     while ( $hash_ref = $sthP->fetchrow_hashref() ) {
         $trip_id          = $hash_ref->{'trip_id'};
         $list_service_ids = $hash_ref->{'list_service_ids'};
@@ -738,6 +740,7 @@ sub CalculateSumRidesOfLongestTrip {
     my $rides       = 0;
     my $sum_rides   = 0;
     my $subroute_of = undef;
+    my $count       = 0;
 
     my $sthUS = $dbh->prepare( "UPDATE    ptna_trips SET sum_rides=? WHERE trip_id=?;" );
 
@@ -759,16 +762,17 @@ sub CalculateSumRidesOfLongestTrip {
         $trip_id     = $hash_refT->{'tripid'};
         $rides       = $hash_refT->{'rides'}       || 0;
         $subroute_of = $hash_refT->{'subroute_of'} || '';
-        #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s'\n", $trip_id, $rides, $subroute_of;
+        $count++;
+        #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s'\r", $trip_id, $rides, $subroute_of;
 
         if ( $subroute_of eq '' ) {
-            $sthSR->execute( $trip_id, $trip_id.',%', '%,'.$trip_id, '%,'.$trip_id.',%');
+            $sthSR->execute( $trip_id, $trip_id.',%', '%,'.$trip_id.',%', '%,'.$trip_id);
             while ( $hash_refSR = $sthSR->fetchrow_hashref() ) {
                 $sum_rides = $hash_refSR->{'sum_rides'} || 0;
                 if ( $sum_rides > 0 ) {
                     $sum_rides += $rides;
                     $sthUS->execute( $sum_rides, $trip_id );
-                    #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s', sum_rides = %d\n", $trip_id, $rides, $subroute_of, $sum_rides;
+                    printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $count, $trip_id, $rides, $sum_rides, ' ';
                 }
             }
         }
