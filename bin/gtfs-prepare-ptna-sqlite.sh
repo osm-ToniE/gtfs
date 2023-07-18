@@ -94,7 +94,7 @@ sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_routes (route_id TEXT DEFAULT '' PRIM
 echo "Table 'ptna_trips'"
 
 sqlite3 $SQ_OPTIONS $DB "DROP TABLE IF EXISTS ptna_trips;"
-sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '');"
+sqlite3 $SQ_OPTIONS $DB "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, list_trip_ids TEXT DEFAULT '', list_departure_times TEXT DEFAULT '', list_durations TEXT DEFAULT '', list_service_ids TEXT DEFAULT '', min_start_date TEXT DEFAULT '', max_end_date TEXT DEFAULT '', rides INTEGER DEFAULT 0, sum_rides INTEGER DEFAULT 0, route_id TEXT DEFAULT '');"
 
 
 #

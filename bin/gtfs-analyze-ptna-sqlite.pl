@@ -721,6 +721,9 @@ sub FindNumberOfRidesForTripIds {
         #printf STDERR "    \$rides{%s} = %d\n", $trip_id, $rides;
         $sthUR->execute($rides,$trip_id);
     }
+
+    $dbh->commit();
+
 }
 
 
@@ -736,52 +739,53 @@ sub CalculateSumRidesOfLongestTrip {
 
     my $hash_refT   = undef;
     my $hash_refSR  = undef;
+    my $route_id    = undef;
     my $trip_id     = undef;
     my $rides       = 0;
     my $sum_rides   = 0;
-    my $subroute_of = undef;
     my $count       = 0;
     my $updated     = 0;
 
     my $sthUS = $dbh->prepare( "UPDATE    ptna_trips SET sum_rides=? WHERE trip_id=?;" );
 
-    my $sthT  = $dbh->prepare( "SELECT    ptna_trips.trip_id AS tripid, rides, subroute_of
+    my $sthT  = $dbh->prepare( "SELECT    ptna_trips.trip_id AS tripid, ptna_trips.route_id AS route_id, rides
                                 FROM      ptna_trips
-                                LEFT JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id;" );
+                                LEFT JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
+                                WHERE     subroute_of = '';" );
 
     my $sthSR = $dbh->prepare( "SELECT    SUM(rides) AS sum_rides
                                 FROM      ptna_trips
                                 JOIN      ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
-                                WHERE     subroute_of=? OR subroute_of LIKE ? OR subroute_of LIKE ? OR subroute_of LIKE ?;" );
+                                WHERE     ptna_trips.route_id = ? AND subroute_of != '' AND (subroute_of=? OR subroute_of LIKE ? OR subroute_of LIKE ? OR subroute_of LIKE ?);" );
 
     #
-    # select all representative trip_ids
+    # select all representative trip_ids which are not a sub-route
     #
     $sthT->execute();
 
     while ( $hash_refT = $sthT->fetchrow_hashref() ) {
+        $route_id    = $hash_refT->{'route_id'};
         $trip_id     = $hash_refT->{'tripid'};
         $rides       = $hash_refT->{'rides'}       || 0;
-        $subroute_of = $hash_refT->{'subroute_of'} || '';
         $count++;
-        #printf STDERR "CalculateSumRidesOfLongestTrip: %s -> rides = %d, subroute_of = '%s'\r", $trip_id, $rides, $subroute_of;
+        #printf STDERR "CalculateSumRidesOfLongestTrip: %s - %s -> rides = %d, subroute_of = '%s'\r", $route_id, $trip_id, $rides, $subroute_of;
 
-        if ( $subroute_of eq '' ) {
-            $sthSR->execute( $trip_id, $trip_id.',%', '%,'.$trip_id.',%', '%,'.$trip_id);
-            while ( $hash_refSR = $sthSR->fetchrow_hashref() ) {
-                $sum_rides = $hash_refSR->{'sum_rides'} || 0;
-                if ( $sum_rides > 0 ) {
-                    $sum_rides += $rides;
-                    $sthUS->execute( $sum_rides, $trip_id );
-                    $updated++;
-                    printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $count, $trip_id, $rides, $sum_rides, ' ';
-                }
+        $sthSR->execute( $route_id, $trip_id, $trip_id.',%', '%,'.$trip_id.',%', '%,'.$trip_id);
+        while ( $hash_refSR = $sthSR->fetchrow_hashref() ) {
+            $sum_rides = $hash_refSR->{'sum_rides'} || 0;
+            if ( $sum_rides > 0 ) {
+                $sum_rides += $rides;
+                $sthUS->execute( $sum_rides, $trip_id );
+                $updated++;
+                printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $count, $trip_id, $rides, $sum_rides, ' ';
             }
         }
     }
     if ( $updated ) {
         printf STDERR "\n";
     }
+
+    $dbh->commit();
 
 }
 
