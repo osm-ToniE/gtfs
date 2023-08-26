@@ -750,12 +750,12 @@ sub CalculateSumRidesOfLongestTrip {
 
     my $sthT  = $dbh->prepare( "SELECT    ptna_trips.trip_id AS tripid, ptna_trips.route_id AS route_id, rides
                                 FROM      ptna_trips
-                                LEFT JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
-                                WHERE     subroute_of = '';" );
+                                FULL JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
+                                WHERE     ptna_trips_comments.subroute_of IS NULL OR ptna_trips_comments.subroute_of = '';" );
 
     my $sthSR = $dbh->prepare( "SELECT    SUM(rides) AS sum_rides
                                 FROM      ptna_trips
-                                JOIN      ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
+                                LEFT JOIN ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
                                 WHERE     ptna_trips.route_id = ? AND subroute_of != '' AND (subroute_of=? OR subroute_of LIKE ? OR subroute_of LIKE ? OR subroute_of LIKE ?);" );
 
     #
