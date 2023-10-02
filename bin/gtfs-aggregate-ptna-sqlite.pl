@@ -369,6 +369,8 @@ sub FindUniqueTripIds {
     my $duration_secs          = 0;
     my $route_id               = '-';
     my $service_id             = '-';
+    my $shape_id               = '-';
+    my $hash_ref               = undef;
 
     my $totals    = scalar( @{$array_ref} );
     my $tripcount = 0;
@@ -376,7 +378,7 @@ sub FindUniqueTripIds {
 
     printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
 
-    $sthR = $dbh->prepare( "SELECT   route_id,service_id
+    $sthR = $dbh->prepare( "SELECT   *
                             FROM     trips
                             WHERE    trip_id=?;" );
 
@@ -389,6 +391,10 @@ sub FindUniqueTripIds {
                             FROM     stop_times
                             WHERE    trip_id=?
                             ORDER BY CAST (stop_sequence AS INTEGER) DESC LIMIT 1;" );
+
+    $sthI = $dbh->prepare( "INSERT INTO ptna_trips
+                                   ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids, min_start_date, max_end_date )
+                            VALUES ( ?, ?, ?, ?, ?, ?, ? );" );
 
     $sth_tempD = $dbh_temp->prepare( "DROP TABLE IF EXISTS FindUniqueTripIds;" );
     $sth_tempC = $dbh_temp->prepare( "CREATE TABLE         FindUniqueTripIds (trip_id TEXT DEFAULT '', similar TEXT DEFAULT '', departure TEXT DEFAULT '', duration TEXT DEFAULT '', service_id TEXT DEFAULT '');" );
@@ -406,22 +412,23 @@ sub FindUniqueTripIds {
 
         $sthR->execute( $trip_id );
 
-        @row        = $sthR->fetchrow_array();
-        $route_id   = $row[0] || '-';
-        $service_id = $row[1] || '-';
+        $hash_ref   = $sthR->fetchrow_hashref();
+        $route_id   = $hash_ref->{'route_id'}   || '-';
+        $service_id = $hash_ref->{'service_id'} || '-';
+        $shape_id   = $hash_ref->{'shape_id'}   || '-';
 
         $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
 
-        if ( !defined($stop_list_hash{$route_id}{$stop_id_list_as_string}) ) {
-            $stop_list_hash{$route_id}{$stop_id_list_as_string} = $trip_id;
+        if ( !defined($stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string}) ) {
+            $stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string} = $trip_id;
             $representative_trip_id                             = $trip_id;
             push( @ret_array, $trip_id );
 
             printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, ++$uniques, 0, $totals  if ( $verbose );
         } else {
-            $representative_trip_id = $stop_list_hash{$route_id}{$stop_id_list_as_string};
+            $representative_trip_id = $stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string};
         }
 
         $sthD->execute( $trip_id );
@@ -452,17 +459,12 @@ sub FindUniqueTripIds {
     printf STDERR "\n"                                          if ( $verbose );
     printf STDERR "%s Start Storing ptna_trips ...\n", get_time();
 
-    $sthI = $dbh->prepare( "INSERT INTO ptna_trips
-                                   ( trip_id, list_trip_ids, list_departure_times, list_durations, list_service_ids, min_start_date, max_end_date )
-                            VALUES ( ?, ?, ?, ?, ?, ?, ? );" );
-
     my @new_ret_array = ();
     my $best_trip_id  = '';
     my $start_date  = '';
     my $end_date  = '';
     my $stored = 0;
     my %have_seen_trip_id = ();
-    my $hash_ref    = undef;
     my @similars    = ();
     my @departures  = ();
     my @durations   = ();
@@ -618,6 +620,9 @@ sub CreateNewShapesTable {
         $row[0] =~ s/CREATE TABLE shapes/CREATE TABLE new_shapes/;
         $sth  = $dbh->prepare( $row[0] );
         $sth->execute();
+
+        $sth = $dbh->prepare( "CREATE UNIQUE INDEX shape_unique_entry_index on new_shapes ( shape_id, shape_pt_lat,shape_pt_lon, shape_pt_sequence );" );
+        $sth->execute();
     }
 
     $dbh->commit();
@@ -649,7 +654,7 @@ sub FillNewShapesTable {
     }
 
     if ( $has_shape_id ) {
-        $sth = $dbh->prepare( "INSERT INTO new_shapes SELECT shapes.* FROM shapes JOIN trips ON trips.shape_id = shapes.shape_id WHERE trips.trip_id=?;" );
+        $sth = $dbh->prepare( "INSERT OR IGNORE INTO new_shapes SELECT shapes.* FROM shapes JOIN trips ON trips.shape_id = shapes.shape_id WHERE trips.trip_id=?;" );
 
         foreach my $trip_id ( @{$array_ref} ) {
             $sth->execute( $trip_id );

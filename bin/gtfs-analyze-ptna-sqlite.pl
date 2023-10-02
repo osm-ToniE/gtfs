@@ -119,13 +119,17 @@ my %stop_id_hash_of_route_id    = ();
 
 my %stop_name_hash_of_route_id  = ();
 
+my %detail_hash_of_trips        = ();
+
+my $shape_id                    = '';
+
 my $stop_id_list                = '';
 
 my $stop_name_list              = '';
 
 printf STDERR "Routes of agencies selected: %d\n", scalar(@route_ids_of_agency)  if ( $debug );
 
-printf STDERR "%s Loop over route_ids\n", get_time();
+printf STDERR "%s Mark details of trips\n", get_time();
 foreach my $route_id ( @route_ids_of_agency ) {
 
     @trip_ids_of_route_id       = FindTripIdsOfRouteId( $route_id );
@@ -133,6 +137,8 @@ foreach my $route_id ( @route_ids_of_agency ) {
     %stop_id_hash_of_route_id   = ();
 
     %stop_name_hash_of_route_id = ();
+
+    %detail_hash_of_trips       = ();
 
     foreach my $trip_id ( @trip_ids_of_route_id ) {
 
@@ -144,22 +150,29 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
         MarkSuspiciousTripDuration( $trip_id );
 
+        $shape_id        = FindShapeIdOfTripId( $trip_id ) || '-';
+
         $stop_id_list    = FindStopIdListAsString( $trip_id );
 
-        $stop_id_hash_of_route_id{$stop_id_list} = $trip_id   if ( $stop_id_list );
+#        $stop_id_hash_of_route_id{$stop_id_list} = $trip_id   if ( $stop_id_list );
 
         $stop_name_list  = FindStopNameListAsString( $trip_id );
 
-        push( @{$stop_name_hash_of_route_id{$stop_name_list}}, $trip_id );
+        $detail_hash_of_trips{$trip_id}{'shape_id'}   = $shape_id;
+        $detail_hash_of_trips{$trip_id}{'stop_ids'}   = $stop_id_list;
+        $detail_hash_of_trips{$trip_id}{'stop_names'} = $stop_name_list;
+
+#        push( @{$stop_name_hash_of_route_id{$stop_name_list.$list_separator.$shape_id}}, $trip_id );
+
     }
 
-    printf STDERR "Route-ID: %s Trip-IDs: %s\n", $route_id, join( ', ', values(%stop_id_hash_of_route_id) )  if ( $debug );
+#    MarkSubRoutesBasedOnId( \%stop_id_hash_of_route_id );
 
-    MarkSubRoutesBasedOnId( \%stop_id_hash_of_route_id );
+#    MarkIdenticalRoutesBasedOnName( \%stop_name_hash_of_route_id );
 
-    MarkIdenticalRoutesBasedOnName( \%stop_name_hash_of_route_id );
+    MarkTripsOfRouteId( $route_id, \%detail_hash_of_trips );
 }
-printf STDERR "%s Loop over route_ids ... done\n", get_time();
+printf STDERR "\n%s Mark details of trips ... done\n", get_time();
 
 printf STDERR "%s Calculate Rides ... be patient\n", get_time();
 FindNumberOfRidesForTripIds();
@@ -250,6 +263,32 @@ sub FindTripIdsOfRouteId {
     }
 
     return @return_array;
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub FindShapeIdOfTripId {
+    my $trip_id     = shift || '-';
+
+    my $sth          = undef;
+    my $hash_ref     = undef;
+
+    $sth = $dbh->prepare( "SELECT *
+                           FROM   trips
+                           WHERE  trip_id=?;" );
+    $sth->execute( $trip_id );
+
+    while ( $hash_ref = $sth->fetchrow_hashref() ) {
+        if ( $hash_ref->{'shape_id'} ) {
+            return $hash_ref->{'shape_id'};
+        }
+    }
+
+    return '';
 }
 
 
@@ -792,8 +831,7 @@ sub CalculateSumRidesOfLongestTrip {
 
 #############################################################################################
 #
-# check whether we find sub-routes of this route here.
-# I.e. a stop-list which is a sub-string of another stop-list
+# check whether we find trips with identical list of stop names but different list of stop ids
 #
 
 sub MarkIdenticalRoutesBasedOnName {
@@ -826,6 +864,64 @@ sub MarkIdenticalRoutesBasedOnName {
 
     $dbh->commit();
 
+}
+
+
+#############################################################################################
+#
+# check similarities and differences between trips of same route
+#
+
+sub MarkTripsOfRouteId {
+    my $route_id         = shift;
+    my $details_hash_ref = shift;
+
+    my @trip_ids = keys( %{$details_hash_ref} );
+    my $last_len = 1;
+    my $printstring = ' ';
+
+    my @subroute_of = ();
+    my @same_names_but_different_ids = ();
+    my @same_stops_but_different_shape_ids = ();
+
+    my $sthI = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (subroute_of,same_names_but_different_ids,same_stops_but_different_shape_ids,trip_id) VALUES (?,?,?,?);" );
+
+    foreach my $trip_id (@trip_ids) {
+        @subroute_of = ();
+        @same_names_but_different_ids = ();
+        @same_stops_but_different_shape_ids = ();
+        foreach my $compare_with_trip_id (@trip_ids) {
+            if ( $trip_id ne $compare_with_trip_id ) {
+                $printstring = sprintf "Route-Id %s: compare trip-id %s with %s", $route_id, $trip_id, $compare_with_trip_id;
+                printf STDERR "%${last_len}s%20s\r%s\r", ' ', ' ', $printstring;
+                $last_len = length( $printstring );
+
+                if  ( $details_hash_ref->{$trip_id}{'stop_ids'} ne $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} ) {
+                    if ( $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} =~ m/\Q$details_hash_ref->{$trip_id}{'stop_ids'}\E/ ) {
+                        #printf STDERR "Route-Id %s: trip %s is sub-route of %s\n", $route_id, $trip_id, $compare_with_trip_id;
+                        push( @subroute_of, $compare_with_trip_id );
+                    }
+                    if ( $details_hash_ref->{$trip_id}{'stop_names'} eq $details_hash_ref->{$compare_with_trip_id}{'stop_names'} ) {
+                        #printf STDERR "Route-Id %s: Same stop names but different stop ids for %s and %s\n", $route_id, $trip_id, $compare_with_trip_id;
+                        push( @same_names_but_different_ids, $compare_with_trip_id );
+                    }
+                } else {
+                    if ( $details_hash_ref->{$trip_id}{'stop_names'} eq $details_hash_ref->{$compare_with_trip_id}{'stop_names'} ) {
+                        #printf STDERR "Route-Id %s: Same stop names and stop ids but different shape ids for %s and %s\n", $route_id, $trip_id, $compare_with_trip_id;
+                        push( @same_stops_but_different_shape_ids, $compare_with_trip_id );
+                    }
+                }
+            }
+        }
+        if ( scalar(@subroute_of)                        ||
+             scalar(@same_names_but_different_ids)       ||
+             scalar(@same_stops_but_different_shape_ids)    ) {
+            $sthI->execute( join(',',@subroute_of),
+                            join(',',@same_names_but_different_ids),
+                            join(',',@same_stops_but_different_shape_ids),
+                            $trip_id );
+        }
+    }
 }
 
 
