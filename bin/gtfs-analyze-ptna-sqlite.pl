@@ -115,10 +115,6 @@ my @route_ids_of_agency         = FindRouteIdsOfAgency( $agency );
 
 my @trip_ids_of_route_id        = ();
 
-my %stop_id_hash_of_route_id    = ();
-
-my %stop_name_hash_of_route_id  = ();
-
 my %detail_hash_of_trips        = ();
 
 my $shape_id                    = '';
@@ -133,10 +129,6 @@ printf STDERR "%s Mark details of trips\n", get_time();
 foreach my $route_id ( @route_ids_of_agency ) {
 
     @trip_ids_of_route_id       = FindTripIdsOfRouteId( $route_id );
-
-    %stop_id_hash_of_route_id   = ();
-
-    %stop_name_hash_of_route_id = ();
 
     %detail_hash_of_trips       = ();
 
@@ -154,25 +146,16 @@ foreach my $route_id ( @route_ids_of_agency ) {
 
         $stop_id_list    = FindStopIdListAsString( $trip_id );
 
-#        $stop_id_hash_of_route_id{$stop_id_list} = $trip_id   if ( $stop_id_list );
-
         $stop_name_list  = FindStopNameListAsString( $trip_id );
 
         $detail_hash_of_trips{$trip_id}{'shape_id'}   = $shape_id;
         $detail_hash_of_trips{$trip_id}{'stop_ids'}   = $stop_id_list;
         $detail_hash_of_trips{$trip_id}{'stop_names'} = $stop_name_list;
-
-#        push( @{$stop_name_hash_of_route_id{$stop_name_list.$list_separator.$shape_id}}, $trip_id );
-
     }
-
-#    MarkSubRoutesBasedOnId( \%stop_id_hash_of_route_id );
-
-#    MarkIdenticalRoutesBasedOnName( \%stop_name_hash_of_route_id );
 
     MarkTripsOfRouteId( $route_id, \%detail_hash_of_trips );
 }
-printf STDERR "\n%s Mark details of trips ... done\n", get_time();
+printf STDERR "%s Mark details of trips ... done\n", get_time();
 
 printf STDERR "%s Calculate Rides ... be patient\n", get_time();
 FindNumberOfRidesForTripIds();
@@ -922,6 +905,7 @@ sub MarkTripsOfRouteId {
                             $trip_id );
         }
     }
+    #printf STDERR "\n";
 }
 
 
