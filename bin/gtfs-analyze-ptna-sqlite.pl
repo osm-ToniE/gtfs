@@ -892,9 +892,9 @@ sub MarkTripsOfRouteId {
         @same_stops_but_different_shape_ids = ();
         foreach my $compare_with_trip_id (@trip_ids) {
             if ( $trip_id ne $compare_with_trip_id ) {
-                $printstring = sprintf "Route-Id %s: compare trip-id %s with %s", $route_id, $trip_id, $compare_with_trip_id;
-                printf STDERR "%${last_len}s%20s\r%s\r", ' ', ' ', $printstring;
-                $last_len = length( $printstring );
+                #$printstring = sprintf "Route-Id %s: compare trip-id %s with %s", $route_id, $trip_id, $compare_with_trip_id;
+                #printf STDERR "%${last_len}s%20s\r%s\r", ' ', ' ', $printstring;
+                #$last_len = length( $printstring );
 
                 if  ( $details_hash_ref->{$trip_id}{'stop_ids'} ne $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} ) {
                     if ( $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} =~ m/\Q$details_hash_ref->{$trip_id}{'stop_ids'}\E/ ) {
