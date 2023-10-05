@@ -533,12 +533,11 @@ sub MarkSuspiciousNumberOfStops {
         $sth->execute( $trip_id );
 
         @row = $sth->fetchrow_array();
-        if ( scalar(@row) && $row[0] == 2 ) {
-
-            $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_number_of_stops='2' WHERE trip_id=?;" );
-            $sth->execute( $trip_id );
-            $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_number_of_stops) VALUES (?,'2');" );
-            $sth->execute( $trip_id );
+        if ( scalar(@row) && $row[0] <= 2 ) {
+            $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_number_of_stops=? WHERE trip_id=?;" );
+            $sth->execute( $row[0], $trip_id );
+            $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (suspicious_number_of_stops,trip_id) VALUES (?,?);" );
+            $sth->execute( $row[0], $trip_id );
 
             printf STDERR "Suspicious number of stops for: %s\n", $trip_id  if ( $debug  );
 
@@ -589,54 +588,6 @@ sub MarkSuspiciousTripDuration {
 
         $dbh->commit();
     }
-}
-
-
-#############################################################################################
-#
-# check whether we find sub-routes of this route here.
-# I.e. a stop-list which is a sub-string of another stop-list
-#
-
-sub MarkSubRoutesBasedOnId {
-    my $hash_ref        = shift;
-
-    my $stoplist1       = '';
-    my $stoplist2       = '';
-    my @subroute_of     = ();
-
-    if ( $hash_ref ) {
-
-        my @stop_lists = keys( %{$hash_ref} );
-
-        my $sthU = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET subroute_of=? WHERE trip_id=?;" );
-        my $sthI = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (subroute_of,trip_id) VALUES (?,?);" );
-
-        foreach $stoplist1 (@stop_lists) {
-
-            @subroute_of = ();
-
-            foreach $stoplist2 (@stop_lists) {
-
-                next if ( $stoplist1 eq $stoplist2 );
-
-                if ( $stoplist2 =~ m/\Q$stoplist1\E/ ) {
-                    push( @subroute_of, ${$hash_ref}{$stoplist2} );
-                }
-            }
-
-            if ( scalar(@subroute_of) ) {
-
-                $sthU->execute( join(',',@subroute_of), ${$hash_ref}{$stoplist1} );
-                $sthI->execute( join(',',@subroute_of), ${$hash_ref}{$stoplist1} );
-
-                printf STDERR "%s is sub-route of: %s\n", ${$hash_ref}{$stoplist1}, join( ', ', @subroute_of )  if ( $debug );
-            }
-        }
-    }
-
-    $dbh->commit();
-
 }
 
 
@@ -763,17 +714,16 @@ sub CalculateSumRidesOfLongestTrip {
     my $hash_refSR  = undef;
     my $route_id    = undef;
     my $trip_id     = undef;
+    my $rowid       = 0;
     my $rides       = 0;
     my $sum_rides   = 0;
-    my $count       = 0;
     my $updated     = 0;
 
     my $sthUS = $dbh->prepare( "UPDATE    ptna_trips SET sum_rides=? WHERE trip_id=?;" );
 
-    my $sthT  = $dbh->prepare( "SELECT     ptna_trips.trip_id AS tripid, ptna_trips.route_id AS route_id, rides
-                                FROM       ptna_trips
-                                LEFT JOIN  ptna_trips_comments ON ptna_trips.trip_id = ptna_trips_comments.trip_id
-                                WHERE      ptna_trips_comments.trip_id IS NULL OR ptna_trips_comments.trip_id IS NOT NULL OR ptna_trips_comments.subroute_of IS NULL OR ptna_trips_comments.subroute_of = '';" );
+    my $sthT  = $dbh->prepare( "SELECT    rowid, trip_id, route_id, rides
+                                FROM      ptna_trips
+                                WHERE     trip_id NOT IN (SELECT trip_id FROM ptna_trips_comments WHERE subroute_of != '');" );
 
     my $sthSR = $dbh->prepare( "SELECT    SUM(rides) AS sum_rides
                                 FROM      ptna_trips
@@ -786,10 +736,10 @@ sub CalculateSumRidesOfLongestTrip {
     $sthT->execute();
 
     while ( $hash_refT = $sthT->fetchrow_hashref() ) {
+        $rowid       = $hash_refT->{'rowid'};
         $route_id    = $hash_refT->{'route_id'};
-        $trip_id     = $hash_refT->{'tripid'};
+        $trip_id     = $hash_refT->{'trip_id'};
         $rides       = $hash_refT->{'rides'}       || 0;
-        $count++;
         #printf STDERR "CalculateSumRidesOfLongestTrip: %s - %s -> rides = %d, subroute_of = '%s'\r", $route_id, $trip_id, $rides, $subroute_of;
 
         $sthSR->execute( $route_id, $trip_id, $trip_id.',%', '%,'.$trip_id.',%', '%,'.$trip_id);
@@ -799,50 +749,12 @@ sub CalculateSumRidesOfLongestTrip {
                 $sum_rides += $rides;
                 $sthUS->execute( $sum_rides, $trip_id );
                 $updated++;
-                printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $count, $trip_id, $rides, $sum_rides, ' ';
+                printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $rowid, $trip_id, $rides, $sum_rides, ' ';
             }
         }
     }
     if ( $updated ) {
         printf STDERR "\n";
-    }
-
-    $dbh->commit();
-
-}
-
-
-#############################################################################################
-#
-# check whether we find trips with identical list of stop names but different list of stop ids
-#
-
-sub MarkIdenticalRoutesBasedOnName {
-    my $name_hash_ref   = shift;
-
-    my $stopnamelist    = '';
-    my $trip_id         = '';
-
-    if ( $name_hash_ref ) {
-
-       my @stop_name_lists = keys( %{$name_hash_ref} );
-
-        my $sthU = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET same_names_but_different_ids=? WHERE trip_id=?;" );
-        my $sthI = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (same_names_but_different_ids,trip_id) VALUES (?,?);" );
-
-        foreach $stopnamelist (@stop_name_lists) {
-
-            if ( scalar( @{${$name_hash_ref}{$stopnamelist}} ) > 1 ) {
-
-                foreach $trip_id ( @{${$name_hash_ref}{$stopnamelist}} ) {
-
-                    $sthU->execute( join(',',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
-                    $sthI->execute( join(',',@{${$name_hash_ref}{$stopnamelist}}), $trip_id );
-
-                    printf STDERR "%s have same stop names: %s\n", $trip_id, join( ', ', @{${$name_hash_ref}{$stopnamelist}} ) if ( $verbose );
-                }
-            }
-        }
     }
 
     $dbh->commit();
