@@ -277,7 +277,7 @@ sub FindShapeIdOfTripId {
 
 #############################################################################################
 #
-#
+# list has already been ordered by stop_sequence in gtfs-aggregate.pl, so group_concat works as expected
 #
 
 sub FindStopIdListAsString {
@@ -305,7 +305,7 @@ sub FindStopIdListAsString {
 
 #############################################################################################
 #
-#
+# list has already been ordered by stop_sequence in gtfs-aggregate.pl, so group_concat works as expected
 #
 
 sub FindStopNameListAsString {

@@ -419,6 +419,9 @@ sub FindUniqueTripIds {
 
         $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
+        #if ( $trip_id =~ m/^MTN-I-L/ ){
+        #    printf STDERR "route_id %s, trip_id %s: %s - %s\n", $route_id, $trip_id, $stop_id_list_as_string, $shape_id;
+        #}
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
 
         if ( !defined($stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string}) ) {
@@ -511,7 +514,7 @@ sub FindUniqueTripIds {
 
 #############################################################################################
 #
-#
+# there seems to be a bug: group_concat() does not work correctly with order by
 #
 
 sub FindStopIdListAsString {
@@ -519,20 +522,21 @@ sub FindStopIdListAsString {
 
     my $sth          = undef;
     my @row          = ();
+    my @stop_id_list = ();
 
-    $sth = $dbh->prepare( "SELECT   GROUP_CONCAT(stop_id,'$list_separator')
+    $sth = $dbh->prepare( "SELECT   stop_id
                            FROM     stop_times
                            WHERE    trip_id=?
                            ORDER BY CAST (stop_sequence AS INTEGER) ASC;" );
     $sth->execute( $trip_id );
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
-            return $row[0];
+        if ( $row[0] ) {
+            push( @stop_id_list, $row[0] );
         }
     }
 
-    return '';
+    return join( $list_separator,@stop_id_list );
 
 }
 
