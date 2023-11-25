@@ -376,16 +376,25 @@ sub NormalizeString {
     my $normalized = $original;
 
     if ( $original ) {
-        if ( $language eq 'de' ) {
+        if ( $language =~ m/^de/ ) {
             $normalized =~ s/,/, /g;
+            if ( $language == 'de_CH' ) {
+                $normalized =~ s/Str\./Strasse /g;
+                $normalized =~ s/Str$/Strasse/g;
+                $normalized =~ s/str$/strasse/g;
+                $normalized =~ s/str\./strasse /g;
+                $normalized =~ s/str$/strasse/g;
+            } else {
+                $normalized =~ s/Str\./Straße /g;
+                $normalized =~ s/Str$/Straße/g;
+                $normalized =~ s/str$/straße/g;
+                $normalized =~ s/str\./straße /g;
+                $normalized =~ s/str$/straße/g;
+            }
             $normalized =~ s/\(b\./(bei /g;
-            $normalized =~ s/nchnerStr\./nchner Straße /g;
-            $normalized =~ s/Str\./Straße /g;
-            $normalized =~ s/Str$/Straße/g;
-            $normalized =~ s/str$/straße/g;
-            $normalized =~ s/str\./straße /g;
-            $normalized =~ s/str$/straße/g;
+            $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Pl\./Platz /g;
+            $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Abzw\./Abzweig /g;
             $normalized =~ s/rstenfeldbr,/rstenfeldbruck, /g;
             $normalized =~ s/rstenfeldb\.,/rstenfeldbruck, /g;
@@ -425,14 +434,26 @@ sub NormalizeString {
             $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
             $normalized =~ s/Freising,\s*RS Gute .nger/Freising, Realschule Gute Änger/g;
             $normalized =~ s/J\.-Dosch-Schule/Josef-Dosch-Schule/g;
+            $normalized =~ s/Gudrunsiedlg\./Gudrunsiedlung/g;
+            $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
+            $normalized =~ s/Höhenkirchen-S\./Höhenkirchen-Siegertsbrunn/g;
+            $normalized =~ s/Brunnth\.Stra/Brunnthaler Stra/g;
+            $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
+            $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/;
+            $normalized =~ s/Haslach \(Landkreis EBE\)/Haslach (Landkreis Ebersberg)/;
+            $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
+            $normalized =~ s/Hl\. Blut/Heilig Blut/
+            $normalized =~ s/Hallbergm\./Hallbergmoos/
+            $normalized =~ s/Bildungsz\./Bildungszentrum/
+            $normalized =~ s/Kerschenst\./Kerschensteiner/
             $normalized =~ s/\s+/ /g;
             $normalized =~ s/^\s//g;
             $normalized =~ s/\s$//g;
             $normalized =~ s/\s,/,/g;
             $normalized =~ s/\( /(/g;
             $normalized =~ s/ \)/)/g;
-            $normalized =~ s|/ |/|g;
-            $normalized =~ s| /|/|g;
+#            $normalized =~ s|/ |/|g;
+#            $normalized =~ s| /|/|g;
         }
     }
 
