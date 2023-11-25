@@ -391,6 +391,9 @@ sub NormalizeString {
                 $normalized =~ s/str\./straße /g;
                 $normalized =~ s/str$/straße/g;
             }
+            if ( $language == 'de_AT' ) {
+                $normalized =~ s/St\./Sankt /g;
+            }
             $normalized =~ s/\(b\./(bei /g;
             $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Pl\./Platz /g;
