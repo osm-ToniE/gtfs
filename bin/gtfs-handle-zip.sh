@@ -39,24 +39,26 @@ if [ "$COUNTRY" = "DE" ]
 then
     use_language="de"
 elif [ "$COUNTRY" = "CH" ]
+then
     use_language="de_CH"
 elif [ "$COUNTRY" = "AT" ]
+then
     use_language="de_AT"
 else
     use_language="en"
 fi
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start preparation $*"
-gtfs-prepare-ptna-sqlite.sh $* --language=$use_language
+gtfs-prepare-ptna-sqlite.sh --language=$use_language $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start aggregation $*"
-gtfs-aggregate-ptna-sqlite.pl $* --language=$use_language
+gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis $*"
-gtfs-analyze-ptna-sqlite.pl $* --language=$use_language
+gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
 
 echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $*"
-gtfs-normalize-ptna-sqlite.pl $* --language=$use_language
+gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
 
 if [ -f ../post-process-ptna-sqlite.sh ]
 then
