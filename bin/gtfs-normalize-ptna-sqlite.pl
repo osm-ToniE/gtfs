@@ -445,10 +445,10 @@ sub NormalizeString {
             $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/;
             $normalized =~ s/Haslach \(Landkreis EBE\)/Haslach (Landkreis Ebersberg)/;
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
-            $normalized =~ s/Hl\. Blut/Heilig Blut/
-            $normalized =~ s/Hallbergm\./Hallbergmoos/
-            $normalized =~ s/Bildungsz\./Bildungszentrum/
-            $normalized =~ s/Kerschenst\./Kerschensteiner/
+            $normalized =~ s/Hl\. Blut/Heilig Blut/;
+            $normalized =~ s/Hallbergm\./Hallbergmoos/;
+            $normalized =~ s/Bildungsz\./Bildungszentrum/;
+            $normalized =~ s/Kerschenst\./Kerschensteiner/;
             $normalized =~ s/\s+/ /g;
             $normalized =~ s/^\s//g;
             $normalized =~ s/\s$//g;
