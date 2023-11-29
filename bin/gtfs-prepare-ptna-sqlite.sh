@@ -263,9 +263,9 @@ then
     if [ $(head -1 routes.txt | fgrep -c agency_id) == 0 ]
     then
         sqlite3 $SQ_OPTIONS $DB "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
+        sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id='???' WHERE agency_id='';"
     fi
     sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET route_short_name = route_long_name WHERE route_short_name='';"
-    sqlite3 $SQ_OPTIONS $DB "UPDATE routes SET agency_id='???' WHERE agency_id='';"
     rm -f routes-wo-header.txt
 fi
 
