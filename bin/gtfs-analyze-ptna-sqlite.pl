@@ -11,9 +11,9 @@ use strict;
 use POSIX;
 
 use utf8;
-binmode STDIN,  ":utf8";
-binmode STDOUT, ":utf8";
-binmode STDERR, ":utf8";
+binmode STDIN,  ":encoding(UTF-8)";
+binmode STDOUT, ":encoding(UTF-8)";
+binmode STDERR, ":encoding(UTF-8)";
 use Encode;
 
 use DBI;
@@ -685,7 +685,7 @@ sub FindNumberOfRidesForTripIds {
         } else {
             @array_service_ids = split($list_separator,$list_service_ids)
         }
-        foreach $service_id ( @array_service_ids ) {
+        foreach my $service_id ( @array_service_ids ) {
         #    printf STDERR "    %s: %d += %d\n", $service_id, $rides, $service_id_service_days{$service_id};
             if ( $service_id_service_days{$service_id} ) {      # key might not exist
                 $rides += $service_id_service_days{$service_id};
