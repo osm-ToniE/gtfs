@@ -378,7 +378,7 @@ sub NormalizeString {
     if ( $original ) {
         if ( $language =~ m/^de/ ) {
             $normalized =~ s/,/, /g;
-            if ( $language == 'de_CH' ) {
+            if ( $language eq 'de_CH' ) {
                 $normalized =~ s/Str\./Strasse /g;
                 $normalized =~ s/Str$/Strasse/g;
                 $normalized =~ s/str$/strasse/g;
@@ -391,7 +391,7 @@ sub NormalizeString {
                 $normalized =~ s/str\./straße /g;
                 $normalized =~ s/str$/straße/g;
             }
-            if ( $language == 'de_AT' ) {
+            if ( $language eq 'de_AT' ) {
                 $normalized =~ s/St\./Sankt /g;
             }
             $normalized =~ s/\(b\./(bei /g;
