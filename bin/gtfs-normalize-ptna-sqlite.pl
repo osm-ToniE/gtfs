@@ -393,12 +393,14 @@ sub NormalizeString {
             }
             if ( $language eq 'de_AT' ) {
                 $normalized =~ s/St\./Sankt /g;
+                $normalized =~ s/Abzw /Abzweigung /g;
             }
             $normalized =~ s/\(b\./(bei /g;
             $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Pl\./Platz /g;
             $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Abzw\./Abzweig /g;
+            $normalized =~ s/Abzw /Abzweig /g;
             $normalized =~ s/rstenfeldbr,/rstenfeldbruck, /g;
             $normalized =~ s/rstenfeldb\.,/rstenfeldbruck, /g;
             $normalized =~ s/Gym\./Gymnasium /g;
