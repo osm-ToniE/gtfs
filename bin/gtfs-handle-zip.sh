@@ -14,24 +14,24 @@
 
 use_language="de"
 
-network_dir=$(dirname $PWD)
+network_dir=$(dirname "$PWD")
 
-D3=$(basename $network_dir)
+#D3=$(basename "$network_dir")
 
-D2_path=$(dirname $network_dir)
-D2=$(basename $D2_path)
+D2_path=$(dirname "$network_dir")
+D2=$(basename "$D2_path")
 
-D1_path=$(dirname $D2_path)
-D1=$(basename $D1_path)
+D1_path=$(dirname "$D2_path")
+D1=$(basename "$D1_path")
 
 if [ "$D1" = "gtfs-networks" ]
 then
-    TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
-    FORMER_DB="$WORK_BASE_DIR/$D2/$D2-$D3-prev-$DB"
+#    TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
+#    FORMER_DB="$WORK_BASE_DIR/$D2/$D2-$D3-prev-$DB"
     COUNTRY=$D2
 else
-    TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
-    FORMER_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-prev-$DB"
+#    TARGET_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-$DB"
+#    FORMER_DB="$WORK_BASE_DIR/$D1/$D2/$D1-$D2-$D3-prev-$DB"
     COUNTRY=$D1
 fi
 
@@ -48,20 +48,20 @@ else
     use_language="en"
 fi
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start preparation $*"
-gtfs-prepare-ptna-sqlite.sh --language=$use_language $*
+echo "$(date '+%Y-%m-%d %H:%M:%S') start preparation $*"
+gtfs-prepare-ptna-sqlite.sh --language=$use_language "$*"
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start aggregation $*"
-gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
+echo "$(date '+%Y-%m-%d %H:%M:%S') start aggregation $*"
+gtfs-aggregate-ptna-sqlite.pl --language=$use_language "$*"
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start analysis $*"
-gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
+echo "$(date '+%Y-%m-%d %H:%M:%S') start analysis $*"
+gtfs-analyze-ptna-sqlite.pl --language=$use_language "$*"
 
-echo $(date '+%Y-%m-%d %H:%M:%S') "start normalization $*"
-gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
+echo "$(date '+%Y-%m-%d %H:%M:%S') start normalization $*"
+gtfs-normalize-ptna-sqlite.pl --language=$use_language "$*"
 
 if [ -f ../post-process-ptna-sqlite.sh ]
 then
-    echo $(date '+%Y-%m-%d %H:%M:%S') "start post processing $*"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') start post processing $*"
     ../post-process-ptna-sqlite.sh
 fi

@@ -19,18 +19,18 @@ RELEASE_DATE=$(sqlite3 $DB "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
 if [ -n "$RELEASE_DATE" ]
 then
-    RELEASE_DATE=$(basename $GTFS_DIR)
+    RELEASE_DATE=$(basename "$GTFS_DIR")
 fi
 
-network_dir=$(dirname $GTFS_DIR)
+network_dir=$(dirname "$GTFS_DIR")
 
-D3=$(basename $network_dir)
+D3=$(basename "$network_dir")
 
-D2_path=$(dirname $network_dir)
-D2=$(basename $D2_path)
+D2_path=$(dirname "$network_dir")
+D2=$(basename "$D2_path")
 
-D1_path=$(dirname $D2_path)
-D1=$(basename $D1_path)
+D1_path=$(dirname "$D2_path")
+D1=$(basename "$D1_path")
 
 if [ "$D1" = "gtfs-feeds" ]
 then
@@ -49,7 +49,7 @@ else
     COUNTRY=$D1
 fi
 
-if [ "$COUNTRY" = "DE" -o "$COUNTRY" = "CH" ]
+if [ "$COUNTRY" = "DE" ] || [ "$COUNTRY" = "CH" ]
 then
     use_language=de
 else
@@ -57,42 +57,42 @@ else
 fi
 
 echo
-echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as with 'date' = $RELEASE_DATE"
+echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as with 'date' = $RELEASE_DATE"
 
 echo
-echo $(date '+%Y-%m-%d %H:%M:%S') "start rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB"
-mkdir -p $TARGET_DIR 2> /dev/null
-rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB
+echo "$(date '+%Y-%m-%d %H:%M:%S') start rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB"
+mkdir -p "$TARGET_DIR" 2> /dev/null
+rsync -tvu $DB "$TARGET_DIR/$WITHDATE_DB"
 
-cd $TARGET_DIR
+cd "$TARGET_DIR" || { echo "cannot cd into TARGET_DIR $TARGET_DIR"; exit 1; }
 
 if [ "$1" = "-n" ]
 then
 
     echo
-    echo $(date '+%Y-%m-%d %H:%M:%S') "Publish as 'newest'"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as 'newest'"
 
-    former_newest=$(readlink $TARGET_SYM)
-
-    echo
-    echo $(date '+%Y-%m-%d %H:%M:%S') "remove symbolic link 'newest' (rm -f $TARGET_SYM)"
-    rm -f $TARGET_SYM
+    former_newest=$(readlink "$TARGET_SYM")
 
     echo
-    echo $(date '+%Y-%m-%d %H:%M:%S') "set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
-    ln -s $WITHDATE_DB $TARGET_SYM
+    echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'newest' (rm -f $TARGET_SYM)"
+    rm -f "$TARGET_SYM"
+
+    echo
+    echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
+    ln -s "$WITHDATE_DB" "$TARGET_SYM"
 
     if [ -n "$former_newest" ]
     then
         echo
-        echo $(date '+%Y-%m-%d %H:%M:%S') "remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
-        rm -f $PREVIOUS_SYM
+        echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
+        rm -f "$PREVIOUS_SYM"
 
         echo
-        echo $(date '+%Y-%m-%d %H:%M:%S') "set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
-        ln -s $former_newest $PREVIOUS_SYM
+        echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
+        ln -s "$former_newest" "$PREVIOUS_SYM"
 
-        RELEASE_DATE=$(sqlite3 $PREVIOUS_SYM "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+        RELEASE_DATE=$(sqlite3 "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
         if [ "$use_language" = "de" ]
         then
@@ -102,8 +102,8 @@ then
         fi
 
         echo
-        echo $(date '+%Y-%m-%d %H:%M:%S') "update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
-        sqlite3 $PREVIOUS_SYM "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
+        sqlite3 "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
     fi
 
 elif [ "$1" = "-o" ]
@@ -116,9 +116,9 @@ then
     fi
 
     echo
-    echo $(date '+%Y-%m-%d %H:%M:%S') "update comment='$new_comment' for this old version $WITHDATE_DB"
-    sqlite3 $WITHDATE_DB "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for this old version $WITHDATE_DB"
+    sqlite3 "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
 
 fi
 
-cd $GTFS_DIR
+cd "$GTFS_DIR" || { echo "cannot cd into GTFS_DIR $GTFS_DIR"; exit 1; }
