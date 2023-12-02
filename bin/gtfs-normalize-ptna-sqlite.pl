@@ -229,7 +229,7 @@ sub NormalizeRouteLongName {
     $sth = $dbh->prepare( "SELECT route_long_name,route_id FROM routes;" );
     $sth->execute();
 
-    $sth2 = $dbh->prepare( "INSERT OR IGNORE INTO ptna_routes (normalized_route_long_name,route_id) VALUES (?,?);" );
+    $sth2 = $dbh->prepare( "REPLACE INTO ptna_routes (normalized_route_long_name,route_id) VALUES (?,?);" );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] && $row[1]  ) {
@@ -338,7 +338,7 @@ sub NormalizeStopName {
     $sth = $dbh->prepare( "SELECT stop_name,stop_id FROM stops;" );
     $sth->execute();
 
-    $sth2 = $dbh->prepare( "INSERT OR IGNORE INTO ptna_stops (normalized_stop_name,stop_id) VALUES (?,?);" );
+    $sth2 = $dbh->prepare( "REPLACE INTO ptna_stops (normalized_stop_name,stop_id) VALUES (?,?);" );
 
     while ( @row = $sth->fetchrow_array() ) {
         if ( $row[0] && $row[1]  ) {
@@ -352,7 +352,7 @@ sub NormalizeStopName {
 
                 $number_of_normalized++;
 
-                #printf STDERR "Stop: %s -> %s\n", $original, $normalized;
+                printf STDERR "Stop %s: %s -> %s\n", $stop_id, $original, $normalized;
                 printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
             }
         }
@@ -379,23 +379,25 @@ sub NormalizeString {
         if ( $language =~ m/^de/ ) {
             $normalized =~ s/,/, /g;
             if ( $language eq 'de_CH' ) {
-                $normalized =~ s/Str\./Strasse /g;
+                $normalized =~ s/Str\./Strasse/g;
                 $normalized =~ s/Str$/Strasse/g;
                 $normalized =~ s/str$/strasse/g;
                 $normalized =~ s/str\./strasse /g;
                 $normalized =~ s/str$/strasse/g;
             } else {
-                $normalized =~ s/Str\./Straße /g;
+                $normalized =~ s/Str\./Straße/g;
                 $normalized =~ s/Str$/Straße/g;
                 $normalized =~ s/str$/straße/g;
                 $normalized =~ s/str\./straße /g;
                 $normalized =~ s/str$/straße/g;
             }
             if ( $language eq 'de_AT' ) {
+                $normalized =~ s/St\.-/Sankt /g;
                 $normalized =~ s/St\./Sankt /g;
                 $normalized =~ s/Abzw /Abzweigung /g;
             }
             $normalized =~ s/\(b\./(bei /g;
+            $normalized =~ s/ b\./ bei /g;
             $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Pl\./Platz /g;
             $normalized =~ s/Bf\./Bahnhof/g;
