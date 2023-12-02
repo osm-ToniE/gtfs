@@ -11,9 +11,9 @@ use strict;
 use POSIX;
 
 use utf8;
-binmode STDIN,  ":utf8";
-binmode STDOUT, ":utf8";
-binmode STDERR, ":utf8";
+binmode STDIN,  ":encoding(UTF-8)";
+binmode STDOUT, ":encoding(UTF-8)";
+binmode STDERR, ":encoding(UTF-8)";
 use Encode;
 
 use DBI;

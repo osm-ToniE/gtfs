@@ -11,9 +11,9 @@ use strict;
 use POSIX;
 
 use utf8;
-binmode STDIN,  ":utf8";
-binmode STDOUT, ":utf8";
-binmode STDERR, ":utf8";
+binmode STDIN,  ":encoding(UTF-8)";
+binmode STDOUT, ":encoding(UTF-8)";
+binmode STDERR, ":encoding(UTF-8)";
 use Encode;
 
 use DBI;
@@ -212,7 +212,7 @@ sub FindRouteIdsOfAgency {
         $join_clause  = "JOIN agency ON routes.agency_id = agency.agency_id";
         my @agencies = split( ',', $agency );
         $where_clause = 'WHERE';
-        foreach $agency ( @agencies ) {
+        foreach my $agency ( @agencies ) {
             $where_clause .= sprintf( " agency.agency_id='%s' OR agency.agency_name='%s' OR", $agency, $agency );
         }
         $where_clause =~ s/ OR$//;
