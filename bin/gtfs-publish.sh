@@ -20,7 +20,7 @@ WORK_BASE_DIR="/osm/ptna/work"
 
 GTFS_DIR=$PWD
 
-RELEASE_DATE=$(sqlite3 SQ_OPTIONS "$DB" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+RELEASE_DATE=$(sqlite3 $SQ_OPTIONS "$DB" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
 if [ -n "$RELEASE_DATE" ]
 then
@@ -54,7 +54,7 @@ else
     COUNTRY=$D1
 fi
 
-if [ "$COUNTRY" = "DE" ] || [ "$COUNTRY" = "CH" || [ "$COUNTRY" = "AT" ]
+if [ "$COUNTRY" = "DE" ] || [ "$COUNTRY" = "CH" ] || [ "$COUNTRY" = "AT" ]
 then
     use_language=de
 else
@@ -97,7 +97,7 @@ then
         echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
         ln -s "$former_newest" "$PREVIOUS_SYM"
 
-        RELEASE_DATE=$(sqlite3 SQ_OPTIONS "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+        RELEASE_DATE=$(sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
         if [ "$use_language" = "de" ]
         then
