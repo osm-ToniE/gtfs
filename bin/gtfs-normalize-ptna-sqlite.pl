@@ -352,7 +352,7 @@ sub NormalizeStopName {
 
                 $number_of_normalized++;
 
-                printf STDERR "Stop %s: %s -> %s\n", $stop_id, $original, $normalized;
+                printf STDERR "Stop %s: %s -> %s\n", $stop_id, $original, $normalized                          if ( $verbose );
                 printf STDERR "Stops  normalized: %06d of %06d\r", $number_of_normalized, $number_of_stops     if ( $verbose );
             }
         }
