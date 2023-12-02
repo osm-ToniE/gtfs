@@ -3,7 +3,10 @@
 #
 # the GTFS-zip file should be store in a location like this:
 #
-# $PWD ends like this ... gtfs-network/DE/BY/MVV/2020-03-17"
+# $PWD ends like this ...
+# - gtfs-network/DE/BY/MVV/2020-03-17
+# or
+# - gtfs-network/AT/VVV/2020-03-17
 #
 # where DE-BY-MVV later on build the 'network' part of the target DB file
 # where DE and BY and MVV later on build part of the target path /osm/ptna/work/DE/BY/DE-BY-MVV-ptna-gtfs-sqlite.db
@@ -24,7 +27,7 @@ D2=$(basename "$D2_path")
 D1_path=$(dirname "$D2_path")
 D1=$(basename "$D1_path")
 
-if [ "$D1" = "gtfs-networks" ]
+if [ "$D1" = "gtfs-feeds" ]
 then
 #    TARGET_DB="$WORK_BASE_DIR/$D2/$D2-$D3-$DB"
 #    FORMER_DB="$WORK_BASE_DIR/$D2/$D2-$D3-prev-$DB"
@@ -49,16 +52,16 @@ else
 fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start preparation $*"
-gtfs-prepare-ptna-sqlite.sh --language=$use_language "$*"
+gtfs-prepare-ptna-sqlite.sh --language=$use_language $*
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start aggregation $*"
-gtfs-aggregate-ptna-sqlite.pl --language=$use_language "$*"
+gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start analysis $*"
-gtfs-analyze-ptna-sqlite.pl --language=$use_language "$*"
+gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start normalization $*"
-gtfs-normalize-ptna-sqlite.pl --language=$use_language "$*"
+gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
 
 if [ -f ../post-process-ptna-sqlite.sh ]
 then

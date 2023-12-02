@@ -3,7 +3,10 @@
 #
 # the GTFS-zip file should be store in a location like this:
 #
-# $PWD ends like this ... gtfs-network/DE/BY/MVV/2020-03-17"
+# $PWD ends like this ...
+# - gtfs-network/DE/BY/MVV/2020-03-17
+# or
+# - gtfs-network/AT/VVV/2020-03-17
 #
 # where DE-BY-MVV later on build the 'network' part of the target DB file
 # where DE and BY and MVV later on build part of the target path /osm/ptna/work/DE/BY/DE-BY-MVV-ptna-gtfs-sqlite.db
@@ -11,11 +14,13 @@
 
 DB="ptna-gtfs-sqlite.db"
 
+SQ_OPTIONS="-init /dev/null -csv -header"
+
 WORK_BASE_DIR="/osm/ptna/work"
 
 GTFS_DIR=$PWD
 
-RELEASE_DATE=$(sqlite3 $DB "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+RELEASE_DATE=$(sqlite3 SQ_OPTIONS "$DB" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
 if [ -n "$RELEASE_DATE" ]
 then
@@ -49,7 +54,7 @@ else
     COUNTRY=$D1
 fi
 
-if [ "$COUNTRY" = "DE" ] || [ "$COUNTRY" = "CH" ]
+if [ "$COUNTRY" = "DE" ] || [ "$COUNTRY" = "CH" || [ "$COUNTRY" = "AT" ]
 then
     use_language=de
 else
@@ -92,7 +97,7 @@ then
         echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
         ln -s "$former_newest" "$PREVIOUS_SYM"
 
-        RELEASE_DATE=$(sqlite3 "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+        RELEASE_DATE=$(sqlite3 SQ_OPTIONS "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
 
         if [ "$use_language" = "de" ]
         then
@@ -103,7 +108,7 @@ then
 
         echo
         echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
-        sqlite3 "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+        sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
     fi
 
 elif [ "$1" = "-o" ]
@@ -117,7 +122,7 @@ then
 
     echo
     echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for this old version $WITHDATE_DB"
-    sqlite3 "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+    sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
 
 fi
 

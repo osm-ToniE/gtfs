@@ -12,7 +12,7 @@ WORK_BASE_DIR="/osm/ptna/work"
 TEMP=$(getopt -o acdDEfnoPTuv --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
 
 # shellcheck disable=SC2181
-if [ $? != 0 ] ; then echo "$(date "+%Y-%m-%d %H:%M:%S") Terminating..."  >> /dev/stderr ; exit 2 ; fi
+if [ $? != 0 ] ; then echo "$(date '+%Y-%m-%d %H:%M:%S') Terminating..."  >> /dev/stderr ; exit 2 ; fi
 
 eval set -- "$TEMP"
 
@@ -31,7 +31,7 @@ while true ; do
         -u|--url-print)             url_print=true      ; shift ;;
         -v|--verbose)               verbose='-v'        ; shift ;;
         --) shift ; break ;;
-        *) echo "$(date "+%Y-%m-%d %H:%M:%S") Internal error!" >> /dev/stderr ; exit 3 ;;
+        *) echo "$(date '+%Y-%m-%d %H:%M:%S') Internal error!" >> /dev/stderr ; exit 3 ;;
     esac
 done
 
@@ -41,7 +41,7 @@ done
 
 if [ "$clean" = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Removing temporary files" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Removing temporary files" >> /dev/stderr
     if [ -f ./cleanup.sh ]
     then
         ./cleanup.sh "$verbose"
@@ -55,7 +55,7 @@ fi
 
 if [ "$date_print" = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Retrieving Release-Date" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Retrieving Release-Date" >> /dev/stderr
     if [ -f ./get-release-date.sh ]
     then
         ./get-release-date.sh "$verbose"
@@ -70,7 +70,7 @@ fi
 
 if [ "$date_check" = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Checking Release-Date against existing feeds" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Checking Release-Date against existing feeds" >> /dev/stderr
     if [ -f ./get-release-date.sh ] && [ -f ./get-feed-name.sh ]
     then
         FEED_NAME=$(./get-feed-name.sh)
@@ -151,7 +151,7 @@ fi
 
 if [ "$feed_print" = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Retrieving Feed Name" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Retrieving Feed Name" >> /dev/stderr
     if [ -f ./get-feed-name.sh ]
     then
         ./get-feed-name.sh "$verbose"
@@ -166,7 +166,7 @@ fi
 
 if [ "$url_print"  = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Retrieving Release-URL" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Retrieving Release-URL" >> /dev/stderr
     if [ -f ./get-release-url.sh ]
     then
         ./get-release-url.sh "$verbose"
@@ -181,7 +181,7 @@ fi
 
 if [ "$analyze"  = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Analyzing GTFS package" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Analyzing GTFS package" >> /dev/stderr
     if [ -f ./get-release-url.sh ] && [ -f ./get-release-date.sh ]
     then
         rd=$(./get-release-date.sh)
@@ -220,7 +220,7 @@ fi
 
 if [ "$publish"  = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Publishing data" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Publishing data" >> /dev/stderr
     db=$(find . -maxdepth 2 -mindepth 1 -name ptna-gtfs-sqlite.db | sort | tail -1)
     if [ -n "$db" ]
     then
@@ -239,7 +239,7 @@ fi
 
 if [ "$clean_empty"  = "true" ]
 then
-    [ -n "$verbose" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Clean up older empty databases" >> /dev/stderr
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Clean up older empty databases" >> /dev/stderr
 
     feed=$(./get-feed-name.sh)
 
