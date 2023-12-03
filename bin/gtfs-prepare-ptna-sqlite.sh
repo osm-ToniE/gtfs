@@ -172,8 +172,14 @@ then
         grep -F -v agency_name agency.txt | grep  -E -v '^\s*$' | awk '{printf("%d,%s\n", NR, $0)}' > agency-wo-header.txt
     fi
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE agency ($columns);"
-    sqlite3 $SQ_OPTIONS "$DB" ".import agency-wo-header.txt agency"
-    sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO agency (agency_id,agency_name) VALUES ('???','???');"
+    AGENCY_COUNT=$(cat agency-wo-header.txt | wc -l)
+    if [ "$AGENCY_COUNT" -gt 0 ]
+    then
+        sqlite3 $SQ_OPTIONS "$DB" ".import agency-wo-header.txt agency"
+    else
+        sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO agency (agency_id,agency_name) VALUES ('1','???');"
+        AGENCY_COUNT=1
+    fi
     rm -f agency-wo-header.txt
 fi
 
@@ -263,7 +269,10 @@ then
     if [ "$(head -1 routes.txt | grep -F -c agency_id)" == 0 ]
     then
         sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
-        sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id='???' WHERE agency_id='';"
+    fi
+    if [ "$AGENCY_COUNT" -eq 1 ]
+    then
+        sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
     fi
     sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET route_short_name = route_long_name WHERE route_short_name='';"
     rm -f routes-wo-header.txt
