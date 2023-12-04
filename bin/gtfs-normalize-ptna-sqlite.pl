@@ -418,7 +418,7 @@ sub NormalizeString {
             $normalized =~ s/Unterschlei.h\./Unterschleißheim/g;
             $normalized =~ s/Garch\.,\s*Forschungsz\./Garching, Forschungszentrum/g;
             $normalized =~ s/A\.-Stifter/Adalbert-Stifter/g;
-            $normalized =~ s|Arabellap\./Kl.Bogenh.|Arabellapark/Klinik Bogenh.|g;
+            $normalized =~ s|Arabellap\./Kl\.Bogenh\.|Arabellapark/Klinik Bogenhausen|g;
             $normalized =~ s/Hans-Stie.b\.-Stra.e\s*\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
             $normalized =~ s/H\.-Stie.b\.-Stra.e\s*\(Schl\.\)/Hans-Stießberger-Straße (Schleife)/g;
             $normalized =~ s/H\.-Stie.b\.-Str\.\s*\(Schl\.\)/Hans-Stießberger-Straße (Schleife)/g;
@@ -426,7 +426,8 @@ sub NormalizeString {
             $normalized =~ s/Max-Planck-Inst\./Max-Planck-Institut/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
-            $normalized =~ s/I\.-Taschner Gymn/Ignaz-Taschner Gymn/g;
+            $normalized =~ s/I\.-Taschner.Gymn/Ignaz-Taschner Gymn/g;
+            $normalized =~ s/Fischer-v\.-Erlach-Stra.e/Fischer-von-Erlach-Straße/g;
             $normalized =~ s/Brunnthal,\s*E\.-Sänger-Ring/Brunnthal, Eugen-Sänger-Ring/g;
             $normalized =~ s/M\.-Haslbeck/Michael-Haslbeck/g;
             $normalized =~ s/W\.-Heisenberg-W\./Werner-Heisenberg-Weg/g;
@@ -439,9 +440,11 @@ sub NormalizeString {
             $normalized =~ s/Wiedenzh\./Wiedenzhausen/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
             $normalized =~ s/Kolumbuspl\./Kolumbusplatz /g;
+            $normalized =~ s/Feringastra.eOst/Feringastraße Ost/g;
             $normalized =~ s/Ludw\.-Ganghofer/Ludwig-Ganghofer/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Parkpl\./Parkplatz/g;
+            $normalized =~ s/Haus d\.Kunst/Haus der Kunst/g;
             $normalized =~ s/Lkr\.\s*/Lkr. /g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/R\.-Diesel/Rudolf-Diesel/g;
@@ -451,6 +454,7 @@ sub NormalizeString {
             $normalized =~ s/K\.-Adenauer/Konrad-Adenauer/g;
             $normalized =~ s/H\.-Tassilo-Realschule/Herzog-Tassilo-Realschule/g;
             $normalized =~ s/Kerschenst\.Schule/Kerschensteiner Schule/g;
+            $normalized =~ s/Kerschenst\./Kerschensteiner/;
             $normalized =~ s/Pestalozzisch\./Pestalozzischule/g;
             $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
             $normalized =~ s/Freising,\s*RS Gute .nger/Freising, Realschule Gute Änger/g;
@@ -465,12 +469,12 @@ sub NormalizeString {
             $normalized =~ s/Brunnth\.Stra/Brunnthaler Stra/g;
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
             $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/;
+            $normalized =~ s/Bernhard-Rö.ner-St$/Bernhard-Rößner-Straße/;
             $normalized =~ s/Haslach \(Landkreis EBE\)/Haslach (Landkreis Ebersberg)/;
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
             $normalized =~ s/Hl\. Blut/Heilig Blut/;
             $normalized =~ s/Hallbergm\./Hallbergmoos/;
             $normalized =~ s/Bildungsz\./Bildungszentrum/;
-            $normalized =~ s/Kerschenst\./Kerschensteiner/;
             $normalized =~ s/\s+/ /g;
             $normalized =~ s/^\s//g;
             $normalized =~ s/\s$//g;
