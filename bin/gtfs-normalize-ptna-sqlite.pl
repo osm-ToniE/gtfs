@@ -460,7 +460,7 @@ sub NormalizeString {
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
-            $normalized =~ s/tra.e(\d)/traße \1/g;
+            $normalized =~ s/tra.e(\d)/traße $1/g;
             $normalized =~ s/Kolumbuspl\./Kolumbusplatz /g;
             $normalized =~ s/Feringastra.eOst/Feringastraße Ost/g;
             $normalized =~ s/Ludw\.-Ganghofer/Ludwig-Ganghofer/g;
