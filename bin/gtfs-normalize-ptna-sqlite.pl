@@ -459,13 +459,18 @@ sub NormalizeString {
             $normalized =~ s/H\.Stie.b\.-Stra.e\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
             $normalized =~ s/Aschheim,\s*Siedl\.Tassilo/Aschheim, Siedlung Tassilo/g;
             $normalized =~ s/Max-Planck-Inst\./Max-Planck-Institut/g;
+            $normalized =~ s/Untersc\./Unterschleißheim/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
+            $normalized =~ s/Rummelsb\. Stift S.ck\./Rummelsberger Stift Söcking/g;
             $normalized =~ s/Finsingerm\./Finsingermoos/g;
+            $normalized =~ s/Museum Starnb\. See/Museum Starnberger See/g;
+            $normalized =~ s/Starnb\./Starnberg/g;
             $normalized =~ s/Fahrenzh\./Fahrenzhausen/g;
             $normalized =~ s/Karlsf\./Karlsfeld/g;
             $normalized =~ s/Gilch\./Gilching/g;
+            $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinh.ring, Gasthof zur Post/g;
             $normalized =~ s/Holzhausen\(Amb\)/Holzhausen (bei Ambach)/g;
             $normalized =~ s/Neugilch\./Neugilching/g;
             $normalized =~ s/Wp\.Zwei Löwen/Wohnpark Zwei Löwen/g;
@@ -538,6 +543,7 @@ sub NormalizeString {
             $normalized =~ s/Moosburg\.Str/Moosburger Str/g;
             $normalized =~ s/Hochbr\.,\s*Hohe-/Hochbrück, Hohe-/g;
             $normalized =~ s|Ottobr\.,\s*A\.Brunneck/Uhlands\.|Ottobrunn, Am Brunneck/Uhlandstraße|g;
+            $normalized =~ s|Kirchstockach,\s*St\.-Georg-Str|Kirchstockach, Sankt-Georg-Str|g;
             $normalized =~ s/Pfr-Caspar-Mayr-Pl/Pfarrer-Caspar-Mayr-Pl/g;
             $normalized =~ s/Karlsfeld,M.\.Str/nchner Str/g;
             $normalized =~ s/Friedh\. Schopflach/Friedhof Schopflach/g;
