@@ -379,16 +379,18 @@ sub NormalizeString {
         if ( $language =~ m/^de/ ) {
             $normalized =~ s/,/, /g;
             if ( $language eq 'de_CH' ) {
+                $normalized =~ s|Str\/|Strasse/|g;
+                $normalized =~ s|str\./|strasse/|g;
                 $normalized =~ s/Str\./Strasse/g;
+                $normalized =~ s/str\./strasse/g;
                 $normalized =~ s/Str$/Strasse/g;
                 $normalized =~ s/str$/strasse/g;
-                $normalized =~ s/str\./strasse /g;
-                $normalized =~ s/str$/strasse/g;
             } else {
+                $normalized =~ s|Str\/|Straße/|g;
+                $normalized =~ s|str\./|straße/|g;
                 $normalized =~ s/Str\./Straße/g;
+                $normalized =~ s/str\./straße/g;
                 $normalized =~ s/Str$/Straße/g;
-                $normalized =~ s/str$/straße/g;
-                $normalized =~ s/str\./straße /g;
                 $normalized =~ s/str$/straße/g;
             }
             if ( $language eq 'de_AT' ) {
@@ -399,7 +401,12 @@ sub NormalizeString {
             $normalized =~ s/\(b\./(bei /g;
             $normalized =~ s/ b\./ bei /g;
             $normalized =~ s/nchnerStr/nchner Str/g;
+            $normalized =~ s|Pl\./|Platz/|g;
+            $normalized =~ s|pl\./|platz/|g;
+            $normalized =~ s|Pl\.\)|Platz)|g;
+            $normalized =~ s|pl\.\)|platz)|g;
             $normalized =~ s/Pl\./Platz /g;
+            $normalized =~ s/pl\./platz /g;
             $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Abzw\./Abzweig /g;
             $normalized =~ s/Abzw /Abzweig /g;
@@ -407,28 +414,35 @@ sub NormalizeString {
             $normalized =~ s/rstenfeldb\.,/rstenfeldbruck, /g;
             $normalized =~ s/Gym\./Gymnasium /g;
             $normalized =~ s/Gymn\./Gymnasium /g;
+            $normalized =~ s/Hochschule M\. \(Lothstraße\)/Hochschule München (Lothstraße)/g;
             $normalized =~ s/Unterschlei.h\./Unterschleißheim/g;
             $normalized =~ s/Garch\.,\s*Forschungsz\./Garching, Forschungszentrum/g;
             $normalized =~ s/A\.-Stifter/Adalbert-Stifter/g;
+            $normalized =~ s|Arabellap\./Kl.Bogenh.|Arabellapark/Klinik Bogenh.|g;
             $normalized =~ s/Hans-Stie.b\.-Stra.e\s*\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
+            $normalized =~ s/H\.-Stie.b\.-Stra.e\s*\(Schl\.\)/Hans-Stießberger-Straße (Schleife)/g;
+            $normalized =~ s/H\.-Stie.b\.-Str\.\s*\(Schl\.\)/Hans-Stießberger-Straße (Schleife)/g;
             $normalized =~ s/Aschheim,\s*Siedl\.Tassilo/Aschheim, Siedlung Tassilo/g;
             $normalized =~ s/Max-Planck-Inst\./Max-Planck-Institut/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
+            $normalized =~ s/I\.-Taschner Gymn/Ignaz-Taschner Gymn/g;
             $normalized =~ s/Brunnthal,\s*E\.-Sänger-Ring/Brunnthal, Eugen-Sänger-Ring/g;
             $normalized =~ s/M\.-Haslbeck/Michael-Haslbeck/g;
             $normalized =~ s/W\.-Heisenberg-W\./Werner-Heisenberg-Weg/g;
             $normalized =~ s/Wernh\.-v\.-Braun/Wernher-von-Braun/g;
+            $normalized =~ s/Wernh\.-v-Braun/Wernher-von-Braun/g;
             $normalized =~ s/M\.\s*Schwaben,\s*Wittelsb\.Weg/Markt Schwaben, Wittelsbacher Weg/g;
             $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
             $normalized =~ s/Unter\.\s*Markt/Unterer Markt/g;
             $normalized =~ s/Markt Indersdorf,\s*Rothbachbr\./Markt Indersdorf, Rothbachbrücke/g;
             $normalized =~ s/Wiedenzh\./Wiedenzhausen/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
+            $normalized =~ s/Kolumbuspl\./Kolumbusplatz /g;
             $normalized =~ s/Ludw\.-Ganghofer/Ludwig-Ganghofer/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Parkpl\./Parkplatz/g;
-            $normalized =~ s/Lkr\./Lkr. /g;
+            $normalized =~ s/Lkr\.\s*/Lkr. /g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/R\.-Diesel/Rudolf-Diesel/g;
             $normalized =~ s/J\.-u\.-R\.-Werner-Platz/Josef-und-Rosina-Werner-Platz/g;
@@ -442,8 +456,12 @@ sub NormalizeString {
             $normalized =~ s/Freising,\s*RS Gute .nger/Freising, Realschule Gute Änger/g;
             $normalized =~ s/J\.-Dosch-Schule/Josef-Dosch-Schule/g;
             $normalized =~ s/Gudrunsiedlg\./Gudrunsiedlung/g;
+            $normalized =~ s/H\.-Hildebrand-Weg/Heinrich-Hildebrand-Weg/g;
             $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
             $normalized =~ s/Höhenkirchen-S\./Höhenkirchen-Siegertsbrunn/g;
+            $normalized =~ s/Puchh\. Bahnhof/Puchheim Bahnhof/g;
+            $normalized =~ s/Friedh\. Schopflach/Friedhof Schopflach/g;
+            $normalized =~ s/Am M.hlstetter Gr\./Am Mühlstetter Graben/g;
             $normalized =~ s/Brunnth\.Stra/Brunnthaler Stra/g;
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
             $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/;
