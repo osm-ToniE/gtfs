@@ -53,18 +53,46 @@ fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start preparation $*"
 gtfs-prepare-ptna-sqlite.sh --language=$use_language $*
+error=$?
+if [ "$error" -gt 0 ]
+then
+    exit $error
+fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start aggregation $*"
 gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
+error=$?
+if [ "$error" -gt 0 ]
+then
+    exit $error
+fi
+
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start analysis $*"
 gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
+error=$?
+if [ "$error" -gt 0 ]
+then
+    exit $error
+fi
+
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start normalization $*"
 gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
+error=$?
+if [ "$error" -gt 0 ]
+then
+    exit $error
+fi
+
 
 if [ -f ../post-process-ptna-sqlite.sh ]
 then
     echo "$(date '+%Y-%m-%d %H:%M:%S') start post processing $*"
     ../post-process-ptna-sqlite.sh
+    error=$?
+    if [ "$error" -gt 0 ]
+    then
+        exit $error
+    fi
 fi
