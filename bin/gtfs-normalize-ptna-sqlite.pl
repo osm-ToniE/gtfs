@@ -442,6 +442,7 @@ sub NormalizeString {
             $normalized =~ s/Fischer-v\.-Erlach-Stra.e/Fischer-von-Erlach-Straße/g;
             $normalized =~ s/Freising,\s*RS Gute .nger/Freising, Realschule Gute Änger/g;
             $normalized =~ s/Friedh\. Schopflach/Friedhof Schopflach/g;
+            $normalized =~ s/F.rstenfeldbruck, Messerschmitt/Fürstenfeldbruck, Messerschmittstraße/g;
             $normalized =~ s/Garch\.,\s*Forschungsz\./Garching, Forschungszentrum/g;
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
