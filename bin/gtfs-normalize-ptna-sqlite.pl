@@ -554,7 +554,7 @@ sub NormalizeString {
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/Südl\. Ingolstädter Str/Südliche Ingolstädter Str/;
             $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
-            $normalized =~ s/Taufk\., Werner-Messerschmitt-Str/Taufkirchen, Werner-Messerschmitt-Str/g;
+            $normalized =~ s/Taufk\., Willy-Messerschmitt-Str/Taufkirchen, Willy-Messerschmitt-Str/g;
             $normalized =~ s/Tegerns\. Landstr/Tegernseer Landstr/g;
             $normalized =~ s/Th\.-Heuss/Theodor-Heuss/g;
             $normalized =~ s/tra.e(\d)/traße $1/g;
@@ -566,7 +566,7 @@ sub NormalizeString {
             $normalized =~ s/W.rmk\./Würmkanal/g;
             $normalized =~ s/W\.-Heisenberg-Str/Werner-Heisenberg-Str/g;
             $normalized =~ s/W\.-Heisenberg-W\./Werner-Heisenberg-Weg/g;
-            $normalized =~ s/W\.-Messerschmitt-Str/Werner-Messerschmitt-Str/g;
+            $normalized =~ s/W\.-Messerschmitt-Str/Willy-Messerschmitt-Str/g;
             $normalized =~ s/Wernh\.-v-Braun/Wernher-von-Braun/g;
             $normalized =~ s/Wernh\.-v\.-Braun/Wernher-von-Braun/g;
             $normalized =~ s/Wiedenzh\./Wiedenzhausen/g;
