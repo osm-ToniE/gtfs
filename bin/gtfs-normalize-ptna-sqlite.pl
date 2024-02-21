@@ -555,6 +555,7 @@ sub NormalizeString {
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/Südl\. Ingolstädter Str/Südliche Ingolstädter Str/;
             $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
+            $normalized =~ s/Taufk\., W\.-Messerschmitt-Str/Taufkirchen, Willy-Messerschmitt-Str/g;
             $normalized =~ s/Taufk\., Willy-Messerschmitt-Str/Taufkirchen, Willy-Messerschmitt-Str/g;
             $normalized =~ s/Taufk\., Werner-Messerschmitt-Str/Taufkirchen, Willy-Messerschmitt-Str/g;
             $normalized =~ s/Tegerns\. Landstr/Tegernseer Landstr/g;
