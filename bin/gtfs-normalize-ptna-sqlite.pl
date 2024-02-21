@@ -473,7 +473,8 @@ sub NormalizeString {
             $normalized =~ s/Hochschule M\. \(Lothstraße\)/Hochschule München (Lothstraße)/g;
             $normalized =~ s/Hohenk\./Hohenkammer/g;
             $normalized =~ s/Holzhausen\(Amb\)/Holzhausen (bei Ambach)/g;
-            $normalized =~ s/Hörgertshs\./Hörgertshausen/g;
+            $normalized =~ s/H.henkirchen-S, Harthauser Straße/Höhenkirchen-Siegertsbrunn, Harthauser Straße/g;
+            $normalized =~ s/H.rgertshs\./Hörgertshausen/g;
             $normalized =~ s/I\.-Taschner.Gymn/Ignaz-Taschner Gymn/g;
             $normalized =~ s/Isar-Amper-Kl\./Isar-Amper-Klinik/g;
             $normalized =~ s/J\.-Dosch-Schule/Josef-Dosch-Schule/g;
@@ -513,6 +514,8 @@ sub NormalizeString {
             $normalized =~ s/Museum Starnb\. See/Museum Starnberger See/g;
             $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Neugilch\./Neugilching/g;
+            $normalized =~ s/Neukeferloh, Bretonisch\.Ring/Neukeferloh, Bretonischer Ring/g;
+            $normalized =~ s/Neukeferloh, L\.-Stadler-Str/Neukeferloh, Leonhard-Stadler-Str/g;
             $normalized =~ s/Niederneuch\./Niederneuching/g;
             $normalized =~ s/Niederstraub\. Abz/Niederstraubing, Abz/g;
             $normalized =~ s/Niederstraubing,\s*Abzweig\s*Hofst\./Niederstraubing, Abzweig Hofstarring/g;
@@ -521,6 +524,7 @@ sub NormalizeString {
             $normalized =~ s/Ob\. Lagerstr/Obere Lagerstr/g;
             $normalized =~ s/Oberallersh\./Oberallershausen/g;
             $normalized =~ s/Oberdorf\(DAH\)/Oberdorf (DAH)/g;
+            $normalized =~ s/Oberhaching, St\.-Rita-Weg/Oberhaching, Sankt-Rita-Weg/g;
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
