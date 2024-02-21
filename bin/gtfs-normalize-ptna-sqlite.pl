@@ -425,6 +425,7 @@ sub NormalizeString {
             $normalized =~ s/Bernhard-Rö.ner-St$/Bernhard-Rößner-Straße/;
             $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Bildungsz\./Bildungszentrum/;
+            $normalized =~ s/Brudermuehlstr/Brudermühlstr/g;
             $normalized =~ s/Brunnth\.Stra/Brunnthaler Stra/g;
             $normalized =~ s/Brunnthal,\s*E\.-Sänger-Ring/Brunnthal, Eugen-Sänger-Ring/g;
             $normalized =~ s/Buchenauer S\./Buchenauer Straße/g;
@@ -454,6 +455,7 @@ sub NormalizeString {
             $normalized =~ s/Gymn\./Gymnasium /g;
             $normalized =~ s/Gymnasium -S.d/Gymnasium-Süd/g;
             $normalized =~ s/H.henkirchen-S\./Höhenkirchen-Siegertsbrunn/g;
+            $normalized =~ s/Geiselbullach, H\.-B.cker-Straße/Geiselbullach, Hermann-Böcker-Str/g;
             $normalized =~ s/H\.-B.cker-Str/Hermann-Böcker-Str/g;
             $normalized =~ s/H\.-Hildebrand-Weg/Heinrich-Hildebrand-Weg/g;
             $normalized =~ s/H\.-Junkers-Str/Hugo-Junkers-Str/g;
@@ -549,6 +551,7 @@ sub NormalizeString {
             $normalized =~ s/rstenfeldbr,/rstenfeldbruck,/g;
             $normalized =~ s/rstenfeldbr\.,/rstenfeldbruck,/g;
             $normalized =~ s/Rummelsb\. Stift S.ck\./Rummelsberger Stift Söcking/g;
+            $normalized =~ s|Schaeftlarnstra.e / Gasteig HP8|Schäftlarnstraße/Gasteig HP8|g;
             $normalized =~ s/Sch.ng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Schöng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Sittenb\. Str/Sittenbacher Str/g;
@@ -583,6 +586,7 @@ sub NormalizeString {
             $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
             $normalized =~ s/Wolfratsh\./Wolfratshausen/g;
             $normalized =~ s/Wolfratshauser S\./Wolfratshauser Straße/g;
+            $normalized =~ s/Wolfratshausen, St.dt.Bauhof/Wolfratshausen, Städtischer Bauhof/g;
             $normalized =~ s/Wp\.Zwei Löwen/Wohnpark Zwei Löwen/g;
             $normalized =~ s|Arabellap\./Kl\.Bogenh\.|Arabellapark/Klinik Bogenhausen|g;
             $normalized =~ s|F\.-Kobell-Straße/Waldfr\.|Ferdinand-Kobell-Straße/Waldfriedhof|g;
