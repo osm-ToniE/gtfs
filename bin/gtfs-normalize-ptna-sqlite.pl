@@ -449,6 +449,7 @@ sub NormalizeString {
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/Gilch\./Gilching/g;
+            $normalized =~ s/Gilching, GWG Argelsried/Gilching, Gewergegebiet Argelsried/g;
             $normalized =~ s/Graf-Siegh\.-Weg/Graf-Sieghart-Weg/g;
             $normalized =~ s/Gudrunsiedlg\./Gudrunsiedlung/g;
             $normalized =~ s/Gym\./Gymnasium /g;
