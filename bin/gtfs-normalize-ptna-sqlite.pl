@@ -550,6 +550,7 @@ sub NormalizeString {
             $normalized =~ s/Sittenb\. Str/Sittenbacher Str/g;
             $normalized =~ s/St-Margar\.-Str/Sankt-Margarethen-Str/g;
             $normalized =~ s/St\. Hub\. Abz/St. Hubertus Abz/g;
+            $normalized =~ s/St\.-Quirin-Platz/Sankt-Quirin-Platz/g;
             $normalized =~ s/Starnb\./Starnberg/g;
             $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinh.ring, Gasthof zur Post/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
@@ -563,6 +564,7 @@ sub NormalizeString {
             $normalized =~ s/tra.e(\d)/traße $1/g;
             $normalized =~ s/Unter\.\s*Markt/Unterer Markt/g;
             $normalized =~ s/Untersc\./Unterschleißheim/g;
+            $normalized =~ s/Unterhaching, St\.-Alto-Straße/Unterhaching, Sankt-Alto-Straße/g;
             $normalized =~ s/Unterschlei.h\./Unterschleißheim/g;
             $normalized =~ s/Unterweikertsho\./Unterweikertshofen/g;
             $normalized =~ s/Vaterst\./Vaterstetten/g;
