@@ -513,6 +513,7 @@ sub NormalizeString {
             $normalized =~ s/Max-v\.-Eyth-Str/Max-von-Eyth-Str/g;
             $normalized =~ s/Mintrach\./Mintraching/g;
             $normalized =~ s/Mittenh\. Str/Mittenheimer Str/g;
+            $normalized =~ s/Moosacher St\.-Martins-Platz/Moosacher Sankt-Martins-Platz/g;
             $normalized =~ s/Moosburg\.Str/Moosburger Str/g;
             $normalized =~ s/Museum Starnb\. See/Museum Starnberger See/g;
             $normalized =~ s/nchnerStr/nchner Str/g;
