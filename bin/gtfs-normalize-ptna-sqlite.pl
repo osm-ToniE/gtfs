@@ -476,6 +476,7 @@ sub NormalizeString {
             $normalized =~ s/Hochschule M\. \(Lothstraße\)/Hochschule München (Lothstraße)/g;
             $normalized =~ s/Hohenk\./Hohenkammer/g;
             $normalized =~ s/Holzhausen\(Amb\)/Holzhausen (bei Ambach)/g;
+            $normalized =~ s/Hohensch\., Rathaus/Hohenschäftlarn, Rathaus/g;
             $normalized =~ s/H.henkirchen-S, Harthauser Straße/Höhenkirchen-Siegertsbrunn, Harthauser Straße/g;
             $normalized =~ s/H.rgertshs\./Hörgertshausen/g;
             $normalized =~ s/I\.-Taschner.Gymn/Ignaz-Taschner Gymn/g;
@@ -505,6 +506,7 @@ sub NormalizeString {
             $normalized =~ s/M\.\s*Schwaben/Markt Schwaben/g;
             $normalized =~ s/M\.Ind\./Markt Indersdorf/g;
             $normalized =~ s/M\.Indersdorf/Markt Indersdorf/g;
+            $normalized =~ s/Mammendorf, M\.-Aum.ller-Stra.e/Mammendorf, Michael-Aumüller-Straße/g;
             $normalized =~ s/Markt I\.,\s*Abzweig\s*Gewerbe/Markt Indersdorf, Abzweig Gewerbegebiet/g;
             $normalized =~ s/Markt I\./Markt Indersdorf/g;
             $normalized =~ s/Markt Ind\./Markt Indersdorf/g;
@@ -531,6 +533,7 @@ sub NormalizeString {
             $normalized =~ s/Oberhaching, St\.-Rita-Weg/Oberhaching, Sankt-Rita-Weg/g;
             $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
+            $normalized =~ s/Oberschw\., Am Maibaum/Oberschweinbach, Am Maibaum/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
             $normalized =~ s/Odelsh\./Odelshausen/g;
             $normalized =~ s/Oskar-M\.-Graf-Str/Oskar-Maria-Graf-Str/;
@@ -561,6 +564,7 @@ sub NormalizeString {
             $normalized =~ s/St\. Hub\. Abz/St. Hubertus Abz/g;
             $normalized =~ s/St\.-Quirin-Platz/Sankt-Quirin-Platz/g;
             $normalized =~ s/Starnb\./Starnberg/g;
+            $normalized =~ s/Starnberg, Ina-Seidl-Weg/Starnberg, Ina-Seidel-Weg/g;
             $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinh.ring, Gasthof zur Post/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/Südl\. Ingolstädter Str/Südliche Ingolstädter Str/;
