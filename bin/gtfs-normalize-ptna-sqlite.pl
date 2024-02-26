@@ -416,6 +416,7 @@ sub NormalizeString {
             $normalized =~ s/A\.-Stifter/Adalbert-Stifter/g;
             $normalized =~ s/Abzw /Abzweig /g;
             $normalized =~ s/Abzw\./Abzweig /g;
+            $normalized =~ s/Aich, Schlossbergstraße/Aich, Schloßsbergstraße/g;
             $normalized =~ s/Am M.hlstetter Gr\./Am Mühlstetter Graben/g;
             $normalized =~ s/Am M.hlstetter Gr$/Am Mühlstetter Graben/g;
             $normalized =~ s/Andr\.-Wagner-Str/Andreas-Wagner-Str/g;
@@ -568,6 +569,7 @@ sub NormalizeString {
             $normalized =~ s/St\. Hub\. Abz/St. Hubertus Abz/g;
             $normalized =~ s/St\.-Quirin-Platz/Sankt-Quirin-Platz/g;
             $normalized =~ s/Starnb\./Starnberg/g;
+            $normalized =~ s/Starnberg, F\.-Maria-Grundschule/Starnberg, Ferdinand-Maria-Grundschule/g;
             $normalized =~ s/Starnberg, Ina-Seidl-Weg/Starnberg, Ina-Seidel-Weg/g;
             $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinhöring, Gasthof zur Post/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
