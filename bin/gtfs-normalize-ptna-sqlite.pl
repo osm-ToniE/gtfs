@@ -446,6 +446,8 @@ sub NormalizeString {
             $normalized =~ s/F.rstenfeldbruck, Messerschmitt/Fürstenfeldbruck, Messerschmittstraße/g;
             $normalized =~ s/Garch\.,\s*Forschungsz\./Garching, Forschungszentrum/g;
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
+            $normalized =~ s/Gernlinden, J\.-Poxleitn\.-Allee/Gernlinden, Josef-Poxleitner-Allee/g;
+            $normalized =~ s/Gernlinden, Rud\.-Diesel-Straße/Gernlinden, Rudolf-Diesel-Straße/g;
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/Gilch\./Gilching/g;
