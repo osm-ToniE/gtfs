@@ -613,6 +613,7 @@ sub NormalizeString {
             $normalized =~ s|Pl\.\)|Platz)|g;
 #            $normalized =~ s|/ |/|g;
 #            $normalized =~ s| /|/|g;
+            $normalized =~ s/  / /g;
         }
     }
 
