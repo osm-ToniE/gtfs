@@ -446,13 +446,14 @@ sub NormalizeString {
             $normalized =~ s/Friedh\. Schopflach/Friedhof Schopflach/g;
             $normalized =~ s/F.rstenfeldbruck, Messerschmitt/Fürstenfeldbruck, Messerschmittstraße/g;
             $normalized =~ s/Garch\.,\s*Forschungsz\./Garching, Forschungszentrum/g;
+            $normalized =~ s/Gauting, A\.-Fachkliniken/Gauting, Asklepios-Fachkliniken/g;
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
             $normalized =~ s/Gernlinden, J\.-Poxleitn\.-Allee/Gernlinden, Josef-Poxleitner-Allee/g;
             $normalized =~ s/Gernlinden, Rud\.-Diesel-Straße/Gernlinden, Rudolf-Diesel-Straße/g;
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/Gilch\./Gilching/g;
-            $normalized =~ s/Gilching, GWG Argelsried/Gilching, Gewergegebiet Argelsried/g;
+            $normalized =~ s/Gilching, GWG Argelsried/Gilching, Gewerbegebiet Argelsried/g;
             $normalized =~ s/Graf-Siegh\.-Weg/Graf-Sieghart-Weg/g;
             $normalized =~ s/Gudrunsiedlg\./Gudrunsiedlung/g;
             $normalized =~ s/Gym\./Gymnasium /g;
@@ -478,10 +479,12 @@ sub NormalizeString {
             $normalized =~ s/Hochbr\.,\s*Hohe-/Hochbrück, Hohe-/g;
             $normalized =~ s/Hochschule M\. \(Lothstraße\)/Hochschule München (Lothstraße)/g;
             $normalized =~ s/Hohenk\./Hohenkammer/g;
+            $normalized =~ s/Höhenrain, Ehem\. Post/Höhenrain, Ehemalige Post/g;
             $normalized =~ s/Holzhausen\(Amb\)/Holzhausen (bei Ambach)/g;
             $normalized =~ s/Hohensch\., Rathaus/Hohenschäftlarn, Rathaus/g;
             $normalized =~ s/H.henkirchen-S, Harthauser Straße/Höhenkirchen-Siegertsbrunn, Harthauser Straße/g;
             $normalized =~ s/H.rgertshs\./Hörgertshausen/g;
+            $normalized =~ s/Irschenh\., St\. Anna Colleg/Irschenhausen, St. Anna Colleg/g;
             $normalized =~ s/I\.-Taschner.Gymn/Ignaz-Taschner Gymn/g;
             $normalized =~ s/Isar-Amper-Kl\./Isar-Amper-Klinik/g;
             $normalized =~ s/J\.-Dosch-Schule/Josef-Dosch-Schule/g;
@@ -498,6 +501,7 @@ sub NormalizeString {
             $normalized =~ s/Kolumbuspl\./Kolumbusplatz /g;
             $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
             $normalized =~ s/Kottg\. Villenstr/Kottgeisering, Villenstr/g;
+            $normalized =~ s/Krailling, Altenh\. Maria Eich/Krailling, Altenheim Maria Eich/g;
             $normalized =~ s/L\.-Braren-Str/Lozent-Braren-Str/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Lkr\.\s*/Lkr. /g;
@@ -586,6 +590,7 @@ sub NormalizeString {
             $normalized =~ s/Unterhaching, St\.-Alto-Straße/Unterhaching, Sankt-Alto-Straße/g;
             $normalized =~ s/Unterschlei.h\./Unterschleißheim/g;
             $normalized =~ s/Unterweikertsho\./Unterweikertshofen/g;
+            $normalized =~ s/Unterzeism\., Maibaum/Unterzeismering, Maibaum/g;
             $normalized =~ s/Vaterst\./Vaterstetten/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
             $normalized =~ s/W\.-Heisenberg-Str/Werner-Heisenberg-Str/g;
