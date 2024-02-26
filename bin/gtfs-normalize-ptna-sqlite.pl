@@ -542,6 +542,7 @@ sub NormalizeString {
             $normalized =~ s/Oskar-v\.-Miller-Str/Oskar-von-Miller-Str/g;
             $normalized =~ s/P\.-Rupert-Mayer-Str/Pater-Rupert-Mayer-Str/;
             $normalized =~ s/Parkpl\./Parkplatz/g;
+            $normalized =~ s/Penzberg, Kurf\.-Max-Siedlung/Penzberg, Kurfürst-Max-Siedlung/g;
             $normalized =~ s/Pestalozzisch\./Pestalozzischule/g;
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
             $normalized =~ s/Pf\.-Freiberger-Str/Pfarrer-Freiberger-Str/;
@@ -562,12 +563,13 @@ sub NormalizeString {
             $normalized =~ s/Sch.ng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Schöng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Sittenb\. Str/Sittenbacher Str/g;
+            $normalized =~ s/STA/Starnberg/g;
             $normalized =~ s/St-Margar\.-Str/Sankt-Margarethen-Str/g;
             $normalized =~ s/St\. Hub\. Abz/St. Hubertus Abz/g;
             $normalized =~ s/St\.-Quirin-Platz/Sankt-Quirin-Platz/g;
             $normalized =~ s/Starnb\./Starnberg/g;
             $normalized =~ s/Starnberg, Ina-Seidl-Weg/Starnberg, Ina-Seidel-Weg/g;
-            $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinh.ring, Gasthof zur Post/g;
+            $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinhöring, Gasthof zur Post/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/Südl\. Ingolstädter Str/Südliche Ingolstädter Str/;
             $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
