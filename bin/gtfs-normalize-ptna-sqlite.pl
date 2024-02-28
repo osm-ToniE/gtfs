@@ -422,7 +422,11 @@ sub NormalizeString {
             $normalized =~ s/Andr\.-Wagner-Str/Andreas-Wagner-Str/g;
             $normalized =~ s/Anzing,\s*Tankst\./Anzing, Tankstelle/g;
             $normalized =~ s/Aschheim,\s*Siedl\.Tassilo/Aschheim, Siedlung Tassilo/g;
-            $normalized =~ s/Bernh\.-Rößner-Str/Bernhard-Rößner-Str/g;
+            $normalized =~ s/Bad T.lz, Chr\.-Pabst-Weg/Bad Tölz, Christian-Pabst-Weg/g;
+            $normalized =~ s/Bad T.lz, Ludwigstraße\/Tankst\./Bad Tölz, Ludwigstraße\/Tankstelle/g;
+            $normalized =~ s/Bad T.lz, Karwendelsiedl.\/T.V/Bad Tölz, Karwendelsiedlung\/TÜV/g;
+            $normalized =~ s/Bad Tölz, G.Patton-Str\./Bad Tölz, General-Patton-Straße/g;
+
             $normalized =~ s/Bernhard-Rö.ner-St$/Bernhard-Rößner-Straße/;
             $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Bildungsz\./Bildungszentrum/;
@@ -484,6 +488,7 @@ sub NormalizeString {
             $normalized =~ s/Hohensch\., Rathaus/Hohenschäftlarn, Rathaus/g;
             $normalized =~ s/H.henkirchen-S, Harthauser Straße/Höhenkirchen-Siegertsbrunn, Harthauser Straße/g;
             $normalized =~ s/H.rgertshs\./Hörgertshausen/g;
+            $normalized =~ s/IAK-Klinikum M.\.-Ost/IAK-Klinikum München-Ost/g;
             $normalized =~ s/Irschenh\., St\. Anna Colleg/Irschenhausen, St. Anna Colleg/g;
             $normalized =~ s/I\.-Taschner.Gymn/Ignaz-Taschner Gymn/g;
             $normalized =~ s/Isar-Amper-Kl\./Isar-Amper-Klinik/g;
@@ -502,6 +507,7 @@ sub NormalizeString {
             $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
             $normalized =~ s/Kottg\. Villenstr/Kottgeisering, Villenstr/g;
             $normalized =~ s/Krailling, Altenh\. Maria Eich/Krailling, Altenheim Maria Eich/g;
+            $normalized =~ s/Landsham, Gh\.K.niger/Landsham, Gasthof Königer/g;
             $normalized =~ s/L\.-Braren-Str/Lozent-Braren-Str/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Lkr\.\s*/Lkr. /g;
@@ -602,6 +608,9 @@ sub NormalizeString {
             $normalized =~ s/Wittelsb\.Weg/Wittelsbacher Weg/g;
             $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
             $normalized =~ s/Wolfratsh\./Wolfratshausen/g;
+            $normalized =~ s/Wolfratshausen, K.nigsdorfer S\./Wolfratshausen, Königsdorfer Straße/g;
+            $normalized =~ s/Wolfratshausen, Me.nergassl/Wolfratshausen, Mesnergassl/g;
+            $normalized =~ s/Wolfratshausen, Sauerlacher S\./Wolfratshausen, Sauerlacher Straße/g;
             $normalized =~ s/Wolfratshauser S\./Wolfratshauser Straße/g;
             $normalized =~ s/Wolfratshausen, St.dt.Bauhof/Wolfratshausen, Städtischer Bauhof/g;
             $normalized =~ s/Wp\.Zwei Löwen/Wohnpark Zwei Löwen/g;
