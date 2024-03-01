@@ -426,6 +426,7 @@ sub NormalizeString {
             $normalized =~ s/Bad T.lz, Ludwigstraße\/Tankst\./Bad Tölz, Ludwigstraße\/Tankstelle/g;
             $normalized =~ s/Bad T.lz, Karwendelsiedl.\/T.V/Bad Tölz, Karwendelsiedlung\/TÜV/g;
             $normalized =~ s/Bad T.lz, G\.Patton-Str/Bad Tölz, General-Patton-Str/g;
+            $normalized =~ s/Bad Goisern Jodschwefelbad Bahnhst$/Bad Goisern Jodschwefelbad Bahnhaltestelle/g;
             $normalized =~ s/Bernhard-Rö.ner-St$/Bernhard-Rößner-Straße/;
             $normalized =~ s/Bf\./Bahnhof/g;
             $normalized =~ s/Bildungsz\./Bildungszentrum/;
@@ -630,6 +631,8 @@ sub NormalizeString {
 #            $normalized =~ s|/ |/|g;
 #            $normalized =~ s| /|/|g;
             $normalized =~ s/  / /g;
+            $normalized =~ s/^\s*//;
+            $normalized =~ s/\s*$//;
         }
     }
 
