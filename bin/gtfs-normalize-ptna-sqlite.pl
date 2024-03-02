@@ -551,6 +551,7 @@ sub NormalizeString {
             $normalized =~ s/Odelsh\./Odelshausen/g;
             $normalized =~ s/Oskar-M\.-Graf-Str/Oskar-Maria-Graf-Str/;
             $normalized =~ s/Oskar-v\.-Miller-Str/Oskar-von-Miller-Str/g;
+            $normalized =~ s/Ottobrunn, F\.-Ebert-Platz/Ottobrunn, Friedrich-Ebert-Platz/g;
             $normalized =~ s/P\.-Rupert-Mayer-Str/Pater-Rupert-Mayer-Str/;
             $normalized =~ s/Parkpl\./Parkplatz/g;
             $normalized =~ s/Penzberg, Kurf\.-Max-Siedlung/Penzberg, Kurfürst-Max-Siedlung/g;
