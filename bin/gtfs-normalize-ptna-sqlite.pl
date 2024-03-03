@@ -422,6 +422,7 @@ sub NormalizeString {
             $normalized =~ s/Andr\.-Wagner-Str/Andreas-Wagner-Str/g;
             $normalized =~ s/Anzing,\s*Tankst\./Anzing, Tankstelle/g;
             $normalized =~ s/Aschheim,\s*Siedl\.Tassilo/Aschheim, Siedlung Tassilo/g;
+            $normalized =~ s/Bad Heilbrunn, Kr.uterpark\/Fk\./Bad Heilbrunn, Kräuterpark\/Fachklinik/g;
             $normalized =~ s/Bad T.lz, Chr\.-Pabst-Weg/Bad Tölz, Christian-Pabst-Weg/g;
             $normalized =~ s/Bad T.lz, Ludwigstraße\/Tankst\./Bad Tölz, Ludwigstraße\/Tankstelle/g;
             $normalized =~ s/Bad T.lz, Karwendelsiedl.\/T.V/Bad Tölz, Karwendelsiedlung\/TÜV/g;
@@ -436,6 +437,7 @@ sub NormalizeString {
             $normalized =~ s/Buchenauer S\./Buchenauer Straße/g;
             $normalized =~ s/C-v\.-Linde-Str/Carl-von-Linde-Str/g;
             $normalized =~ s/C\.-Duisberg-Str/Carl-Duisberg-Str/g;
+            $normalized =~ s/Deining, Gh\.zur Post/Deining, Gasthaus zur Post/;
             $normalized =~ s/Dr\.-H\.-Eisenmann-Str/Dr.-Hans-Eisenmann-Str/;
             $normalized =~ s/Ebersb\.Forst/Ebersberger Forst/g;
             $normalized =~ s/F\.-Kamerseder-Str/Franz-Kamerseder-Str/g;
@@ -465,6 +467,7 @@ sub NormalizeString {
             $normalized =~ s/Gymnasium -S.d/Gymnasium-Süd/g;
             $normalized =~ s/H.henkirchen-S\./Höhenkirchen-Siegertsbrunn/g;
             $normalized =~ s/Geiselbullach, H\.-B.cker-Str/Geiselbullach, Hermann-Böcker-Str/g;
+            $normalized =~ s/Geretsried, St\. Nikolaus/Geretsried, Sankt Nikolaus/g;
             $normalized =~ s/H\.-B.cker-Str/Hermann-Böcker-Str/g;
             $normalized =~ s/H\.-Hildebrand-Weg/Heinrich-Hildebrand-Weg/g;
             $normalized =~ s/H\.-Junkers-Str/Hugo-Junkers-Str/g;
@@ -508,6 +511,7 @@ sub NormalizeString {
             $normalized =~ s/Kottg\. Villenstr/Kottgeisering, Villenstr/g;
             $normalized =~ s/Krailling, Altenh\. Maria Eich/Krailling, Altenheim Maria Eich/g;
             $normalized =~ s/Landsham, Gh\.K.niger/Landsham, Gasthof Königer/g;
+            $normalized =~ s/Lenggries, Alpenrose\/Wegsch\.Str/Lenggries, Alpenrose\/Wegscheider Str/g;
             $normalized =~ s/L\.-Braren-Str/Lozent-Braren-Str/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Lkr\.\s*/Lkr. /g;
@@ -584,6 +588,7 @@ sub NormalizeString {
             $normalized =~ s/Starnberg, F\.-Maria-Grundschule/Starnberg, Ferdinand-Maria-Grundschule/g;
             $normalized =~ s/Starnberg, Ina-Seidl-Weg/Starnberg, Ina-Seidel-Weg/g;
             $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinhöring, Gasthof zur Post/g;
+            $normalized =~ s/Stra.lach, Gh\.Wildpark/Straßlach, Gasthaus Wildpark/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
             $normalized =~ s/Südl\. Ingolstädter Str/Südliche Ingolstädter Str/;
             $normalized =~ s/Taufki\.Stra/Taufkirchener Stra/g;
