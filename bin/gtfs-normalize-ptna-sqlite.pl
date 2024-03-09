@@ -523,6 +523,7 @@ sub NormalizeString {
             $normalized =~ s/M\.\s*Schwaben/Markt Schwaben/g;
             $normalized =~ s/M\.Ind\./Markt Indersdorf/g;
             $normalized =~ s/M\.Indersdorf/Markt Indersdorf/g;
+            $normalized =~ s/Mailingerstraße/Maillingerstraße/g;
             $normalized =~ s/Mammendorf, M\.-Aum.ller-Stra.e/Mammendorf, Michael-Aumüller-Straße/g;
             $normalized =~ s/Markt I\.,\s*Abzweig\s*Gewerbe/Markt Indersdorf, Abzweig Gewerbegebiet/g;
             $normalized =~ s/Markt I\./Markt Indersdorf/g;
