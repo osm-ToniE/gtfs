@@ -554,6 +554,7 @@ sub NormalizeString {
             $normalized =~ s/Oberschw\., Am Maibaum/Oberschweinbach, Am Maibaum/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
             $normalized =~ s/Odelsh\./Odelshausen/g;
+            $normalized =~ s/Odelzh\./Odelzhausen/g;
             $normalized =~ s/Oskar-M\.-Graf-Str/Oskar-Maria-Graf-Str/;
             $normalized =~ s/Oskar-v\.-Miller-Str/Oskar-von-Miller-Str/g;
             $normalized =~ s/Ottobrunn, F\.-Ebert-Platz/Ottobrunn, Friedrich-Ebert-Platz/g;
@@ -562,8 +563,9 @@ sub NormalizeString {
             $normalized =~ s/Penzberg, Kurf\.-Max-Siedlung/Penzberg, Kurfürst-Max-Siedlung/g;
             $normalized =~ s/Pestalozzisch\./Pestalozzischule/g;
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
-            $normalized =~ s/Pf\.-Freiberger-Str/Pfarrer-Freiberger-Str/;
-            $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/;
+            $normalized =~ s/Pf\.-Freiberger-Str/Pfarrer-Freiberger-Str/g;
+            $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/g;
+            $normalized =~ s/Pfaffenhofen \(a\.d\.Glonn\)/Pfaffenhofen (an der Glonn)/g;
             $normalized =~ s/Pfr-Caspar-Mayr-Pl/Pfarrer-Caspar-Mayr-Pl/g;
             $normalized =~ s/Parkp$/Parkplatz/g;
             $normalized =~ s/pl\./platz /g;
@@ -638,6 +640,7 @@ sub NormalizeString {
 #            $normalized =~ s|/ |/|g;
 #            $normalized =~ s| /|/|g;
             $normalized =~ s/  / /g;
+            $normalized =~ s/\s*\)/)/g;
             $normalized =~ s/^\s*//;
             $normalized =~ s/\s*$//;
         }
