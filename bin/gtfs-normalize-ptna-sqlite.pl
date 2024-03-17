@@ -437,6 +437,7 @@ sub NormalizeString {
             $normalized =~ s/Buchenauer S\./Buchenauer Straße/g;
             $normalized =~ s/C-v\.-Linde-Str/Carl-von-Linde-Str/g;
             $normalized =~ s/C\.-Duisberg-Str/Carl-Duisberg-Str/g;
+            $normalized =~ s/Daglfing Bf/Daglfing Bahnhof/;
             $normalized =~ s/Deining, Gh\.zur Post/Deining, Gasthaus zur Post/;
             $normalized =~ s/Dr\.-H\.-Eisenmann-Str/Dr.-Hans-Eisenmann-Str/;
             $normalized =~ s/Ebersb\.Forst/Ebersberger Forst/g;
@@ -456,6 +457,7 @@ sub NormalizeString {
             $normalized =~ s/Gelting \(bei WOR\)/Gelting (bei Wolfratshausen)/g;
             $normalized =~ s/Gernlinden, J\.-Poxleitn\.-Allee/Gernlinden, Josef-Poxleitner-Allee/g;
             $normalized =~ s/Gernlinden, Rud\.-Diesel-Straße/Gernlinden, Rudolf-Diesel-Straße/g;
+            $normalized =~ s/Gest.tring .rztez./Gestütring Ärztezentrum/g;
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/Gilch\./Gilching/g;
@@ -565,7 +567,7 @@ sub NormalizeString {
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
             $normalized =~ s/Pf\.-Freiberger-Str/Pfarrer-Freiberger-Str/g;
             $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/g;
-            $normalized =~ s/Pfaffenhofen \(a\.d\.Glonn\)/Pfaffenhofen (an der Glonn)/g;
+            $normalized =~ s/Pfaffenhofen \(a\.d\.Glonn\)/Pfaffenhofen an der Glonn/g;
             $normalized =~ s/Pfr-Caspar-Mayr-Pl/Pfarrer-Caspar-Mayr-Pl/g;
             $normalized =~ s/Parkp$/Parkplatz/g;
             $normalized =~ s/pl\./platz /g;
@@ -580,6 +582,7 @@ sub NormalizeString {
             $normalized =~ s/rstenfeldbr\.,/rstenfeldbruck,/g;
             $normalized =~ s/Rummelsb\. Stift S.ck\./Rummelsberger Stift Söcking/g;
             $normalized =~ s|Schaeftlarnstra.e / Gasteig HP8|Schäftlarnstraße/Gasteig HP8|g;
+            $normalized =~ s|Sch.ftlarnstra.e / Gasteig HP8|Schäftlarnstraße/Gasteig HP8|g;
             $normalized =~ s/Sch.ng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Schöng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Sittenb\. Str/Sittenbacher Str/g;
@@ -608,6 +611,7 @@ sub NormalizeString {
             $normalized =~ s/Unterweikertsho\./Unterweikertshofen/g;
             $normalized =~ s/Unterzeism\., Maibaum/Unterzeismering, Maibaum/g;
             $normalized =~ s/Vaterst\./Vaterstetten/g;
+            $normalized =~ s/Wartenberg, Aufhamerstra.e/Wartenberg, Aufhamer Straße/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
             $normalized =~ s/W\.-Heisenberg-Str/Werner-Heisenberg-Str/g;
             $normalized =~ s/W\.-Heisenberg-W\./Werner-Heisenberg-Weg/g;
