@@ -289,6 +289,10 @@ then
         then
             sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
         fi
+        if [ "$(head -1 routes.txt | grep -F -c route_long_name)" == 0 ]
+        then
+            sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD route_long_name TEXT DEFAULT '?';"
+        fi
         if [ "$AGENCY_COUNT" -eq 1 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
