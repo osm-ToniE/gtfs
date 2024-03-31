@@ -459,10 +459,12 @@ sub NormalizeString {
             $normalized =~ s/Gernlinden, Rud\.-Diesel-Straße/Gernlinden, Rudolf-Diesel-Straße/g;
             $normalized =~ s/Gest.tring .rztez./Gestütring Ärztezentrum/g;
             $normalized =~ s/Gew\.park Römerw\./Gewerbepark Römerweg/g;
+            $normalized =~ s/Gewerbege\./Gewerbegebiet/g;
             $normalized =~ s/Gewerbegeb\./Gewerbegebiet/g;
             $normalized =~ s/Gilch\./Gilching/g;
             $normalized =~ s/Gilching, GWG Argelsried/Gilching, Gewerbegebiet Argelsried/g;
             $normalized =~ s/Graf-Siegh\.-Weg/Graf-Sieghart-Weg/g;
+            $normalized =~ s/Grafing, Schulzentrum Kap\.-Str/Grafing, Schulzentrum Kapellenstr/g;
             $normalized =~ s/Gudrunsiedlg\./Gudrunsiedlung/g;
             $normalized =~ s/Gym\./Gymnasium /g;
             $normalized =~ s/Gymn\./Gymnasium /g;
