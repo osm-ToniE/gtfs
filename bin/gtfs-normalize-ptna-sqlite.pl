@@ -406,7 +406,8 @@ sub NormalizeString {
             $normalized =~ s/ b\./ bei /g;
             $normalized =~ s/ \)/)/g;
             $normalized =~ s/\( /(/g;
-            $normalized =~ s/\(Rindermarkt\)\*201\*101/(Rindermarkt)/;
+            $normalized =~ s/Marienpl. \(Rindermarkt\)\*201\*101/Marienplatz (Rindermarkt)/;
+            $normalized =~ s/Marienpl. \(Rindermarkt\)$/Marienplatz (Rindermarkt)/;
             $normalized =~ s/\s,/,/g;
             $normalized =~ s/\s+/ /g;
             $normalized =~ s/\s$//g;
