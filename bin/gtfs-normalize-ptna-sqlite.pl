@@ -512,6 +512,7 @@ sub NormalizeString {
             $normalized =~ s/Kerschenst\./Kerschensteiner/;
             $normalized =~ s/Kerschenst\.Schule/Kerschensteiner Schule/g;
             $normalized =~ s/Kolumbuspl\./Kolumbusplatz /g;
+            $normalized =~ s|Kolumbusplatz / |Kolumbusplatz/|g;
             $normalized =~ s/Korb\.-Aigner/Korbinian-Aigner/g;
             $normalized =~ s/Kottg\. Villenstr/Kottgeisering, Villenstr/g;
             $normalized =~ s/Krailling, Altenh\. Maria Eich/Krailling, Altenheim Maria Eich/g;
@@ -542,6 +543,7 @@ sub NormalizeString {
             $normalized =~ s/Moosburg\.Str/Moosburger Str/g;
             $normalized =~ s/Museum Starnb\. See/Museum Starnberger See/g;
             $normalized =~ s/nchnerStr/nchner Str/g;
+            $normalized =~ s/Neubiberg, Marktpl\. Unterbiberg/Neubiberg, Marktplatz Unterbiberg/g;
             $normalized =~ s/Neugilch\./Neugilching/g;
             $normalized =~ s/Neukeferloh, Bretonisch\.Ring/Neukeferloh, Bretonischer Ring/g;
             $normalized =~ s/Neukeferloh, L\.-Stadler-Str/Neukeferloh, Leonhard-Stadler-Str/g;
