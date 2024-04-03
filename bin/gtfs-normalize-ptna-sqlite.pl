@@ -556,7 +556,7 @@ sub NormalizeString {
             $normalized =~ s/Oberallersh\./Oberallershausen/g;
             $normalized =~ s/Oberdorf\(DAH\)/Oberdorf (DAH)/g;
             $normalized =~ s/Oberhaching, St\.-Rita-Weg/Oberhaching, Sankt-Rita-Weg/g;
-            $normalized =~ s/Oberpf\./Oberpaffenhofen/g;
+            $normalized =~ s/Oberpf\./Oberpfaffenhofen/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberschw\., Am Maibaum/Oberschweinbach, Am Maibaum/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
