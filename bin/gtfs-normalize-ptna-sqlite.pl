@@ -563,7 +563,6 @@ sub NormalizeString {
             $normalized =~ s/Oskar-v\.-Miller-Str/Oskar-von-Miller-Str/g;
             $normalized =~ s/Ottobrunn, F\.-Ebert-Platz/Ottobrunn, Friedrich-Ebert-Platz/g;
             $normalized =~ s/P\.-Rupert-Mayer-Str/Pater-Rupert-Mayer-Str/;
-            $normalized =~ s/Parkpl\./Parkplatz/g;
             $normalized =~ s/Penzberg, Kurf\.-Max-Siedlung/Penzberg, Kurfürst-Max-Siedlung/g;
             $normalized =~ s/Pestalozzisch\./Pestalozzischule/g;
             $normalized =~ s/Pf\.-Aigner-Allee/Pfarrer-Aigner-Allee/;
@@ -572,8 +571,10 @@ sub NormalizeString {
             $normalized =~ s/Pfaffenhofen \(a\.d\.Glonn\)/Pfaffenhofen an der Glonn/g;
             $normalized =~ s/Pfr-Caspar-Mayr-Pl/Pfarrer-Caspar-Mayr-Pl/g;
             $normalized =~ s/Parkp$/Parkplatz/g;
-            $normalized =~ s/pl\./platz /g;
-            $normalized =~ s/Pl\./Platz /g;
+            $normalized =~ s|pl\./|platz/|g;
+            $normalized =~ s|Pl\./|Platz/|g;
+            $normalized =~ s|pl\.\)|platz)|g;
+            $normalized =~ s|Pl\.\)|Platz)|g;
             $normalized =~ s/Puchh\. Bahnhof/Puchheim Bahnhof/g;
             $normalized =~ s/Puchheim Bf,/Puchheim Bahnhof,/g;
             $normalized =~ s/R\.-Bosch-Str/Robert-Bosch-Str/g;
@@ -639,10 +640,6 @@ sub NormalizeString {
             $normalized =~ s|M.hlfeldstr./Freibad|Brunnthaler Stra|g;
             $normalized =~ s|Ottobr\.,\s*A\.Brunneck/Uhlands\.|Ottobrunn, Am Brunneck/Uhlandstraße|g;
             $normalized =~ s|Pfaffenhofen/Alto\.|Pfaffenhofen/Altomünster|g;
-            $normalized =~ s|pl\./|platz/|g;
-            $normalized =~ s|Pl\./|Platz/|g;
-            $normalized =~ s|pl\.\)|platz)|g;
-            $normalized =~ s|Pl\.\)|Platz)|g;
 #            $normalized =~ s|/ |/|g;
 #            $normalized =~ s| /|/|g;
             $normalized =~ s/  / /g;
