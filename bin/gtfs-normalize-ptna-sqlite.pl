@@ -443,6 +443,7 @@ sub NormalizeString {
             $normalized =~ s/C\.-Duisberg-Str/Carl-Duisberg-Str/g;
             $normalized =~ s/Daglfing Bf/Daglfing Bahnhof/;
             $normalized =~ s/Deining, Gh\.zur Post/Deining, Gasthaus zur Post/;
+            $normalized =~ s/Dirnismaning, Kranzberger A\./Dirnismaning, Kranzberger Allee/;
             $normalized =~ s/Dr\.-H\.-Eisenmann-Str/Dr.-Hans-Eisenmann-Str/;
             $normalized =~ s/Ebersb\.Forst/Ebersberger Forst/g;
             $normalized =~ s/F\.-Kamerseder-Str/Franz-Kamerseder-Str/g;
@@ -582,6 +583,7 @@ sub NormalizeString {
             $normalized =~ s|Pl\./|Platz/|g;
             $normalized =~ s|pl\.\)|platz)|g;
             $normalized =~ s|Pl\.\)|Platz)|g;
+            $normalized =~ s|Prof\.|Professor)|g;
             $normalized =~ s/Puchh\. Bahnhof/Puchheim Bahnhof/g;
             $normalized =~ s/Puchheim Bf,/Puchheim Bahnhof,/g;
             $normalized =~ s/R\.-Bosch-Str/Robert-Bosch-Str/g;
