@@ -360,6 +360,9 @@ sub NormalizeStopName {
 
     printf STDERR "Stops  normalized: %06d of %06d\n", $number_of_normalized, $number_of_stops     if ( $verbose );
 
+    $sth = $dbh->prepare( "DELETE FROM ptna_stops WHERE normalized_stop_name='';" );
+    $sth->execute();
+
     $dbh->commit();
 
     return $number_of_normalized;
