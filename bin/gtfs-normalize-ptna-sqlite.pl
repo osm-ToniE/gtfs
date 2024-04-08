@@ -550,6 +550,7 @@ sub NormalizeString {
             $normalized =~ s/nchnerStr/nchner Str/g;
             $normalized =~ s/Neubiberg, Marktpl\. Unterbiberg/Neubiberg, Marktplatz Unterbiberg/g;
             $normalized =~ s/Neugilch\./Neugilching/g;
+            $normalized =~ s/Neuherberg, Helmholtz-Z\./Neuherberg, Helmholtz-Zentrum/g;
             $normalized =~ s/Neukeferloh, Bretonisch\.Ring/Neukeferloh, Bretonischer Ring/g;
             $normalized =~ s/Neukeferloh, L\.-Stadler-Str/Neukeferloh, Leonhard-Stadler-Str/g;
             $normalized =~ s/Niederneuch\./Niederneuching/g;
