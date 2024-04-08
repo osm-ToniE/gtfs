@@ -583,7 +583,7 @@ sub NormalizeString {
             $normalized =~ s|Pl\./|Platz/|g;
             $normalized =~ s|pl\.\)|platz)|g;
             $normalized =~ s|Pl\.\)|Platz)|g;
-            $normalized =~ s|Prof\.|Professor)|g;
+            $normalized =~ s|Prof\.|Professor|g;
             $normalized =~ s/Puchh\. Bahnhof/Puchheim Bahnhof/g;
             $normalized =~ s/Puchheim Bf,/Puchheim Bahnhof,/g;
             $normalized =~ s/R\.-Bosch-Str/Robert-Bosch-Str/g;
