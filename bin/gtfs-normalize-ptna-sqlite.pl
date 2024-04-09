@@ -523,7 +523,7 @@ sub NormalizeString {
             $normalized =~ s/Krailling, Altenh\. Maria Eich/Krailling, Altenheim Maria Eich/g;
             $normalized =~ s/Landsham, Gh\.K.niger/Landsham, Gasthof Königer/g;
             $normalized =~ s/Lenggries, Alpenrose\/Wegsch\.Str/Lenggries, Alpenrose\/Wegscheider Str/g;
-            $normalized =~ s/L\.-Braren-Str/Lozent-Braren-Str/g;
+            $normalized =~ s/L\.-Braren-Str/Lorenz-Braren-Str/g;
             $normalized =~ s/Lindenbg\.Siedlg\./Lindenberg Siedlung/g;
             $normalized =~ s/Lkr\.\s*/Lkr. /g;
             $normalized =~ s/Lkr\.\s*DAH/Lkr. Dachau/g;
