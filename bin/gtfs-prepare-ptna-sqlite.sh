@@ -124,7 +124,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_routes_comments (route_id TEXT DEFA
 echo "Table 'ptna_trips_comments'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_trips_comments;"
-sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_trips_comments (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, comment TEXT DEFAULT '', subroute_of TEXT DEFAULT '', suspicious_start TEXT DEFAULT '', suspicious_end TEXT DEFAULT '', suspicious_number_of_stops TEXT DEFAULT '', same_names_but_different_ids TEXT DEFAULT '', suspicious_trip_duration TEXT DEFAULT '', same_stops_but_different_shape_ids TEXT DEFAULT '');"
+sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_trips_comments (trip_id TEXT DEFAULT '' PRIMARY KEY UNIQUE, comment TEXT DEFAULT '', subroute_of TEXT DEFAULT '', suspicious_start TEXT DEFAULT '', suspicious_end TEXT DEFAULT '', suspicious_number_of_stops TEXT DEFAULT '', same_names_but_different_ids TEXT DEFAULT '', suspicious_trip_duration TEXT DEFAULT '', same_stops_but_different_shape_ids TEXT DEFAULT '', suspicious_other TEXT DEFAULT '' );"
 
 
 #
