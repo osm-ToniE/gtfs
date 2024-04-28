@@ -208,6 +208,7 @@ then
         fi
     else
         echo "calendar_dats.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 else
@@ -239,6 +240,7 @@ then
         fi
     else
         echo "calendar.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 fi
@@ -301,6 +303,7 @@ then
         rm -f routes-wo-header.txt
     else
         echo "routes.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 fi
@@ -324,6 +327,7 @@ then
         rm -f shapes-wo-header.txt
     else
         echo "shapes.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 else
@@ -352,6 +356,7 @@ then
         rm -f stops-wo-header.txt
     else
         echo "stops.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 fi
@@ -377,6 +382,7 @@ then
         rm -f stop_times-wo-header.txt
     else
         echo "stop_times.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 fi
@@ -401,6 +407,7 @@ then
         rm -f trips-wo-header.txt
     else
         echo "trips.txt without header"
+        rm -f "$DB"
         exit 1
     fi
 fi
