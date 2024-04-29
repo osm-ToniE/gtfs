@@ -129,4 +129,4 @@ then
     fi
 
     cd "$GTFS_DIR" || { echo "cannot cd into GTFS_DIR $GTFS_DIR"; exit 1; }
-file
+fi
