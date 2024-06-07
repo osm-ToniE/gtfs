@@ -14,7 +14,7 @@
 
 DB="ptna-gtfs-sqlite.db"
 
-SQ_OPTIONS="-init /dev/null -csv -header"
+SQ_OPTIONS="-init /dev/null"
 
 WORK_BASE_DIR="/osm/ptna/work"
 
