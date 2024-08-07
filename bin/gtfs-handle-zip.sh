@@ -59,6 +59,17 @@ then
     exit $error
 fi
 
+if [ -f ../pre-process-ptna-sqlite.sh ]
+then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') start pre processing $*"
+    ../pre-process-ptna-sqlite.sh
+    error=$?
+    if [ "$error" -gt 0 ]
+    then
+        exit $error
+    fi
+fi
+
 echo "$(date '+%Y-%m-%d %H:%M:%S') start aggregation $*"
 gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
 error=$?
