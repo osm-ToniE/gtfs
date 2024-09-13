@@ -114,7 +114,14 @@ then
                         printf "%s - OK\n" "$RELEASE_DATE"
                     else
                         youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                        printf "%s versus %s - empty file\n" "$youngest_real" "$RELEASE_DATE"
+                        youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7)
+                        RELEASE_DATE_Ym=$(echo "$RELEASE_DATE" | cut -c 1-7)
+                        if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
+                        then
+                            printf "%s versus %s - skip(ped) version\n" "$youngest_real" "$RELEASE_DATE"
+                        else
+                            printf "%s versus %s - not yet analyzed (stub)\n" "$youngest_real" "$RELEASE_DATE"
+                        fi
                     fi
                 else
                     youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
@@ -125,7 +132,7 @@ then
                     then
                         printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
                     else
-                        printf "%s versus %s - not yet analyzed\n" "$youngest_real" "$RELEASE_DATE"
+                        printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
                     fi
 
                     if [ "$touch_n_e" = "true" ]
@@ -199,7 +206,7 @@ then
             then
                 if [ "$(file "$rd/gtfs.zip" | grep -E -c -i 'zip[^:]')" == 1 ]
                 then
-                    (cd "$rd" && gtfs-handle-zip.sh)
+                    (cd "$rd" && gtfs-handle-zip.sh $verbose)
                 else
                     echo "failed (file not Zip)"  >> /dev/stderr
                 fi
