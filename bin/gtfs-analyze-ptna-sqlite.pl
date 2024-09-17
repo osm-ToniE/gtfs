@@ -63,6 +63,7 @@ my $agency                   = undef;
 my $consider_calendar        = undef;
 my $language                 = 'de';
 my $list_separator           = '|';
+my $IFOPT_cmp_len            = 3;
 
 GetOptions( 'debug'                 =>  \$debug,                 # --debug
             'verbose'               =>  \$verbose,               # --verbose
@@ -101,6 +102,10 @@ my $today = sprintf( "%04d-%02d-%02d", $year+1900, $month+1, $day );
 printf STDERR "%s Get list separator\n", get_time();
 $list_separator = GetListSeparator();
 printf STDERR "%s List separator: %s\n", get_time(), $list_separator;
+
+printf STDERR "%s Get IFOPT cmp len\n", get_time();
+$IFOPT_cmp_len = GetIfoptCmpLen();
+printf STDERR "%s IFOPT cmp len: %s\n", get_time(), $IFOPT_cmp_len;
 
 printf STDERR "%s CreatePtnaAnalysis\n", get_time();
 CreatePtnaAnalysis();
@@ -181,6 +186,24 @@ sub GetListSeparator {
         return $hash_ref->{'list_separator'};
     } else {
         return $list_separator;
+    }
+}
+
+
+#############################################################################################
+#
+#
+#
+
+sub GetIfoptCmpLen {
+
+    my $sth = $dbh->prepare( "SELECT * FROM ptna LIMIT 1;" );
+       $sth->execute();
+    my $hash_ref = $sth->fetchrow_hashref();
+    if ( exists($hash_ref->{'IFOPT_cmp_len'}) and $hash_ref->{'IFOPT_cmp_len'} ) {
+        return $hash_ref->{'IFOPT_cmp_len'};
+    } else {
+        return $IFOPT_cmp_len;
     }
 }
 
@@ -393,20 +416,24 @@ sub MarkSuspiciousStart {
 
         } elsif ( $first_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
             # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
-            my $string1 = $1 . ':' . $2 . ':' . $3;
+            my $string1  = $1 . ':' . $2 . ':' . $3;
+               $string1 .= ':' . $4   if ( $IFOPT_cmp_len >= 4 );
+               $string1 .= ':' . $5   if ( $IFOPT_cmp_len >= 5 );
 
             if ( $second_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
 
                 my $string2 = $1 . ':' . $2 . ':' . $3;
+                   $string2 .= ':' . $4   if ( $IFOPT_cmp_len >= 4 );
+                   $string2 .= ':' . $5   if ( $IFOPT_cmp_len >= 5 );
 
                 if (  $string2 eq $string1 ) {
 
-                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_start='stop_id' WHERE trip_id=?;" );
-                    $sth->execute( $trip_id );
-                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_start) VALUES (?,'stop_id');" );
-                    $sth->execute( $trip_id );
+                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_start=? WHERE trip_id=?;" );
+                    $sth->execute( sprintf("IFOPT (%d)",$IFOPT_cmp_len), $trip_id );
+                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_start) VALUES (?,?);" );
+                    $sth->execute( $trip_id, sprintf("IFOPT (%d)",$IFOPT_cmp_len) );
 
-                    printf STDERR "Suspicious start per IFOPT for: %s\n", $trip_id  if ( $debug );
+                    printf STDERR "Suspicious start per IFOPT (%d) for: %s\n", $IFOPT_cmp_len, $trip_id  if ( $debug );
                 }
             }
         }
@@ -478,20 +505,24 @@ sub MarkSuspiciousEnd {
 
         } elsif ( $second_last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
             # check whether stop_ids are of type IFOPT ("a:b:c:d:e") and are equal on "a:b:c"
-            my $string1 = $1 . ':' . $2 . ':' . $3;
+            my $string1  = $1 . ':' . $2 . ':' . $3;
+               $string1 .= ':' . $4   if ( $IFOPT_cmp_len >= 4 );
+               $string1 .= ':' . $5   if ( $IFOPT_cmp_len >= 5 );
 
             if ( $last_stop_id =~ m/^(.+):(.+):(.+):(.+):(.+)$/ ) {
 
                 my $string2 = $1 . ':' . $2 . ':' . $3;
+                   $string2 .= ':' . $4   if ( $IFOPT_cmp_len >= 4 );
+                   $string2 .= ':' . $5   if ( $IFOPT_cmp_len >= 5 );
 
                 if (  $string2 eq $string1 ) {
 
-                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_end='IFOPT' WHERE trip_id=?;" );
-                    $sth->execute( $trip_id );
-                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_end) VALUES (?,'IFOPT');" );
-                    $sth->execute( $trip_id );
+                    $sth = $dbh->prepare( "UPDATE OR IGNORE ptna_trips_comments SET suspicious_end=? WHERE trip_id=?;" );
+                    $sth->execute( sprintf("IFOPT (%d)",$IFOPT_cmp_len), $trip_id );
+                    $sth = $dbh->prepare( "INSERT OR IGNORE INTO ptna_trips_comments (trip_id,suspicious_end) VALUES (?,?);" );
+                    $sth->execute( $trip_id, sprintf("IFOPT (%d)",$IFOPT_cmp_len) );
 
-                    printf STDERR "Suspicious end per IFOPT for: %s\n", $trip_id  if ( $debug  );
+                    printf STDERR "Suspicious end per IFOPT (%d) for: %s\n", $IFOPT_cmp_len, $trip_id  if ( $debug  );
                 }
             }
         }
