@@ -780,12 +780,12 @@ sub CalculateSumRidesOfLongestTrip {
                 $sum_rides += $rides;
                 $sthUS->execute( $sum_rides, $trip_id );
                 $updated++;
-                printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $rowid, $trip_id, $rides, $sum_rides, ' ';
+                printf STDERR "%6d: %s -> rides = %d, sum_rides = %d%20s\r", $rowid, $trip_id, $rides, $sum_rides, ' '   if ( $verbose );
             }
         }
     }
     if ( $updated ) {
-        printf STDERR "\n";
+        printf STDERR "%6d: %s -> rides = %d, sum_rides = %d\n", $rowid, $trip_id, $rides, $sum_rides;
     }
 
     $dbh->commit();
