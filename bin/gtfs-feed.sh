@@ -204,7 +204,7 @@ then
             fi
             if [ -f "$rd/gtfs.zip" ] && [ -s "$rd/gtfs.zip" ]
             then
-                if [ "$(file "$rd/gtfs.zip" | grep -E -c -i 'zip[^:]')" == 1 ]
+                if [ "$(file "$rd/gtfs.zip" | grep -E -c -i 'archive data'" == 1 ]
                 then
                     (cd "$rd" && gtfs-handle-zip.sh $verbose)
                 else
