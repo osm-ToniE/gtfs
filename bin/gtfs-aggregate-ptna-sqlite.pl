@@ -579,22 +579,27 @@ sub GetTripIdAndDatesWithBestServiceInterval {
                             FROM   trips
                             JOIN   calendar ON trips.service_id = calendar.service_id
                             WHERE  trip_id=%s
-                            ORDER  BY calendar.end_date DESC, calendar.start_date ASC LIMIT 1;", $where_clause );
+                            ORDER  BY calendar.end_date DESC, calendar.start_date ASC;", $where_clause );
         #printf STDERR "%s\n", $sql;
         $sth = $dbh->prepare( $sql );
         $sth->execute( @work_array );
 
         while ( @row = $sth->fetchrow_array() ) {
-            if ( $row[0] ) {
-                #printf STDERR "??? trip_id = %s: start_date = %s, end_date = %s, out of = %s\n", $row[0], $row[1], $row[2], scalar(@work_array) if ( $original_size > 900 );
-                if ( $row[1] < $ret_array[1] && $row[2] > $ret_array[2] ) {
-                    $ret_array[0] = $row[0];
-                    $ret_array[1] = $row[1];
-                    $ret_array[2] = $row[2]
-                }
+            #printf STDERR "??? trip_id = %s: start_date = %s, end_date = %s, out of = %s\n", $row[0], $row[1], $row[2], scalar(@work_array) if ( $original_size > 900 );
+            if ( $ret_array[0] eq '' && $row[1] < $ret_array[1] && $row[2] > $ret_array[2] ) {
+                # this is a strange calculation but has to be kept for backward compatibility
+                # otherwise the representing trip_id could be different and gtfs:trip:id or gtfs:trip:id:sample will be diffrent in route relations of OSM
+                $ret_array[0] = $row[0];
+                $ret_array[1] = $row[1];
+                $ret_array[2] = $row[2]
             }
+            $best_start_date = $row[1] if ( $row[1] < $best_start_date );
+            $best_end_date   = $row[2] if ( $row[2] > $best_end_date );
         }
     }
+
+    $ret_array[1] = $best_start_date;
+    $ret_array[2] = $best_end_date;
 
     #printf STDERR "--> trip_id = %s: start_date = %s, end_date = %s\n", $ret_array[0], $ret_array[1], $ret_array[2]  if ( $original_size > 900 );
     return @ret_array;
