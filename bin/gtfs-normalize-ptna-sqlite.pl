@@ -658,7 +658,16 @@ sub NormalizeString {
 #            $normalized =~ s| /|/|g;
             $normalized =~ s/  / /g;
             $normalized =~ s/\s*\)/)/g;
+        } elsif ( $language =~ m/^fr/ ) {
+            $normalized =~ s/St /Saint /g;
+            $normalized =~ s/St\./Saint/g;
+            $normalized =~ s/St-/Saint-/g;
+            $normalized =~ s/Ste /Sainte /g;
+            $normalized =~ s/Ste\./Sainte/g;
+            $normalized =~ s/Ste-/Sainte-/g;
+            $normalized =~ s/'/’/g;
         }
+
         $normalized =~ s/^\s*//;
         $normalized =~ s/\s*$//;
     }
