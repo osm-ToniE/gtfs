@@ -134,16 +134,19 @@ then
                     if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                     then
                         printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                        if [ "$touch_n_e" = "true" ]
+                        then
+                            touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                        fi
                     elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
                     then
                         printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                     else
                         printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
-                    fi
-
-                    if [ "$touch_n_e" = "true" ]
-                    then
-                        touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                        if [ "$touch_n_e" = "true" ]
+                        then
+                            touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                        fi
                     fi
                 fi
             else
