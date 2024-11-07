@@ -119,6 +119,9 @@ then
                         if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                         then
                             printf "%s versus %s - skip(ped) version\n" "$youngest_real" "$RELEASE_DATE"
+                        elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
+                        then
+                            printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                         else
                             printf "%s versus %s - not yet analyzed (stub)\n" "$youngest_real" "$RELEASE_DATE"
                         fi
