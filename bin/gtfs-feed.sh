@@ -114,9 +114,9 @@ then
                         printf "%s - OK\n" "$RELEASE_DATE"
                     else
                         youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                        youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7)
-                        RELEASE_DATE_Ym=$(echo "$RELEASE_DATE" | cut -c 1-7)
-                        if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
+                        youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//')
+                        RELEASE_DATE_Ym=$(echo  "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//')
+                        if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                         then
                             printf "%s versus %s - skip(ped) version\n" "$youngest_real" "$RELEASE_DATE"
                         else
@@ -126,11 +126,14 @@ then
                 else
                     youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
 
-                    youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7)
-                    RELEASE_DATE_Ym=$(echo "$RELEASE_DATE" | cut -c 1-7)
-                    if [ "$youngest_real_Ym" = "$RELEASE_DATE_Ym" ]
+                    youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//')
+                    RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//')
+                    if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                     then
                         printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                    elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
+                    then
+                        printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                     else
                         printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
                     fi
