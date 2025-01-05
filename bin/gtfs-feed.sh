@@ -9,7 +9,7 @@
 
 WORK_BASE_DIR="/osm/ptna/work"
 
-TEMP=$(getopt -o acdDEfnoPTuv --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose -n 'gtfs-feed.sh' -- "$@")
+TEMP=$(getopt -o acdDEfnoPTuvW --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose,wipe-old -n 'gtfs-feed.sh' -- "$@")
 
 # shellcheck disable=SC2181
 if [ $? != 0 ] ; then echo "$(date '+%Y-%m-%d %H:%M:%S') Terminating..."  >> /dev/stderr ; exit 2 ; fi
@@ -30,6 +30,7 @@ while true ; do
         -T|--touch-non-existent)    touch_n_e=true      ; shift ;;
         -u|--url-print)             url_print=true      ; shift ;;
         -v|--verbose)               verbose='-v'        ; shift ;;
+        -W|--wipe-old)              wipe_old=true       ; shift ;;
         --) shift ; break ;;
         *) echo "$(date '+%Y-%m-%d %H:%M:%S') Internal error!" >> /dev/stderr ; exit 3 ;;
     esac
@@ -265,4 +266,21 @@ then
     then
         find $WORK_BASE_DIR -name "${feed}-20*.db" -size 0c ! -newer "$current" -exec rm {} \;
     fi
+fi
+
+
+if [ "$wipe_old"  = "true" ]
+then
+    [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Wipe out older, not referenced databases (not yet realized)" >> /dev/stderr
+
+    feed=$(./get-feed-name.sh)
+
+    # to be done
+    # find all occurances of this feed in all *-Analysis.html files having 'release_date' set
+    # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
+    # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
+    # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
+    # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
+    # - found in the list of occurances above
+
 fi
