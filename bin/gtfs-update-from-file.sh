@@ -2,7 +2,7 @@
 
 WHERE_AM_I=$PWD
 
-for f in $(awk '/not yet analyzed/ { print $1; }' ~/tmp/gtfs-all-feeds.log)
+for f in $(awk '/^[A-Z].*not yet analyzed/ { print $1; }' ~/tmp/gtfs-all-feeds.log)
 do
     echo "#####################################"
     echo ""
