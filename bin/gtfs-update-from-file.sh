@@ -29,40 +29,47 @@ then
 
         if [ -d $GTFS_FEEDS_LOC/$subdir ]
         then
-            #
-            # redirect logging to $PREFIX.log file
-            #
+            cd $GTFS_FEEDS_LOC/$subdir
 
             if [ "$LOG_SEPARATE" = "true" ]
             then
-                logdir=$(echo $feed | sed -e 's/-/\//' -e 's/-.*$/\//')
+                #
+                # redirect logging to $feed-gtfs-update.log file
+                #
+
+                logdir=$PTNA_WORK_LOC/$(echo $feed | sed -e 's/-/\//' -e 's/-.*$//')
                 if [ -d "$logdir" ]
                 then
-                    exec 1> $PTNA_WORK_LOC/$logdir/$feed-gtfs-update.log 2>&1
+                    LOGFILE=$logdir/$feed-gtfs-update.log
                 else
-                    logdir=$(echo $feed | sed -e 's/-.*$/\//')
+                    logdir=$PTNA_WORK_LOC/$(echo $feed | sed -e 's/-.*$//')
                     if [ -d "$logdir" ]
                     then
-                        exec 1> $PTNA_WORK_LOC/$logdir/$feed-gtfs-update.log 2>&1
+                        LOGFILE=/$logdir/$feed-gtfs-update.log
                     fi
                 fi
             fi
-
-            cd $GTFS_FEEDS_LOC/$subdir
-
-            # clean, download and analyze
-            gtfs-feed.sh -ca
-
-            # publish as new
-            gtfs-feed.sh -Pn
-
-            # clean, erase empty, wipe out old
-            gtfs-feed.sh -cEW
-
-            if [ "$LOG_SEPARATE" = "true" ]
+            if [ -z "$LOGFILE" ]
             then
-                exec 1>> /dev/stdout 2>> /dev/stderr
+                # clean, download and analyze
+                gtfs-feed.sh -ca
+
+                # publish as new
+                gtfs-feed.sh -Pn
+
+                # clean, erase empty, wipe out old
+                gtfs-feed.sh -cEW
+            else
+                # clean, download and analyze
+                gtfs-feed.sh -ca    >  $LOGFILE 2>&1
+
+                # publish as new
+                gtfs-feed.sh -Pn    >> $LOGFILE 2>&1
+
+                # clean, erase empty, wipe out old
+                gtfs-feed.sh -cEW   >> $LOGFILE 2>&1
             fi
+            LOGFILE=""
         else
             echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$feed : directory '$GTFS_FEEDS_LOC/$subdir' does not exist"
         fi
