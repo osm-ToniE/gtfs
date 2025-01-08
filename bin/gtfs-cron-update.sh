@@ -23,7 +23,7 @@ echo $(date "+%Y-%m-%d %H:%M:%S %Z") "gtfs-all-feeds.sh -cDT"
 echo ""
 echo "#####################################"
 
-gtfs-all-feeds.sh -cDT | tee ~/tmp/gtfs-all-feeds.log
+gtfs-all-feeds.sh -cDT | tee "$PTNA_WORK_LOC/gtfs-all-feeds-cDT.log"
 
 echo "#####################################"
 echo ""
@@ -31,7 +31,7 @@ echo $(date "+%Y-%m-%d %H:%M:%S %Z") "gtfs-update-from-file.sh"
 echo ""
 echo "#####################################"
 
-gtfs-update-from-file.sh
+gtfs-update-from-file.sh -l -f "$PTNA_WORK_LOC/gtfs-all-feeds-cDT.log"
 
 echo "#####################################"
 echo ""
