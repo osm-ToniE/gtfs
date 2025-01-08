@@ -10,8 +10,8 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -f|--file)                  FROM_FILE=$2     ; shift 2 ;;
-        -l|--log-separate)          LOG_SEPARATE=true          ;;
+        -f|--file)                  FROM_FILE=$2        ; shift 2 ;;
+        -l|--log-separate)          LOG_SEPARATE=true   ; shift   ;;
         --) shift ; break ;;
         *) echo "Internal error!" ; exit 2 ;;
     esac
