@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FROM_FILE="~/tmp/gtfs-all-feeds.log"
+FROM_FILE="$HOME/tmp/gtfs-all-feeds.log"
 
 TEMP=$(getopt -o f:l --long file:,log-separate -n 'gtfs-update-from-file.sh' -- "$@")
 
