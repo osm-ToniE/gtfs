@@ -210,7 +210,7 @@ then
             then
                 ./get-release-file.sh > "$rd/gtfs.zip"
             else
-                wget --user-agent "PTNA script on https://ptna.openstreetmap.de" -O "$rd/gtfs.zip" "$ru"
+                wget --no-verbose --user-agent "PTNA script on https://ptna.openstreetmap.de" -O "$rd/gtfs.zip" "$ru"
             fi
             if [ -f "$rd/gtfs.zip" ] && [ -s "$rd/gtfs.zip" ]
             then
