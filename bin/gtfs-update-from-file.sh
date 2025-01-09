@@ -23,7 +23,7 @@ then
 
     for feed in $(awk '/^[A-Z].*not yet analyzed/ { print $1; }' "$FROM_FILE")
     do
-        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$feed"
+        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed'"
 
         subdir=$(echo $feed | sed -e 's/-/\//' -e 's/-/\//')
 
@@ -73,6 +73,7 @@ then
         else
             echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$feed : directory '$GTFS_FEEDS_LOC/$subdir' does not exist"
         fi
+        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' done"
     done
 
     cd $WHERE_AM_I
