@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 # prepare environment for being called by 'cron': if not called in tty read ~/.ptna-config
 
