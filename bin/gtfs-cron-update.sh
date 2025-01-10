@@ -10,9 +10,9 @@ if [ $tty_ret -ne 0 ]
 then
     echo $(date "+%Y-%m-%d %H:%M:%S %Z") "gtfs-cron-update.sh: start"
 
-    if [ -f ~/.ptna-config ]
+    if [ -f $HOME/.ptna-config ]
     then
-        source ~/.ptna-config
+        source $HOME/.ptna-config
 
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$(top -bn1 | grep -i '^.CPU')"
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$(df | grep 'osm')"
@@ -28,7 +28,7 @@ then
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$(df | grep 'osm')"
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") "gtfs-cron-update.sh: done"
     else
-        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "~/.ptna-config not found, terminating"
+        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$HOME/.ptna-config not found, terminating"
         exit 1
     fi
 else
