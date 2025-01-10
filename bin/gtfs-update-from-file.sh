@@ -27,6 +27,11 @@ then
 
         subdir=$(echo $feed | sed -e 's/-/\//' -e 's/-/\//')
 
+        if [ ! -d $GTFS_FEEDS_LOC/$subdir ]
+        then
+            subdir=$(echo $feed | sed -e 's/-/\//')
+        fi
+
         if [ -d $GTFS_FEEDS_LOC/$subdir ]
         then
             cd $GTFS_FEEDS_LOC/$subdir
