@@ -164,11 +164,11 @@ then
                 fi
             fi
         else
-            printf "%-30s - feed name is null\n" "$PWD"
+            printf "%-32s - feed name is null\n" "$PWD"
         fi
     else
         FEED_NAME=$(echo "$PWD" | sed -e "s|^$GTFS_FEEDS_LOC/||" -e 's|/|-|g')
-        printf "%-30s - manually\n" "$FEED_NAME" >> /dev/stderr
+        printf "%-32s - manually\n" "$FEED_NAME" >> /dev/stderr
     fi
 fi
 
