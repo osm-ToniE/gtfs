@@ -78,10 +78,10 @@ then
 
         if [ -n "$FEED_NAME" ]
         then
-            printf "%-30s - " "$FEED_NAME"
+            printf "%-32s - " "$FEED_NAME"
             RELEASE_DATE=$(./get-release-date.sh)
 
-            if [ -n "$RELEASE_DATE" ]
+            if [[ "$RELEASE_DATE" =~ ^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$ ]]
             then
                 # on the web and in the work directory, the data will be stored in sub-directories
                 # FEED_NAME=DE-BY-MVV --> stored in SUB_DIR=DE/BY
@@ -151,7 +151,16 @@ then
                     fi
                 fi
             else
-                printf "unknown release date\n"
+                if [ -n "$RELEASE_DATE" ]
+                then
+                    printf "unknown release date: '$RELEASE_DATE'\n"
+                elif [ -f ./release_date_error.log ]
+                then
+                    printf "unknown release date: "
+                    cat ./release_date_error.log
+                else
+                    printf "unknown release date\n"
+                fi
             fi
         else
             printf "%-30s - feed name is null\n" "$PWD"
@@ -210,6 +219,7 @@ then
             then
                 ./get-release-file.sh > "$rd/gtfs.zip"
             else
+                echo "$(date '+%Y-%m-%d %H:%M:%S') Doenload GTFS data from '$ru'"
                 wget --no-verbose --user-agent "PTNA script on https://ptna.openstreetmap.de" -O "$rd/gtfs.zip" "$ru"
             fi
             if [ -f "$rd/gtfs.zip" ] && [ -s "$rd/gtfs.zip" ]
@@ -249,7 +259,7 @@ then
             echo "failed for directory $rd" >> /dev/stderr
         fi
     else
-            echo "failed: 'ptna-gtfs-sqlite.db' not found" >> /dev/stderr
+        echo "failed: 'ptna-gtfs-sqlite.db' not found" >> /dev/stderr
     fi
 fi
 
