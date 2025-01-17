@@ -63,10 +63,8 @@ then
         use_language=en
     fi
 
-    echo
     echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as with 'date' = $RELEASE_DATE"
 
-    echo
     echo "$(date '+%Y-%m-%d %H:%M:%S') start rsync -tvu $DB $TARGET_DIR/$WITHDATE_DB"
     mkdir -p "$TARGET_DIR" 2> /dev/null
     rsync -tvu $DB "$TARGET_DIR/$WITHDATE_DB"
@@ -76,26 +74,21 @@ then
     if [ "$1" = "-n" ]
     then
 
-        echo
         echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as 'newest'"
 
         former_newest=$(readlink "$TARGET_SYM")
 
-        echo
         echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'newest' (rm -f $TARGET_SYM)"
         rm -f "$TARGET_SYM"
 
-        echo
         echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
         ln -s "$WITHDATE_DB" "$TARGET_SYM"
 
         if [ -n "$former_newest" ]
         then
-            echo
             echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
             rm -f "$PREVIOUS_SYM"
 
-            echo
             echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
             ln -s "$former_newest" "$PREVIOUS_SYM"
 
@@ -108,7 +101,6 @@ then
                 new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
             fi
 
-            echo
             echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
             sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
         fi
@@ -122,7 +114,6 @@ then
             new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
         fi
 
-        echo
         echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for this old version $WITHDATE_DB"
         sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
 
