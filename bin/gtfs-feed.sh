@@ -158,6 +158,7 @@ then
                 then
                     printf "unknown release date: "
                     cat ./release_date_error.log
+                    rm -f ./release_date_error.log
                 else
                     printf "unknown release date\n"
                 fi
