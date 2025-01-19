@@ -306,6 +306,10 @@ then
         rm -f "$DB"
         exit 1
     fi
+else
+    echo "routes.txt not found - invalid GTFS data"
+    rm -f "$DB"
+    exit 1
 fi
 
 
@@ -359,6 +363,10 @@ then
         rm -f "$DB"
         exit 1
     fi
+else
+    echo "stops.txt not found - invalid GTFS data"
+    rm -f "$DB"
+    exit 1
 fi
 
 
@@ -385,6 +393,10 @@ then
         rm -f "$DB"
         exit 1
     fi
+else
+    echo "stop_times.txt not found - invalid GTFS data"
+    rm -f "$DB"
+    exit 1
 fi
 
 
@@ -410,6 +422,10 @@ then
         rm -f "$DB"
         exit 1
     fi
+else
+    echo "trips.txt not found - invalid GTFS data"
+    rm -f "$DB"
+    exit 1
 fi
 
 sqlite3 $SQ_OPTIONS "$DB" ".schema"
@@ -420,15 +436,15 @@ sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;"
 
 echo
 echo "Test for route_id from routes"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 1;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 2;"
 
 echo
 echo "Test for trip_id from trips"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 1;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
 
 echo
 echo "Test for route_id and trip_id from trips"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 1;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
 
 echo
 echo "OSM settings"
