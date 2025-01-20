@@ -230,7 +230,7 @@ then
                 if [ "$(zipinfo -s "$rd/gtfs.zip" | grep -E -c -i 'Zip file size')" == 1 ]
                 then
                     (cd "$rd" && gtfs-handle-zip.sh $verbose)
-                    $ret_code=$?
+                    ret_code=$?
                     error_code=$(( $error_code + $ret_code ))
 
                 else
