@@ -36,6 +36,8 @@ while true ; do
     esac
 done
 
+error_code=0
+
 #
 #
 #
@@ -228,17 +230,24 @@ then
                 if [ "$(zipinfo -s "$rd/gtfs.zip" | grep -E -c -i 'Zip file size')" == 1 ]
                 then
                     (cd "$rd" && gtfs-handle-zip.sh $verbose)
+                    $ret_code=$?
+                    error_code=$(( $error_code + $ret_code ))
+
                 else
                     echo "failed (file not Zip)"  >> /dev/stderr
+                    error_code=$(( $error_code + 1 ))
                 fi
             else
                 echo "failed (file is empty)" >> /dev/stderr
+                error_code=$(( $error_code + 1 ))
             fi
         else
             echo failed >> /dev/stderr
+            error_code=$(( $error_code + 1 ))
         fi
     else
         echo manually >> /dev/stderr
+        error_code=$(( $error_code + 1 ))
     fi
 fi
 
@@ -261,6 +270,7 @@ then
         fi
     else
         echo "failed: 'ptna-gtfs-sqlite.db' not found" >> /dev/stderr
+        error_code=$(( $error_code + 1 ))
     fi
 fi
 

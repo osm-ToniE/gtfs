@@ -23,6 +23,8 @@ then
 
     for feed in $(awk '/^[A-Z].*not yet analyzed/ { print $1; }' "$FROM_FILE")
     do
+        error_code=0
+
         echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed'"
 
         subdir=$(echo $feed | sed -e 's/-/\//' -e 's/-/\//')
@@ -58,27 +60,50 @@ then
             then
                 # clean, download and analyze
                 gtfs-feed.sh -ca
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
 
-                # publish as new
-                gtfs-feed.sh -Pn
+                if [ $error_code -eq 0 ]
+                then
+                    # publish as new
+                    gtfs-feed.sh -Pn
+                    ret_code=$?
+                    error_code=$(( $error_code + $ret_code ))
+                fi
 
                 # clean, erase empty, wipe out old
                 gtfs-feed.sh -cEW
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
             else
                 # clean, download and analyze
                 gtfs-feed.sh -ca    >  $LOGFILE 2>&1
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
 
-                # publish as new
-                gtfs-feed.sh -Pn    >> $LOGFILE 2>&1
+                if [ $error_code -eq 0 ]
+                then
+                    # publish as new
+                    gtfs-feed.sh -Pn    >> $LOGFILE 2>&1
+                    ret_code=$?
+                    error_code=$(( $error_code + $ret_code ))
+                fi
 
                 # clean, erase empty, wipe out old
                 gtfs-feed.sh -cEW   >> $LOGFILE 2>&1
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
             fi
             LOGFILE=""
         else
             echo $(date "+%Y-%m-%d %H:%M:%S %Z") "$feed : directory '$GTFS_FEEDS_LOC/$subdir' does not exist"
         fi
-        echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' done"
+        if [ $error_code -gt 0 ]
+        then
+            echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' failed, see the logs"
+        else
+            echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' done"
+        fi
     done
 
     cd $WHERE_AM_I
