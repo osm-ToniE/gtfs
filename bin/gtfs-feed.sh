@@ -222,7 +222,7 @@ then
             then
                 ./get-release-file.sh > "$rd/gtfs.zip"
             else
-                echo "$(date '+%Y-%m-%d %H:%M:%S') Doenload GTFS data from '$ru'"
+                echo "$(date '+%Y-%m-%d %H:%M:%S') Download GTFS data from '$ru'"
                 wget --no-verbose --user-agent "PTNA script on https://ptna.openstreetmap.de" -O "$rd/gtfs.zip" "$ru"
             fi
             if [ -f "$rd/gtfs.zip" ] && [ -s "$rd/gtfs.zip" ]
