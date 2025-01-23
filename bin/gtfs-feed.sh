@@ -156,14 +156,10 @@ then
                 if [ -n "$RELEASE_DATE" ]
                 then
                     printf "unknown release date: '$RELEASE_DATE'\n"
-                elif [ -f ./release_date_error.log ]
+                elif [ -f ./release_date_error.log -a -s ./release_date_error.log ]
                 then
                     printf "unknown release date: "
                     cat ./release_date_error.log
-                    if [ ! -s ./release_date_error.log ]
-                    then
-                        printf "\n"
-                    fi
                     rm -f ./release_date_error.log
                 else
                     printf "unknown release date\n"
