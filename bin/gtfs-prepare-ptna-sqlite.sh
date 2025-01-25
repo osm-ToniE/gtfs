@@ -231,7 +231,7 @@ if [ -f calendar.txt -a -s calendar.txt ]
 then
     if [ $(head -1 calendar.txt | grep -F -c service_id) -gt 0 ]
     then
-        columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/service_id TEXT/service_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+        columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/service_id/service_id TEXT PRIMARY KEY/' -e 's/day/day INTEGER DEFAULT 0/g' -e 's/date/date INTEGER DEFAULT 0/g' -e 's/[\r\n]//gi')
         grep -F -v service_id calendar.txt | grep -E -v '^\s*$' > calendar-wo-header.txt
         if [ "$(stat -c%s calendar-wo-header.txt)" -gt 0 ]
         then
@@ -244,15 +244,12 @@ then
         exit 1
     fi
 fi
-if [ "$(stat -c%s calendar-wo-header.txt)" -eq 0 ]
-then
-    columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date TEXT DEFAULT '', end_date TEXT DEFAULT ''"
-    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE calendar ($columns);"
-    sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
-    sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1);"
-    sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1);"
-    sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar;"
-fi
+columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date TEXT DEFAULT '', end_date TEXT DEFAULT ''"
+sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE IF NOT EXISTS calendar ($columns);"
+sqlite3 $SQ_OPTIONS "$DB" "INSERT OR IGNORE INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
+sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1) WHERE start_date = 0;"
+sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1) WHERE end_date = 0;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar;"
 rm -f calendar-wo-header.txt
 
 
