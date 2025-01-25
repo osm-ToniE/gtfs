@@ -671,13 +671,14 @@ sub FindNumberOfRidesForTripIds {
         $service_days = Delta_Days(substr($start_date,0,4),substr($start_date,4,2),substr($start_date,6,2),
                                    substr($end_date,0,4),  substr($end_date,4,2),  substr($end_date,6,2)    );
         #printf STDERR "FindNumberOfRidesForTripIds: %s - %s = %d days\n", $start_date, $end_date, $service_days;
-        $on_days_of_week  = $hash_ref->{'monday'};
-        $on_days_of_week += $hash_ref->{'tuesday'};
-        $on_days_of_week += $hash_ref->{'wednesday'};
-        $on_days_of_week += $hash_ref->{'thursday'};
-        $on_days_of_week += $hash_ref->{'friday'};
-        $on_days_of_week += $hash_ref->{'saturday'};
-        $on_days_of_week += $hash_ref->{'sunday'};
+        $on_days_of_week  = 0;
+        $on_days_of_week += $hash_ref->{'monday'}    if ( $hash_ref->{'monday'}    );
+        $on_days_of_week += $hash_ref->{'tuesday'}   if ( $hash_ref->{'tuesday'}   );
+        $on_days_of_week += $hash_ref->{'wednesday'} if ( $hash_ref->{'wednesday'} );
+        $on_days_of_week += $hash_ref->{'thursday'}  if ( $hash_ref->{'thursday'}  );
+        $on_days_of_week += $hash_ref->{'friday'}    if ( $hash_ref->{'friday'}    );
+        $on_days_of_week += $hash_ref->{'saturday'}  if ( $hash_ref->{'saturday'}  );
+        $on_days_of_week += $hash_ref->{'sunday'}    if ( $hash_ref->{'monday'}    );
         $service_days     = ceil( $service_days * $on_days_of_week / 7 );
         if ( $service_days < 1 && $on_days_of_week > 0 ) {
             $service_days = $on_days_of_week;
