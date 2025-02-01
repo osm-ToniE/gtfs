@@ -381,7 +381,7 @@ then
         columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
         grep -F -v stop_id stop_times.txt | grep -E -v '^\s*$' > stop_times-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE stop_times ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import stop_times.txt stop_times"
+        sqlite3 $SQ_OPTIONS "$DB" ".import stop_times-wo-header.txt stop_times"
         sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_trip_id ON stop_times (trip_id);"
         sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_stop_id ON stop_times (stop_id);"
         rm -f stop_times-wo-header.txt
