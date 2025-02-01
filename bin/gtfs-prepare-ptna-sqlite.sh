@@ -247,9 +247,9 @@ fi
 columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date INTEGER DEFAULT 0, end_date INTEGER DEFAULT 0"
 sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE IF NOT EXISTS calendar ($columns);"
 sqlite3 $SQ_OPTIONS "$DB" "INSERT OR IGNORE INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar WHERE start_date = 0 OR end_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1) WHERE start_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1) WHERE end_date = 0;"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar;"
 rm -f calendar-wo-header.txt
 
 
@@ -428,20 +428,36 @@ fi
 sqlite3 $SQ_OPTIONS "$DB" ".schema"
 
 echo
-echo "Test for agency_id from agency"
+echo "Test for agency"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;"
 
 echo
-echo "Test for route_id from routes"
+echo "Test for routes"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 2;"
 
 echo
-echo "Test for trip_id from trips"
+echo "Test for trips"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
 
 echo
-echo "Test for route_id and trip_id from trips"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
+echo "Test for shapes"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM shapes LIMIT 2;"
+
+echo
+echo "Test for stops"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stops LIMIT 2;"
+
+echo
+echo "Test for stop_times"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stop_times LIMIT 2;"
+
+echo
+echo "Test for calendar"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar LIMIT 2;"
+
+echo
+echo "Test for calendar_dates"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar_dates LIMIT 2;"
 
 echo
 echo "OSM settings"
