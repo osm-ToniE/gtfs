@@ -305,3 +305,5 @@ then
     # - found in the list of occurances above
 
 fi
+
+exit $error_code
