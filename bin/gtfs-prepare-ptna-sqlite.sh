@@ -160,27 +160,26 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_normalization ('id' INTEGER DEFAULT
 
 echo "Table 'agency'"
 
+AGENCY_COUNT=0
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     if [ "$(head -1 agency.txt | grep -F -c agency_id)" == 1 ]
     then
-        grep -F -v agency_id agency.txt | grep -E -v '^\s*$' > agency-wo-header.txt
+        columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     else
         columns="agency_id TEXT PRIMARY KEY,$columns"
-        grep -F -v agency_name agency.txt | grep  -E -v '^\s*$' | awk '{printf("%d,%s\n", NR, $0)}' > agency-wo-header.txt
     fi
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE agency ($columns);"
-    AGENCY_COUNT=$(cat agency-wo-header.txt | wc -l)
-    if [ "$AGENCY_COUNT" -gt 0 ]
+    AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
+    if [ $AGENCY_COUNT -gt 1 ]     # including the header
     then
-        sqlite3 $SQ_OPTIONS "$DB" ".import agency-wo-header.txt agency"
+        sqlite3 $SQ_OPTIONS "$DB" ".import agency.txt agency"
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM agency WHERE agency_id='agency_id';"
     else
         sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO agency (agency_id,agency_name) VALUES ('1','???');"
         AGENCY_COUNT=1
     fi
-    rm -f agency-wo-header.txt
 fi
 
 
@@ -195,13 +194,12 @@ if [ -f calendar_dates.txt -a -s calendar_dates.txt ]
 then
     if [ $(head -1 calendar_dates.txt | grep -F -c service_id) -gt 0 ]
     then
-        grep -F -v service_id calendar_dates.txt | grep -E -v '^\s*$' > calendar_dates-wo-header.txt
-        if [ "$(stat -c%s calendar_dates-wo-header.txt)" -gt 0 ]
+        if [ $(wc -l calendar_dates.txt | sed -e 's/ .*$//') -gt 1 ]
         then
             columns=$(head -1 calendar_dates.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/$/ TEXT/g' -e 's/,/ TEXT, /g' -e 's/[\r\n]//gi')
             sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE calendar_dates ($columns);"
-            sqlite3 $SQ_OPTIONS "$DB" ".import calendar_dates-wo-header.txt calendar_dates"
-            rm -f calendar_dates-wo-header.txt
+            sqlite3 $SQ_OPTIONS "$DB" ".import calendar_dates.txt calendar_dates"
+            sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM calendar_dates WHERE service_id='service_id';"
         else
             columns="service_id TEXT, date TEXT DEFAULT '', exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT ''"
             sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE calendar_dates ($columns);"
@@ -225,18 +223,16 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_service_id ON calendar_dates (servic
 echo "Table 'calendar'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS calendar;"
-rm -f calendar-wo-header.txt
-touch calendar-wo-header.txt
 if [ -f calendar.txt -a -s calendar.txt ]
 then
     if [ $(head -1 calendar.txt | grep -F -c service_id) -gt 0 ]
     then
         columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/service_id/service_id TEXT PRIMARY KEY/' -e 's/day/day INTEGER DEFAULT 0/g' -e 's/date/date INTEGER DEFAULT 0/g' -e 's/[\r\n]//gi')
-        grep -F -v service_id calendar.txt | grep -E -v '^\s*$' > calendar-wo-header.txt
-        if [ "$(stat -c%s calendar-wo-header.txt)" -gt 0 ]
+        if [ "$(wc -l calendar.txt | sed -e 's/ .*$//')" -gt 1 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE calendar ($columns);"
-            sqlite3 $SQ_OPTIONS "$DB" ".import calendar-wo-header.txt calendar"
+            sqlite3 $SQ_OPTIONS "$DB" ".import calendar.txt calendar"
+            sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM calendar WHERE service_id='service_id';"
         fi
     else
         echo "calendar.txt without header"
@@ -250,7 +246,6 @@ sqlite3 $SQ_OPTIONS "$DB" "INSERT OR IGNORE INTO calendar (service_id) SELECT DI
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar WHERE start_date = 0 OR end_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1) WHERE start_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1) WHERE end_date = 0;"
-rm -f calendar-wo-header.txt
 
 
 #
@@ -281,9 +276,9 @@ then
     if [ $(head -1 routes.txt | grep -F -c route_id) -gt 0 ]
     then
         columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-        grep -F -v route_id routes.txt | grep -E -v '^\s*$' > routes-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE routes ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import routes-wo-header.txt routes"
+        sqlite3 $SQ_OPTIONS "$DB" ".import routes.txt routes"
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM routes WHERE route_id='route_id';"
         if [ "$(head -1 routes.txt | grep -F -c agency_id)" == 0 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
@@ -297,7 +292,6 @@ then
             sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
         fi
         sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET route_short_name = route_long_name WHERE route_short_name='';"
-        rm -f routes-wo-header.txt
     else
         echo "routes.txt without header"
         rm -f "$DB"
@@ -322,10 +316,9 @@ then
     if [ $(head -1 shapes.txt | grep -F -c shape_id) -gt 0 ]
     then
         columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
-        grep -F -v shape_id shapes.txt | grep -E -v '^\s*$' > shapes-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE shapes ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import shapes-wo-header.txt shapes"
-        rm -f shapes-wo-header.txt
+        sqlite3 $SQ_OPTIONS "$DB" ".import shapes.txt shapes"
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM shapes WHERE shape_id='shape_id';"
     else
         echo "shapes.txt without header"
         rm -f "$DB"
@@ -351,10 +344,9 @@ then
     if [ $(head -1 stops.txt | grep -F -c stop_id) -gt 0 ]
     then
         columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-        grep -F -v stop_id stops.txt | grep -E -v '^\s*$' > stops-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE stops ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import stops-wo-header.txt stops"
-        rm -f stops-wo-header.txt
+        sqlite3 $SQ_OPTIONS "$DB" ".import stops.txt stops"
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM stops WHERE stop_id='stop_id';"
     else
         echo "stops.txt without header"
         rm -f "$DB"
@@ -379,12 +371,11 @@ then
     if [ $(head -1 stop_times.txt | grep -F -c stop_id) -gt 0 ]
     then
         columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
-        grep -F -v stop_id stop_times.txt | grep -E -v '^\s*$' > stop_times-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE stop_times ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import stop_times-wo-header.txt stop_times"
+        sqlite3 $SQ_OPTIONS "$DB" ".import stop_times.txt stop_times"
         sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_trip_id ON stop_times (trip_id);"
         sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_stop_id ON stop_times (stop_id);"
-        rm -f stop_times-wo-header.txt
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM stop_times WHERE stop_id='stop_id';"
     else
         echo "stop_times.txt without header"
         rm -f "$DB"
@@ -409,11 +400,10 @@ then
     if [ $(head -1 trips.txt | grep -F -c trip_id) -gt 0 ]
     then
         columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-        grep -F -v trip_id trips.txt | grep -E -v '^\s*$' > trips-wo-header.txt
         sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE trips ($columns);"
-        sqlite3 $SQ_OPTIONS "$DB" ".import trips-wo-header.txt trips"
+        sqlite3 $SQ_OPTIONS "$DB" ".import trips.txt trips"
         sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_route_id ON trips (route_id);"
-        rm -f trips-wo-header.txt
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM trips WHERE trip_id='trip_id';"
     else
         echo "trips.txt without header"
         rm -f "$DB"
@@ -430,34 +420,50 @@ sqlite3 $SQ_OPTIONS "$DB" ".schema"
 echo
 echo "Test for agency"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM agency;"
+echo "Lines in agency.txt : " $(wc -l agency.txt)
 
 echo
 echo "Test for routes"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM routes;"
+echo "Lines in routes.txt : " $(wc -l routes.txt)
 
 echo
 echo "Test for trips"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM trips;"
+echo "Lines in trips.txt : " $(wc -l trips.txt)
 
 echo
 echo "Test for shapes"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM shapes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM shapes;"
+echo "Lines in shapes.txt : " $(wc -l shapes.txt)
 
 echo
 echo "Test for stops"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stops LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM stops;"
+echo "Lines in stops.txt : " $(wc -l stops.txt)
 
 echo
 echo "Test for stop_times"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stop_times LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM stop_times;"
+echo "Lines in stop_times.txt : " $(wc -l stop_times.txt)
 
 echo
 echo "Test for calendar"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar;"
+echo "Lines in calendar.txt : " $(wc -l calendar.txt)
 
 echo
 echo "Test for calendar_dates"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar_dates LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar_dates;"
+echo "Lines in calendar_dates.txt : " $(wc -l calendar_dates.txt)
 
 echo
 echo "OSM settings"
