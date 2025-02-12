@@ -457,7 +457,12 @@ echo
 echo "Test for calendar"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar LIMIT 2;"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar;"
-echo "Lines in calendar.txt : " $(wc -l calendar.txt)
+if [ -f calendar.txt ]
+then
+    echo "Lines in calendar.txt : " $(wc -l calendar.txt)
+else
+    echo "Entries in calendar table have been created from calendar_dates table"
+fi
 
 echo
 echo "Test for calendar_dates"
