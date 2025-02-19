@@ -15,6 +15,8 @@
 # ../ptna.txt
 #
 
+$error_code=0
+
 use_language="de"
 
 network_dir=$(dirname "$PWD")
@@ -53,57 +55,51 @@ fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start preparation $*"
 gtfs-prepare-ptna-sqlite.sh --language=$use_language $*
-error=$?
-if [ "$error" -gt 0 ]
-then
-    exit $error
-fi
+ret_code=$?
+error_code=$(( $error_code + $ret_code ))
+
 
 if [ -f ../pre-process-ptna-sqlite.sh ]
 then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') start pre processing $*"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') start pre processing database $*"
     ../pre-process-ptna-sqlite.sh
-    error=$?
-    if [ "$error" -gt 0 ]
-    then
-        exit $error
-    fi
+    ret_code=$?
+    error_code=$(( $error_code + $ret_code ))
 fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start aggregation $*"
 gtfs-aggregate-ptna-sqlite.pl --language=$use_language $*
-error=$?
-if [ "$error" -gt 0 ]
-then
-    exit $error
-fi
+ret_code=$?
+error_code=$(( $error_code + $ret_code ))
 
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start analysis $*"
 gtfs-analyze-ptna-sqlite.pl --language=$use_language $*
-error=$?
-if [ "$error" -gt 0 ]
-then
-    exit $error
-fi
+ret_code=$?
+error_code=$(( $error_code + $ret_code ))
 
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') start normalization $*"
 gtfs-normalize-ptna-sqlite.pl --language=$use_language $*
-error=$?
-if [ "$error" -gt 0 ]
-then
-    exit $error
-fi
+ret_code=$?
+error_code=$(( $error_code + $ret_code ))
 
 
 if [ -f ../post-process-ptna-sqlite.sh ]
 then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') start post processing $*"
-    ../post-process-ptna-sqlite.sh
-    error=$?
-    if [ "$error" -gt 0 ]
-    then
-        exit $error
-    fi
+    echo "$(date '+%Y-%m-%d %H:%M:%S') start post processing database $*"
+    ../post-process-ptna-sqlite.sh $*
+    ret_code=$?
+    error_code=$(( $error_code + $ret_code ))
 fi
+
+
+if [ -f ../post-analysis.sh ]
+then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') start post analysis $*"
+    ../post-analysis.sh $*
+    ret_code=$?
+    error_code=$(( $error_code + $ret_code ))
+fi
+
+exit $error_code

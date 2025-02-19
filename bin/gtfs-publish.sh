@@ -12,6 +12,8 @@
 # where DE and BY and MVV later on build part of the target path /osm/ptna/work/DE/BY/DE-BY-MVV-ptna-gtfs-sqlite.db
 #
 
+$error_code=0
+
 DB="ptna-gtfs-sqlite.db"
 
 SQ_OPTIONS="-init /dev/null"
@@ -103,6 +105,8 @@ then
 
             echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
             sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+            ret_code=$?
+            error_code=$(( $error_code + $ret_code ))
         fi
 
     elif [ "$1" = "-o" ]
@@ -116,8 +120,20 @@ then
 
         echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for this old version $WITHDATE_DB"
         sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+        ret_code=$?
+        error_code=$(( $error_code + $ret_code ))
 
+    fi
+
+    if [ -f ../post-publish.sh ]
+    then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') start post publishing $*"
+        ../post-publish.sh $*
+        ret_code=$?
+        error_code=$(( $error_code + $ret_code ))
     fi
 
     cd "$GTFS_DIR" || { echo "cannot cd into GTFS_DIR $GTFS_DIR"; exit 1; }
 fi
+
+exit $error_code
