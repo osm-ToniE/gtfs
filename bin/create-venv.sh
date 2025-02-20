@@ -9,5 +9,5 @@ test -f "${HERE}/israelGtfsRoutesInShape.py"  # Ensure we're in the right direct
 
 VENV="${HERE}/venv"
 
-python3 -m venv --clear "${VENV}"  # Create the virtual environment; --clear makes it purge any previously created environment
+python3 -m virtualenv --clear "${VENV}" # Create the virtual environment; --clear makes it purge any previously created environment
 "${VENV}/bin/pip" --require-virtualenv install shapely # Install packages in the virtual environment
