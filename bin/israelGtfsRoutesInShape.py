@@ -19,7 +19,7 @@ def main(shape_file, trains, gtfs_dir, out_file):
     shape = None
     if use_shape:
         shape = get_shape(shape_file)
-        print(f'get_shape returned geometry with {len(shape.geoms)} parts and {shapely.get_num_coordinates(shape)} coordinates')
+        print(f"get_shape returned geometry with {len(shape.geoms)} parts and {shapely.get_num_coordinates(shape)} coordinates")
 
     # Find routes that stop at these stops
     # (this section is to be replaced with some SQL magic)
@@ -27,18 +27,18 @@ def main(shape_file, trains, gtfs_dir, out_file):
     stop_ids = stop_ids_from_shape(gtfs_dir, shape, trains, train_data)
     print(f"{len(stop_ids)} stop_ids, {len(train_data['stops_by_stop_id'])} train stops out of stop_ids_from_shape")
     internal_trip_ids, connecting_trip_ids = trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data)
-    print(f'{len(internal_trip_ids)} internal trips, {len(connecting_trip_ids)} connecting trips, {len(train_data['sequence_by_trip_id'])} train sequences out of trip_ids_from_stop_ids')
+    print(f"{len(internal_trip_ids)} internal trips, {len(connecting_trip_ids)} connecting trips, {len(train_data['sequence_by_trip_id'])} train sequences out of trip_ids_from_stop_ids")
     route_info, internal_route_ids = route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, train_data)
-    print(f'{len(route_info)} route_ids out of route_ids_from_trip_ids, of which {len(internal_route_ids)} are internal. Also {len(train_data['trip_by_trip_id'])} train trips.')
+    print(f"{len(route_info)} route_ids out of route_ids_from_trip_ids, of which {len(internal_route_ids)} are internal. Also {len(train_data['trip_by_trip_id'])} train trips.")
     routes = routes_from_route_ids(gtfs_dir, route_info)
-    print(f'{len(routes)} routes out of routes_from_route_ids')
+    print(f"{len(routes)} routes out of routes_from_route_ids")
     populate_agency_name_for_routes(gtfs_dir, routes)
 
     # print some statistics
     print("Operators breakdown:")
     for operator, count in Counter(route['agency_name'] for route in routes).most_common():
         print(count, operator)
-    
+
     process_train_data(train_data)
 
     routes_by_catalog_number = group_routes_by_catalog_number(routes, train_data)
@@ -214,12 +214,12 @@ def group_routes_by_catalog_number(routes, train_data):
             if not any(train_sequence_by_route_id[r['route_id']] == seq for r in routes_list):
                 routes_list.append(route)
             continue
-        
+
         catalog_number = desc_parts[0]
         if catalog_number == '11900':
             # these student lines all use the same catalog id for some reason
             catalog_number = f"{desc_parts[0]}-*-{desc_parts[2]}"
-        
+
         # get or create catalog entry
         catalog_routes = routes_by_catalog_number.setdefault(catalog_number, [])
         catalog_routes.append(route)
@@ -385,7 +385,7 @@ def process_train_data(train_data):
     for trip_id, trip in train_trip_by_trip_id.items():
         if trip['direction_id'] == '1':
             train_sequence_by_trip_id[trip_id] = tuple(reversed(train_sequence_by_trip_id[trip_id]))
-    
+
     # group sequences by ref without duplicates
     train_sequences_by_ref = {}
     for trip_id, trip in train_trip_by_trip_id.items():
@@ -402,7 +402,7 @@ def process_train_data(train_data):
     route_identifier_by_sequence_by_ref = {
         ref: map_sequence_to_route_identifier(ref, train_sequences, train_data)
             for ref, train_sequences in train_sequences_by_ref.items() }
-    
+
     # map train number to route identifier, dict sorted by train number
     route_identifier_by_train_number = {
         trip['train_number']: route_identifier_by_sequence_by_ref[trip['ref']][trip['sequence']] for trip_id, trip in sorted(train_trip_by_trip_id.items(), key=lambda p: p[1]['train_number'])
@@ -410,7 +410,7 @@ def process_train_data(train_data):
 
     # figure out train number ranges (human-readable string) for each route identifier
     numbers_by_route_identifier = generate_train_numbers_by_route_identifier(route_identifier_by_train_number)
-    
+
     train_identifier_by_route_id = {}
 
     for trip in train_trip_by_trip_id.values():
@@ -439,7 +439,7 @@ def generate_train_numbers_by_route_identifier(route_identifier_by_train_number)
         prev_number = train_number
         numbers_by_route_identifier.setdefault(route_identifier, []).append(train_number)
     ranges_by_route_identifier.setdefault(prev_identifier, []).append((range_start, prev_number))
-    
+
     return {
         route_identifier:
             (', '.join(
@@ -508,7 +508,7 @@ def merge_same_endpoints(sub_sequences_by_full_sequence, train_data):
         if full_seq not in sub_sequences_by_full_sequence:
             # already merged in a previous iteration of the for loop
             continue
-        
+
         # compare with all other trips
         for other_full_seq, other_sub_seqs in list(sub_sequences_by_full_sequence.items()):
             if other_sub_seqs == sub_seqs:
@@ -516,7 +516,7 @@ def merge_same_endpoints(sub_sequences_by_full_sequence, train_data):
                 # we compare sub_seqs because the same list object stays associated with this sequence even after mergers
                 # as opposed to the sequence itself which is a tuple and might change
                 continue
-            
+
             if sequences_have_same_endpoints(full_seq, other_full_seq):
                 # remove these two
                 del sub_sequences_by_full_sequence[full_seq]
@@ -573,7 +573,7 @@ def merge_sequences(seq1, seq2, train_data):
             new_seq += sort_sub_sequence(seq1[i1:j1] + seq2[i2:j2], train_data)
             i1 = j1
             i2 = j2
-    
+
     # check our work
     assert new_seq[0] == seq1[0]
     assert new_seq[-1] == seq1[-1]
@@ -590,7 +590,7 @@ def sort_sub_sequence(stop_ids, train_data):
         if all(s in seq for s in stop_ids):
             # jackpot
             return tuple(s for s in seq if s in stop_ids)
-    
+
     # need to look at multiple sequences to find the order between all the stops
     # sounds doable but currently not needed
     raise NotImplementedError("Expected the train data to be complete enough for easy coding")
