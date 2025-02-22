@@ -15,7 +15,7 @@
 # ../ptna.txt
 #
 
-$error_code=0
+error_code=0
 
 use_language="de"
 
