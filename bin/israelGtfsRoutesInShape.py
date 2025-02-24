@@ -2,6 +2,9 @@
 # shebang to run with the venv in this directory
 # run create-venv.sh to create it
 
+# Copyright 2025 Nitai Sasson
+# Licensed under GNU GPLv3 or later
+
 # This script creates a .json file with an array of routes (catalog entries) in the provided region.
 # The output must be sorted in the order that items should appear on PTNA (sorted by type, then by ref)
 
@@ -11,7 +14,7 @@ import argparse
 import json
 import shapely
 from os import path
-from collections import Counter
+from collections import Counter, defaultdict
 
 def main(shape_file, trains, gtfs_dir, out_file):
     use_shape = not trains
@@ -24,11 +27,11 @@ def main(shape_file, trains, gtfs_dir, out_file):
     # Find routes that stop at these stops
     # (this section is to be replaced with some SQL magic)
     train_data = {}
-    stop_ids = stop_ids_from_shape(gtfs_dir, shape, trains, train_data)
+    stop_ids, all_stops = stop_ids_from_shape(gtfs_dir, shape, trains, train_data)
     print(f"{len(stop_ids)} stop_ids, {len(train_data['stops_by_stop_id'])} train stops out of stop_ids_from_shape")
-    internal_trip_ids, connecting_trip_ids = trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data)
+    internal_trip_ids, connecting_trip_ids, cities_by_trip_id = trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data, all_stops)
     print(f"{len(internal_trip_ids)} internal trips, {len(connecting_trip_ids)} connecting trips, {len(train_data['sequence_by_trip_id'])} train sequences out of trip_ids_from_stop_ids")
-    route_info, internal_route_ids = route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, train_data)
+    route_info, internal_route_ids = route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, train_data, cities_by_trip_id)
     print(f"{len(route_info)} route_ids out of route_ids_from_trip_ids, of which {len(internal_route_ids)} are internal. Also {len(train_data['trip_by_trip_id'])} train trips.")
     routes = routes_from_route_ids(gtfs_dir, route_info)
     print(f"{len(routes)} routes out of routes_from_route_ids")
@@ -38,7 +41,7 @@ def main(shape_file, trains, gtfs_dir, out_file):
     print("Operators breakdown:")
     for operator, count in Counter(route['agency_name'] for route in routes).most_common():
         print(count, operator)
-    
+
     process_train_data(train_data)
 
     routes_by_catalog_number = group_routes_by_catalog_number(routes, train_data)
@@ -64,42 +67,57 @@ def fix_gtfs_name(s):
 
 def stop_ids_from_shape(gtfs_dir, shape, trains, train_data):
     # return value:
-    # stop_ids: set of stop_ids within this shape
-    # if trains is True, stop_ids will have the stop_ids of all train stations
+    # 1. stop_ids: set of stop_ids within this shape
+    # 2. all_stops: dict mapping stop_id to stop struct for all stops in GTFS
+    # if trains is True, stop_ids will have the stop_ids of all train stations and nothing else (shape is not used)
     # this function also adds to train_data:
     # stops_by_stop_id: dict mapping stop_id to stop struct
     stop_ids = set()
+    all_stops = {}
     train_stops_by_stop_id = {}
     if not trains:
         shapely.prepare(shape)
+    print("Parsing stops.txt")
     with open(path.join(gtfs_dir, 'stops.txt'), newline='', encoding='utf_8_sig') as f:
         csv_reader = csv.DictReader(f)
         for stop in csv_reader:
+            # add to all_stops with fixed name and added city field
+            all_stops[stop['stop_id']] = stop
+            stop['stop_name'] = fix_gtfs_name(stop['stop_name'])
+            city_re = re.fullmatch(r'רחוב: .* עיר: (.*) רציף: .* קומה: .*', stop['stop_desc'])
+            if city_re:
+                stop['city'] = fix_gtfs_name(city_re.group(1))
+            # add train stations to train_data
             if not stop['stop_desc']:
-                # train stop
-                stop['stop_name'] = fix_gtfs_name(stop['stop_name'])
+                # train station
                 train_stops_by_stop_id[stop['stop_id']] = stop
                 if trains:
                     stop_ids.add(stop['stop_id'])
+            # add stops in the shape
             if not trains and shapely.contains_xy(shape, float(stop['stop_lon']), float(stop['stop_lat'])):
                 stop_ids.add(stop['stop_id'])
     train_data['stops_by_stop_id'] = train_stops_by_stop_id
-    return stop_ids
+    return stop_ids, all_stops
 
-def trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data):
+def trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data, all_stops):
     # return values:
     # 1. internal_trip_ids - trips that only stop at the given stops
     # 2. connecting_trip_ids - trips that stop at the given stops as well as other stops (i.e. connect to other districts/regions)
+    # 3. cities_by_trip_id - dict from trip_id to a set of city names in which the trip stops
     # this function also adds to train_data:
     # sequence_by_trip_id - dict mapping trip_id to a tuple of the stop_ids in its route
     in_trip_ids = set()
     out_trip_ids = set()
-    trip_sequence_dict_by_trip_id = {}
+    train_trip_sequence_dict_by_trip_id = defaultdict(dict)
+    cities_by_trip_id = defaultdict(set)
+    print("Parsing stop_times.txt")
     with open(path.join(gtfs_dir, 'stop_times.txt'), newline='', encoding='utf_8_sig') as f:
         csv_reader = csv.DictReader(f)
         for stop_time in csv_reader:
+            if 'city' in all_stops[stop_time['stop_id']]:
+                cities_by_trip_id[stop_time['trip_id']].add(all_stops[stop_time['stop_id']]['city'])
             if stop_time['stop_id'] in train_data['stops_by_stop_id']:
-                sequence_dict = trip_sequence_dict_by_trip_id.setdefault(stop_time['trip_id'], {})
+                sequence_dict = train_trip_sequence_dict_by_trip_id[stop_time['trip_id']]
                 if str(int(stop_time['stop_sequence'])) != stop_time['stop_sequence']:
                     print(f"Warning: weird number formatting '{stop_time['stop_sequence']}' in stop_sequence for trip_id {stop_time['trip_id']}")
                 stop_seq = int(stop_time['stop_sequence'])
@@ -115,12 +133,13 @@ def trip_ids_from_stop_ids(gtfs_dir, stop_ids, train_data):
     assert internal_trip_ids | connecting_trip_ids == in_trip_ids
 
     # convert sequence dicts to sequence tuples
-    train_data['sequence_by_trip_id'] = {trip_id: tuple(sequence[i] for i in sorted(sequence.keys())) for trip_id, sequence in trip_sequence_dict_by_trip_id.items()}
-    return internal_trip_ids, connecting_trip_ids
+    train_data['sequence_by_trip_id'] = {trip_id: tuple(sequence[i] for i in sorted(sequence.keys())) for trip_id, sequence in train_trip_sequence_dict_by_trip_id.items()}
+    return internal_trip_ids, connecting_trip_ids, cities_by_trip_id
 
-def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, train_data):
+def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, train_data, cities_by_trip_id):
     # return values:
-    # 1. route_info: a dict where the key is route_id and the value is a tuple: (direction_id, trip_headsign)
+    # 1. route_info: a dict where the key is route_id and the value is a tuple: (direction_id, trip_headsign, cities)
+    #    where cities is a frozenset of the names of cities the route visits
     # 2. internal_route_ids: set of route_ids belonging to internal routes
     # all routes have the same direction_id for all trips (base assumption for Israel GTFS)
     # almost all routes have the same trip_headsign for all trips, with the only exception being
@@ -134,6 +153,7 @@ def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, tr
     logged_problem_routes = set()
     relevant_trip_ids = internal_trip_ids | connecting_trip_ids
     train_trip_by_trip_id = {}
+    print("Parsing trips.txt")
     with open(path.join(gtfs_dir, 'trips.txt'), newline='', encoding='utf_8_sig') as f:
         csv_reader = csv.DictReader(f)
         for trip in csv_reader:
@@ -141,9 +161,19 @@ def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, tr
                 train_trip_by_trip_id[trip['trip_id']] = trip
             if trip['trip_id'] in relevant_trip_ids:
                 destination = trip['trip_headsign'].replace('_', ' - ')
+
+                trip_cities = frozenset(cities_by_trip_id[trip['trip_id']])
+                route_cities = trip_cities
+                # add trip cities to route_info if the route is already in route_info
+                if trip['route_id'] in route_info:
+                    # get union of route and trip cities and update route_info with the union
+                    route_cities = route_info[trip['route_id']][2]
+                    route_cities = route_cities | trip_cities
+                    route_info[trip['route_id']] = route_info[trip['route_id']][:2] + (route_cities,)
+
                 # sanity check - all trips of a single route are going to the same place
-                if trip['route_id'] not in route_info or route_info[trip['route_id']] == (trip['direction_id'], destination):
-                    route_info[trip['route_id']] = (trip['direction_id'], destination)
+                if trip['route_id'] not in route_info or route_info[trip['route_id']][:2] == (trip['direction_id'], destination):
+                    route_info[trip['route_id']] = (trip['direction_id'], destination, route_cities)
                 else:
                     # route is most likely being changed (stops added/removed), so destination is different, nothing to do
                     # ensure direction is still the same, because that is an important base assumption in Israel's GTFS
@@ -157,7 +187,7 @@ def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, tr
                         )
                     if not route_info[trip['route_id']][1]:
                         # better a non-blank destination than a blank one
-                        route_info[trip['route_id']] = (trip['direction_id'], destination)
+                        route_info[trip['route_id']] = (trip['direction_id'], destination, route_cities)
                 if trip['trip_id'] in internal_trip_ids:
                     internal_route_ids.add(trip['route_id'])
                 else:
@@ -170,16 +200,19 @@ def route_ids_from_trip_ids(gtfs_dir, internal_trip_ids, connecting_trip_ids, tr
 
 def routes_from_route_ids(gtfs_dir, route_info):
     routes = []
+    print("Parsing routes.txt")
     with open(path.join(gtfs_dir, 'routes.txt'), newline='', encoding='utf_8_sig') as f:
         csv_reader = csv.DictReader(f)
         for route in csv_reader:
             if route['route_id'] in route_info:
-                route['direction_and_headsign'] = route_info[route['route_id']]
+                route['direction_and_headsign'] = route_info[route['route_id']][:2]
+                route['cities'] = route_info[route['route_id']][2]
                 routes.append(route)
     return routes
 
 def populate_agency_name_for_routes(gtfs_dir, routes):
     agency_names = {}
+    print("Parsing agency.txt")
     with open(path.join(gtfs_dir, 'agency.txt'), newline='', encoding='utf_8_sig') as f:
         csv_reader = csv.DictReader(f)
         for agency in csv_reader:
@@ -214,12 +247,12 @@ def group_routes_by_catalog_number(routes, train_data):
             if not any(train_sequence_by_route_id[r['route_id']] == seq for r in routes_list):
                 routes_list.append(route)
             continue
-        
+
         catalog_number = desc_parts[0]
         if catalog_number == '11900':
             # these student lines all use the same catalog id for some reason
             catalog_number = f"{desc_parts[0]}-*-{desc_parts[2]}"
-        
+
         # get or create catalog entry
         catalog_routes = routes_by_catalog_number.setdefault(catalog_number, [])
         catalog_routes.append(route)
@@ -232,12 +265,13 @@ class InvalidRouteError(ValueError):
 def create_ptna_routes(routes_by_catalog_number, internal_route_ids):
     # return a list of route objects (dicts)
     # normal fields:
-    # ref; route_type; comment; from; to; operator; gtfs_feed; route_id
+    # ref; type; comment; from; to; operator; gtfs_feed; route_id
     # extra fields usable for filtering:
     # internal=yes/no: yes = this route is fully contained within this region; no = this route has stops outside this region
     # catalog_number: (all except train routes) the "makat" of the route, also appears in the comment
+    # city: (all except train routes) comma-delimited list of cities that the route visits, in alphabetical order, e.g. "חיפה,נשר"
     # train_numbers: (train routes only) a human-readable list of number ranges of trains that serve this line, e.g. "401-409, 418-426, 429", also appears in the comment
-    # train_numbers_full: (train routes only) a comma-separated list of train numbers, e.g. "401, 402, 403, 404, 405, 406, 407, 409, 418, 419, 420, 421, 422, 423, 424, 425, 426, 429"
+    # train_numbers_full: (train routes only) a comma-separated list of train numbers, e.g. "401,402,403,404,405,406,407,409,418,419,420,421,422,423,424,425,426,429"
     # maybe in the future: number of stops, other metadata...
     osm_route_type_conversion = {
         '0': "light_rail",
@@ -253,7 +287,7 @@ def create_ptna_routes(routes_by_catalog_number, internal_route_ids):
     for catalog_number, routes in routes_by_catalog_number.items():
         try:
             catalog_entry = {}
-            # route_type
+            # type (previously known as route_type)
             route_type = {route['route_type'] for route in routes}
             if len(route_type) != 1:
                 raise InvalidRouteError(f"Multiple different route_type values for catalog number {catalog_number}: {route_type}")
@@ -271,7 +305,7 @@ def create_ptna_routes(routes_by_catalog_number, internal_route_ids):
             if route_type not in osm_route_type_conversion:
                 raise InvalidRouteError(f"Unrecognized route_type {route_type} for catalog number {catalog_number}")
             route_type = osm_route_type_conversion[route_type]
-            catalog_entry['route_type'] = route_type
+            catalog_entry['type'] = route_type
 
             train = route_type == 'train'
 
@@ -302,15 +336,19 @@ def create_ptna_routes(routes_by_catalog_number, internal_route_ids):
                         new_name = name_candidate
                     catalog_entry['ref'] = new_name
 
-            # comment and catalog_number
+            # comment, catalog_number, and city
             if train:
                 catalog_entry['comment'] = f"מספרי רכבות: {train_numbers}"
                 catalog_entry['train_numbers'] = train_numbers
                 catalog_entry['train_numbers_full'] = train_numbers_full
             else:
-                real_catalog_number = re.match(r'\d*', catalog_number).group() # take just 11900 from 11900-*-*
-                catalog_entry['comment'] = f"מק״ט: {catalog_number} ([https://markav.net/line/{real_catalog_number}/ מר קו])"
+                comment = f"מק״ט: {catalog_number}"
+                if route_type == 'bus':
+                    real_catalog_number = re.match(r'\d*', catalog_number).group() # take just 11900 from 11900-*-*
+                    comment += f" ([https://markav.net/line/{real_catalog_number}/ מר קו])"
+                catalog_entry['comment'] = comment
                 catalog_entry['catalog_number'] = catalog_number
+                catalog_entry['city'] = ','.join(sorted(frozenset.union(*[route['cities'] for route in routes])))
 
             # internal
             catalog_entry['internal'] = "yes" if all(route['route_id'] in internal_route_ids for route in routes) else "no"
@@ -365,7 +403,7 @@ def sort_catalog(catalog):
     def sort_key(catalog_entry):
         ref = catalog_entry['ref']
         num = re.match(r"\d+", ref).group()
-        return (route_type_order[catalog_entry['route_type']], int(num), catalog_entry['ref'])
+        return (route_type_order[catalog_entry['type']], int(num), catalog_entry['ref'])
     catalog.sort(key=sort_key)
 
 def dump_catalog(catalog, out_file):
@@ -385,7 +423,7 @@ def process_train_data(train_data):
     for trip_id, trip in train_trip_by_trip_id.items():
         if trip['direction_id'] == '1':
             train_sequence_by_trip_id[trip_id] = tuple(reversed(train_sequence_by_trip_id[trip_id]))
-    
+
     # group sequences by ref without duplicates
     train_sequences_by_ref = {}
     for trip_id, trip in train_trip_by_trip_id.items():
@@ -402,7 +440,7 @@ def process_train_data(train_data):
     route_identifier_by_sequence_by_ref = {
         ref: map_sequence_to_route_identifier(ref, train_sequences, train_data)
             for ref, train_sequences in train_sequences_by_ref.items() }
-    
+
     # map train number to route identifier, dict sorted by train number
     route_identifier_by_train_number = {
         trip['train_number']: route_identifier_by_sequence_by_ref[trip['ref']][trip['sequence']] for trip_id, trip in sorted(train_trip_by_trip_id.items(), key=lambda p: p[1]['train_number'])
@@ -410,7 +448,7 @@ def process_train_data(train_data):
 
     # figure out train number ranges (human-readable string) for each route identifier
     numbers_by_route_identifier = generate_train_numbers_by_route_identifier(route_identifier_by_train_number)
-    
+
     train_identifier_by_route_id = {}
 
     for trip in train_trip_by_trip_id.values():
@@ -439,13 +477,13 @@ def generate_train_numbers_by_route_identifier(route_identifier_by_train_number)
         prev_number = train_number
         numbers_by_route_identifier.setdefault(route_identifier, []).append(train_number)
     ranges_by_route_identifier.setdefault(prev_identifier, []).append((range_start, prev_number))
-    
+
     return {
         route_identifier:
             (', '.join(
                 str(range_start) if range_start == range_end else f"{range_start}-{range_end}"
-                for range_start, range_end in ranges ),
-            ', '.join(str(num) for num in numbers_by_route_identifier[route_identifier]))
+                for range_start, range_end in ranges ), # human-readable list of ranges and individual numbers
+            ','.join(str(num) for num in numbers_by_route_identifier[route_identifier])) # list of numbers, comma-delimited (no spaces)
         for route_identifier, ranges in ranges_by_route_identifier.items()
     }
 
@@ -508,7 +546,7 @@ def merge_same_endpoints(sub_sequences_by_full_sequence, train_data):
         if full_seq not in sub_sequences_by_full_sequence:
             # already merged in a previous iteration of the for loop
             continue
-        
+
         # compare with all other trips
         for other_full_seq, other_sub_seqs in list(sub_sequences_by_full_sequence.items()):
             if other_sub_seqs == sub_seqs:
@@ -516,7 +554,7 @@ def merge_same_endpoints(sub_sequences_by_full_sequence, train_data):
                 # we compare sub_seqs because the same list object stays associated with this sequence even after mergers
                 # as opposed to the sequence itself which is a tuple and might change
                 continue
-            
+
             if sequences_have_same_endpoints(full_seq, other_full_seq):
                 # remove these two
                 del sub_sequences_by_full_sequence[full_seq]
@@ -573,7 +611,7 @@ def merge_sequences(seq1, seq2, train_data):
             new_seq += sort_sub_sequence(seq1[i1:j1] + seq2[i2:j2], train_data)
             i1 = j1
             i2 = j2
-    
+
     # check our work
     assert new_seq[0] == seq1[0]
     assert new_seq[-1] == seq1[-1]
@@ -590,7 +628,7 @@ def sort_sub_sequence(stop_ids, train_data):
         if all(s in seq for s in stop_ids):
             # jackpot
             return tuple(s for s in seq if s in stop_ids)
-    
+
     # need to look at multiple sequences to find the order between all the stops
     # sounds doable but currently not needed
     raise NotImplementedError("Expected the train data to be complete enough for easy coding")
