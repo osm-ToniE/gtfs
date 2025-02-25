@@ -12,7 +12,7 @@
 # where DE and BY and MVV later on build part of the target path /osm/ptna/work/DE/BY/DE-BY-MVV-ptna-gtfs-sqlite.db
 #
 
-$error_code=0
+error_code=0
 
 DB="ptna-gtfs-sqlite.db"
 
