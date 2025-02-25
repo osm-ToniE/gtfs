@@ -57,7 +57,10 @@ def fix_gtfs_name(s):
     # GTFS has bad names
     s = s.replace("''", '"')
     s = s.replace('""', '"') # one occurrence of this (גן טכנולוגי/א''''ס הפועל)
+    s = s.replace('\xa0', ' ') # non-breaking space
     s = s.strip()
+    if not s: return s
+    s = re.sub(' +', ' ', s)
     s = re.sub('(?<=[א-ת])"(?=[א-ת])', '״', s) # Hebrew Gershayim (note: א-ת includes אותיות סופיות)
     if s[0] == "'": # sometimes they put the Geresh on the wrong side, probably bad RTL support in their GUI
         s = s[1:] + "'"
@@ -95,6 +98,11 @@ def stop_ids_from_shape(gtfs_dir, shape, trains, train_data):
                     stop_ids.add(stop['stop_id'])
             # add stops in the shape
             if not trains and shapely.contains_xy(shape, float(stop['stop_lon']), float(stop['stop_lat'])):
+                stop_ids.add(stop['stop_id'])
+            elif trains and re.match(r'רחוב: מסילת (ברזל |קו )', stop['stop_desc']):
+                # add light rail stops as well
+                # eventually replace this bullshit logic with querying route_type over SQL instead of going by stops
+                # but right now, this is the easiest way
                 stop_ids.add(stop['stop_id'])
     train_data['stops_by_stop_id'] = train_stops_by_stop_id
     return stop_ids, all_stops
@@ -364,10 +372,12 @@ def create_ptna_routes(routes_by_catalog_number, internal_route_ids):
                     direction, headsign = route['direction_and_headsign']
                     if direction not in ('0', '1'):
                         raise InvalidRouteError(f"Unrecognized direction {direction} for route {route}")
-                    if direction == '0':
-                        to_options.add(fix_gtfs_name(headsign))
+                    headsign = fix_gtfs_name(headsign)
+                    if not headsign: continue
+                    elif direction == '0':
+                        to_options.add(headsign)
                     else:
-                        from_options.add(fix_gtfs_name(headsign))
+                        from_options.add(headsign)
                 catalog_entry['to'] = '|'.join(sorted(to_options))
                 catalog_entry['from'] = '|'.join(sorted(from_options))
                 # TO DO: add the actual stop names for first and last stop, as parsed from route_long_name
@@ -464,19 +474,22 @@ def generate_train_numbers_by_route_identifier(route_identifier_by_train_number)
     # return value is a dict mapping route_identifier to a string listing all the train numbers that use this route identifier
     # example string: "401-409, 418-426, 429"
     # also gives a simple comma-separated list of numbers: "401, 402, 403, 404, 405, 406, 407, 409, 418, 419, 420, 421, 422, 423, 424, 425, 426, 429"
-    ranges_by_route_identifier = {}
-    numbers_by_route_identifier = {}
+    ranges_by_route_identifier = defaultdict(list)
+    numbers_by_route_identifier = defaultdict(list)
     prev_identifier = None
     range_start = None
+    prev_number = 0
     for train_number, route_identifier in route_identifier_by_train_number.items():
-        if prev_identifier and prev_identifier != route_identifier:
-            ranges_by_route_identifier.setdefault(prev_identifier, []).append((range_start, prev_number))
-        if prev_identifier != route_identifier:
+        if prev_identifier != route_identifier or (prev_number // 1000) != (train_number // 1000):
+            # start of a new range
+            if range_start: # don't enter this in the first iteration of the loop
+                # add the range that just ended to the route_identifier it belongs to
+                ranges_by_route_identifier[prev_identifier].append((range_start, prev_number))
             range_start = train_number
         prev_identifier = route_identifier
         prev_number = train_number
-        numbers_by_route_identifier.setdefault(route_identifier, []).append(train_number)
-    ranges_by_route_identifier.setdefault(prev_identifier, []).append((range_start, prev_number))
+        numbers_by_route_identifier[route_identifier].append(train_number)
+    ranges_by_route_identifier[prev_identifier].append((range_start, prev_number))
 
     return {
         route_identifier:
