@@ -420,7 +420,7 @@ sub FindUniqueTripIds {
         $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
         #if ( $trip_id =~ m/^MTN-I-L/ ){
-        #    printf STDERR "route_id %s, trip_id %s: %s - %s\n", $route_id, $trip_id, $stop_id_list_as_string, $shape_id;
+        #    printf STDERR "route_id %s, trip_id %s: %s - %s\n", Encode::decode('utf8',$route_id), $trip_id, $stop_id_list_as_string, $shape_id;
         #}
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
 
@@ -460,7 +460,7 @@ sub FindUniqueTripIds {
     }
 
     printf STDERR "\n"                                          if ( $verbose );
-    printf STDERR "%s Start Storing ptna_trips ...\n", get_time();
+    printf STDERR "%s Start Storing ptna_trips ... %d\n", get_time(), scalar(@ret_array);
 
     my @new_ret_array = ();
     my $best_trip_id  = '';
@@ -485,6 +485,7 @@ sub FindUniqueTripIds {
             push( @service_ids, $hash_ref->{'service_id'}   );
         }
         ($best_trip_id,$start_date,$end_date) = GetTripIdAndDatesWithBestServiceInterval( @similars );
+        #printf STDERR "Trip %s, Best trip %s, start %s, end %s\n", $trip_id, $best_trip_id,$start_date,$end_date;
         unless ( $have_seen_trip_id{$best_trip_id} ) {
             push( @new_ret_array, $best_trip_id );
 
@@ -549,7 +550,7 @@ sub FindStopIdListAsString {
 sub GetTripIdAndDatesWithBestServiceInterval {
     my @trip_id_array   = @_;
 
-    my @ret_array         = ('','99991231','19700101');
+    my @ret_array         = ($trip_id_array[0],'99991231','19700101');
 
     my @work_array      = ();
     my $original_size   = scalar(@trip_id_array);
