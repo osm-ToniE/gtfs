@@ -1,0 +1,92 @@
+route_type,sort_key,string,osm_route
+0,3000,"Tram, Streetcar, Light rail",tram
+1,2000,"Subway, Metro",subway
+2,1900,"Rail",train
+3,5001,"Bus",bus
+4,9904,"Ferry",ferry
+5,3000,"Cable tram",tram
+6,9000,"Aerialway",aerialway
+7,8000,"Funicular",funicular
+11,6300,"Trolleybus",trolleybus
+12,7000,"Monorail",monorail
+100,1900,"Railway Service",train
+101,1000,"High Speed Rail Service",train
+102,1100,"Long Distance Trains",train
+103,1200,"Inter Regional Rail Service",train
+104,1900,"Car Transport Rail Service",train
+105,1900,"Sleeper Rail Service",train
+106,1400,"Regional Rail Service",train
+107,1900,"Tourist Railway Service",train
+108,1900,"Rail Shuttle (Within Complex)",train
+109,1600,"Suburban Railway",train
+110,1900,"Replacement Rail Service",train
+111,1900,"Special Rail Service",train
+112,1900,"Lorry Transport Rail Service",train
+113,1900,"All Rail Services",train
+114,1900,"Cross-Country Rail Service",train
+115,1900,"Vehicle Transport Rail Service",train
+116,1900,"Rack and Pinion Railway",train
+117,1900,"Additional Rail Service",train
+200,4000,"Coach Service",bus
+201,4001,"International Coach Service",bus
+202,4002,"National Coach Service",bus
+203,4003,"Shuttle Coach Service",bus
+204,4004,"Regional Coach Service",bus
+205,4005,"Special Coach Service",bus
+206,4006,"Sightseeing Coach Service",bus
+207,4007,"Tourist Coach Service",bus
+208,4008,"Commuter Coach Service",bus
+209,4009,"All Coach Services",bus
+400,1900,"Urban Railway Service",train
+401,2000,"Metro Service",subway
+402,2000,"Underground Service",subway
+403,1900,"Urban Railway Service",train
+404,1900,"All Urban Railway Services",train
+405,7000,"Monorail",monorail
+700,5000,"Bus Service",bus
+701,5002,"Regional Bus Service",bus
+702,5001,"Express Bus Service",bus
+703,5003,"Stopping Bus Service",bus
+704,5004,"Local Bus Service",bus
+705,5005,"Night Bus Service",bus
+706,5006,"Post Bus Service",bus
+707,5007,"Special Needs Bus",bus
+708,5008,"Mobility Bus Service",bus
+709,5009,"Mobility Bus for Registered Disabled",bus
+710,5010,"Sightseeing Bus",bus
+711,5011,"Shuttle Bus",bus
+712,5012,"School Bus",bus
+713,5013,"School and Public Service Bus",bus
+714,5014,"Rail Replacement Bus Service",bus
+715,5015,"Demand and Response Bus Service",share_taxi
+716,5016,"All Bus Services",bus
+800,6300,"Trolleybus Service",trolleybus
+900,3000,"Tram Service",tram
+901,3000,"City Tram Service",tram
+902,3000,"Local Tram Service",tram
+903,3000,"Regional Tram Service",tram
+904,3000,"Sightseeing Tram Service",tram
+905,3000,"Shuttle Tram Service",tram
+906,3000,"All Tram Services",tram
+907,6300,"Aerial Lift Service",aerialway
+1000,9900,"Water Transport Service",ferry
+1002,9902,"National Car Ferry Service",ferry
+1004,9904,"Local Car Ferry Service",ferry
+1008,9908,"Local Passenger Ferry Service",ferry
+1013,9913,"Car High-Speed Ferry Service",ferry
+1014,9914,"Passenger High-Speed Ferry Service",ferry
+1015,9915,"Sightseeing Boat Service",bus
+1100,6300,"Air Service",bus
+1200,6300,"Ferry Service",ferry
+1300,9000,"Aerial Lift Service",aerialway
+1400,8000,"Funicular Service",funicular
+1500,6900,"Taxi Service",bus
+1501,6900,"Communal Taxi Service",bus
+1502,6900,"Water Taxi Service",bus
+1503,6900,"Rail Taxi Service",train
+1504,6900,"Bike Taxi Service",bus
+1505,6900,"Licensed Taxi Service",bus
+1506,6300,"Private Hire Service Vehicle",bus
+1507,6900,"All Taxi Services",bus
+1700,6300,"Miscellaneous Service",bus
+1702,6300,"Horse-drawn Carriage",bus

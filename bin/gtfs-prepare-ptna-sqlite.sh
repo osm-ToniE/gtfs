@@ -4,6 +4,11 @@ DB="ptna-gtfs-sqlite.db"
 
 SQ_OPTIONS="-init /dev/null -csv -header"
 
+this_file=$(which $0)
+bin_dir=$(dirname $this_file)
+gtfs_dir=$(dirname $bin_dir)
+
+
 rm -f $DB
 
 #rm -f agency.txt calendar.txt calendar_dates.txt fare_attributes.txt fare_rules.txt feed_info.txt frequencies.txt routes.txt trips.txt stops.txt stop_times.txt shapes.txt transfers.txt
@@ -76,6 +81,45 @@ else
     sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO ptna (id,prepared,release_date) VALUES (1,'$today','$release_date');"
     sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM ptna;" > ../ptna.txt
 fi
+
+#
+# osm_routes.txt - we take it as it is,
+#
+
+echo "Table 'osm_routes'"
+
+sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS osm_routes;"
+if [ -f "$gtfs_dir/osm_routes.txt" ]
+then
+    cp "$gtfs_dir/osm_routes.txt" .
+    sqlite3 $SQ_OPTIONS "$DB" ".import osm_routes.txt osm_routes"
+else
+    columns="osm_route TEXT PRIMARY KEY UNIQUE,string TEXT DEFAULT '',string_de TEXT DEFAULT ''"
+    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE osm_routes ($columns);"
+fi
+sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_osm_routes ON osm_routes (osm_route);"
+
+
+#
+# gtfs_route_types.txt
+#
+
+echo "Table 'gtfs_route_types'"
+
+sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS gtfs_route_types;"
+if [ -f "$gtfs_dir/gtfs_route_types.txt" ]
+then
+    cp "$gtfs_dir/gtfs_route_types.txt" .
+    columns=$(head -1 gtfs_route_types.txt | sed -e 's/route_type/route_type INTEGER PRIMARY KEY UNIQUE/' -e 's/sort_key/sort_key INTEGER DEFAULT 9999/' -e 's/string/string TEXT/' -e 's/osm_route/osm_route TEXT/' -e 's/[\r\n]//gi')
+    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE gtfs_route_types ($columns);"
+    sqlite3 $SQ_OPTIONS "$DB" ".import gtfs_route_types.txt gtfs_route_types"
+    sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM gtfs_route_types WHERE route_type='route_type';"
+else
+    columns="route_type INTEGER PRIMARY KEY UNIQUE,sort_key INTEGER DEFAULT 9999,string TEXT DEFAULT '',osm_route TEXT DEFAULT ''"
+    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE gtfs_route_types ($columns);"
+fi
+sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_gtfs_route_types ON gtfs_route_types (route_type);"
+
 
 #
 # will store normalized routes information summary of what has been changed on table "routes"

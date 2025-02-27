@@ -1,0 +1,12 @@
+osm_route,string,string_de
+aerialway,"Aerialway","Seilbahn"
+bus,"Bus","Bus"
+ferry,"Ferry","Fähre"
+funicular,"Funicular","Drahtseilbahn"
+light_rail,"Light Rail","Stadtbahn"
+monorail,"Monorail","Einschienenbahn"
+share_taxi,"Share Taxi","Sammeltaxi"
+subway,"Subway","U-Bahn"
+train,"Train","Zug"
+tram,"Tram","Tram"
+trolleybus,"Trolleybus","Oberleitungsbus"
