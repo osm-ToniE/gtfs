@@ -111,9 +111,10 @@ if [ -f "$gtfs_dir/gtfs_route_types.txt" ]
 then
     cp "$gtfs_dir/gtfs_route_types.txt" .
     columns=$(head -1 gtfs_route_types.txt | sed -e 's/route_type/route_type INTEGER PRIMARY KEY UNIQUE/' -e 's/sort_key/sort_key INTEGER DEFAULT 9999/' -e 's/string/string TEXT/' -e 's/osm_route/osm_route TEXT/' -e 's/[\r\n]//gi')
+    fgrep -v 'route_type' gtfs_route_types.txt > gtfs_route_types_wo_header.txt
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE gtfs_route_types ($columns);"
-    sqlite3 $SQ_OPTIONS "$DB" ".import gtfs_route_types.txt gtfs_route_types"
-    sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM gtfs_route_types WHERE route_type='route_type';"
+    sqlite3 $SQ_OPTIONS "$DB" ".import gtfs_route_types_wo_header.txt gtfs_route_types"
+    rm -f gtfs_route_types_wo_header.txt
 else
     columns="route_type INTEGER PRIMARY KEY UNIQUE,sort_key INTEGER DEFAULT 9999,string TEXT DEFAULT '',osm_route TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE gtfs_route_types ($columns);"
