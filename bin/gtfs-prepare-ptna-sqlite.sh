@@ -209,18 +209,18 @@ AGENCY_COUNT=0
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    if [ "$(head -1 agency.txt | grep -F -c agency_id)" == 1 ]
-    then
-        columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
-    else
-        columns="agency_id TEXT PRIMARY KEY,$columns"
-    fi
+    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE agency ($columns);"
     AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
     if [ $AGENCY_COUNT -gt 1 ]     # including the header
     then
         sqlite3 $SQ_OPTIONS "$DB" ".import agency.txt agency"
-        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM agency WHERE agency_id='agency_id';"
+        sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM agency WHERE agency_name='agency_name';"
+        if [ "$(head -1 agency.txt | grep -F -c agency_id)" == 0 ]
+        then
+            sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE agency ADD agency_id TEXT DEFAULT '1';"
+            sqlite3 $SQ_OPTIONS "$DB" "UPDATE agency SET agency_id='1';"
+        fi
     else
         sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO agency (agency_id,agency_name) VALUES ('1','???');"
         AGENCY_COUNT=1
@@ -326,7 +326,7 @@ then
         sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM routes WHERE route_id='route_id';"
         if [ "$(head -1 routes.txt | grep -F -c agency_id)" == 0 ]
         then
-            sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD agency_id TEXT DEFAULT '';"
+            sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD agency_id TEXT DEFAULT '1';"
         fi
         if [ "$(head -1 routes.txt | grep -F -c route_long_name)" == 0 ]
         then
