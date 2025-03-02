@@ -16,6 +16,8 @@ error_code=0
 
 DB="ptna-gtfs-sqlite.db"
 
+DB_DIR=$PWD
+
 SQ_OPTIONS="-init /dev/null"
 
 WORK_BASE_DIR="/osm/ptna/work"
@@ -124,6 +126,8 @@ then
         error_code=$(( $error_code + $ret_code ))
 
     fi
+
+    cd $DB_DIR
 
     if [ -f ../post-publish.sh ]
     then
