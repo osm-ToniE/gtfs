@@ -3,6 +3,7 @@
 DB="ptna-gtfs-sqlite.db"
 
 SQ_OPTIONS="-init /dev/null -csv -header"
+SQ_OPTIONS_PURE="-init /dev/null -csv -noheader"
 
 this_file=$(which $0)
 bin_dir=$(dirname $this_file)
@@ -326,7 +327,8 @@ then
         then
             sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE routes ADD route_long_name TEXT DEFAULT '?';"
         fi
-        if [ "$AGENCY_COUNT" -eq 1 ]
+        AGENCY_COUNT=$(sqlite3 $SQ_OPTIONS_PURE "$DB" "SELECT COUNT(agency_id) from agency;")
+        if [ $AGENCY_COUNT -eq 1 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
         fi
