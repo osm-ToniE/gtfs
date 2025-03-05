@@ -255,6 +255,7 @@ else
     columns="service_id TEXT, date TEXT DEFAULT '', exception_type INTEGER DEFAULT 0, ptna_changedate TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE calendar_dates ($columns);"
 fi
+sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM calendar_dates WHERE service_id='';"
 sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_service_id ON calendar_dates (service_id);"
 
 
@@ -284,6 +285,7 @@ fi
 columns="service_id TEXT PRIMARY KEY, monday INTEGER DEFAULT 0, tuesday INTEGER DEFAULT 0, wednesday INTEGER DEFAULT 0, thursday INTEGER DEFAULT 0, friday INTEGER DEFAULT 0, saturday INTEGER DEFAULT 0, sunday INTEGER DEFAULT 0, start_date INTEGER DEFAULT 0, end_date INTEGER DEFAULT 0"
 sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE IF NOT EXISTS calendar ($columns);"
 sqlite3 $SQ_OPTIONS "$DB" "INSERT OR IGNORE INTO calendar (service_id) SELECT DISTINCT service_id FROM calendar_dates;"
+sqlite3 $SQ_OPTIONS "$DB" "DELETE FROM calendar WHERE service_id='';"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * from calendar WHERE start_date = 0 OR end_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET start_date = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) ASC  LIMIT 1) WHERE start_date = 0;"
 sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM calendar_dates ORDER BY CAST (date AS INTEGER) DESC LIMIT 1) WHERE end_date = 0;"
