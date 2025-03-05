@@ -134,22 +134,27 @@ then
 
                     youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//')
                     RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//')
-                    if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
+                    if [ -n "youngest_real_Ym" ]
                     then
-                        printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
-                        if [ "$touch_n_e" = "true" ]
+                        if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                         then
-                            touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                            printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                            if [ "$touch_n_e" = "true" ]
+                            then
+                                touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                            fi
+                        elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
+                        then
+                            printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
+                        else
+                            printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
+                            if [ "$touch_n_e" = "true" ]
+                            then
+                                touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                            fi
                         fi
-                    elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
-                    then
-                        printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                     else
-                        printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
-                        if [ "$touch_n_e" = "true" ]
-                        then
-                            touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
-                        fi
+                        printf "%s is new - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
                     fi
                 fi
             else
@@ -298,15 +303,15 @@ then
 
     # to be done
     # find all occurances of this feed in all *-Analysis.html files having 'release_date' set
-    # grep -r ', GTFS-Release-Date: 20' $PTNA_WWW/result/*/*Analysis.html | \
-    # sed -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/' \
-    #     -e 's/^.*data-ref="//' \
-    #     -e 's/^.*GTFS-Feed: //' \
-    #     -e 's/, GTFS-Release-Date: /-/' \
-    #     -e 's/^.*feed=//' \
-    #     -e 's/&release_date=/-/'                                        | \
-    # grep -v "gtfs:release_date"                                         | \
-    # sort -u
+     grep -r ', GTFS-Release-Date: 20' /osm/ptna/www/results/*/*Analysis.html | \
+     sed -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/' \
+         -e 's/^.*data-ref="//' \
+         -e 's/^.*GTFS-Feed: //' \
+         -e 's/, GTFS-Release-Date: /-/' \
+         -e 's/^.*feed=//' \
+         -e 's/&release_date=/-/'                                        | \
+     grep -v "gtfs:release_date"                                         | \
+     sort -u
     # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
     # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
     # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
