@@ -2,8 +2,8 @@
 
 DB="ptna-gtfs-sqlite.db"
 
-SQ_OPTIONS="-init /dev/null -csv -header"
-SQ_OPTIONS_PURE="-init /dev/null -csv -noheader"
+SQ_OPTIONS="-init /dev/null -batch -csv -header"
+SQ_OPTIONS_PURE="-init /dev/null -csv -batch -noheader"
 
 this_file=$(which $0)
 bin_dir=$(dirname $this_file)
@@ -300,7 +300,7 @@ echo "Table 'feed_info'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS feed_info;"
 if [ -f feed_info.txt ]
 then
-    sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 feed_info.txt feed_info"
+    sqlite3 $SQ_OPTIONS "$DB" ".import feed_info.txt feed_info"
 else
     columns="feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '',feed_lang TEXT DEFAULT '',feed_start_date TEXT DEFAULT '',feed_end_date TEXT DEFAULT '',feed_version TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE feed_info ($columns);"
