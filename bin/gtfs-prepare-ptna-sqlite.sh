@@ -2,8 +2,8 @@
 
 DB="ptna-gtfs-sqlite.db"
 
-SQ_OPTIONS="-init /dev/null -csv -header"
-SQ_OPTIONS_PURE="-init /dev/null -csv -noheader"
+SQ_OPTIONS="-init /dev/null -batch -echo -csv -header"
+SQ_OPTIONS_PURE="-init /dev/null -csv -batch -noheader"
 
 this_file=$(which $0)
 bin_dir=$(dirname $this_file)
@@ -50,6 +50,7 @@ fi
 # create a TABLE with OSM specific information for route relations: 'network', 'network:short', 'network:guid', gtfs_agency_is_operator (true/false), 'trip_id_regex'
 #
 
+echo
 echo "Table 'osm'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS osm;"
@@ -69,6 +70,7 @@ fi
 # create a TABLE with PTNA specific information: license, release date, modification date, ...
 #
 
+echo
 echo "Table 'ptna'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna;"
@@ -87,6 +89,7 @@ fi
 # osm_routes.txt - we take it as it is,
 #
 
+echo
 echo "Table 'osm_routes'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS osm_routes;"
@@ -105,6 +108,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_osm_routes ON osm_routes (osm_route)
 # gtfs_route_types.txt
 #
 
+echo
 echo "Table 'gtfs_route_types'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS gtfs_route_types;"
@@ -125,6 +129,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_gtfs_route_types ON gtfs_route_types
 # will store normalized routes information summary of what has been changed on table "routes"
 #
 
+echo
 echo "Table 'ptna_routes'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_routes;"
@@ -135,6 +140,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_routes (route_id TEXT DEFAULT '' PR
 # will store aggregated trip information summary of what has been removed from table "trips"
 #
 
+echo
 echo "Table 'ptna_trips'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_trips;"
@@ -145,6 +151,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_trips (trip_id TEXT DEFAULT '' PRIM
 # will store normalized stops information summary of what has been changed on table "stops"
 #
 
+echo
 echo "Table 'ptna_stops'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_stops;"
@@ -155,6 +162,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_stops (stop_id TEXT DEFAULT '' PRIM
 # will store comments on routes
 #
 
+echo
 echo "Table 'ptna_routes_comments'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_routes_comments;"
@@ -165,6 +173,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_routes_comments (route_id TEXT DEFA
 # will store comments on trips
 #
 
+echo
 echo "Table 'ptna_trips_comments'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS ptna_trips_comments;"
@@ -175,6 +184,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_trips_comments (trip_id TEXT DEFAUL
 # will store aggregation results
 #
 
+echo
 echo "Table 'ptna_aggregation'"
 
 sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_aggregation ('id' INTEGER DEFAULT 0 PRIMARY KEY, 'date' TEXT DEFAULT '', 'duration' INTEGER DEFAULT 0);"
@@ -184,6 +194,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_aggregation ('id' INTEGER DEFAULT 0
 # will store analysis results
 #
 
+echo
 echo "Table 'ptna_analysis'"
 
 sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_analysis ('id' INTEGER DEFAULT 0 PRIMARY KEY, 'date' TEXT DEFAULT '', 'duration' INTEGER DEFAULT 0);"
@@ -193,6 +204,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_analysis ('id' INTEGER DEFAULT 0 PR
 # will store normaization results
 #
 
+echo
 echo "Table 'ptna_normalization'"
 
 sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_normalization ('id' INTEGER DEFAULT 0 PRIMARY KEY, 'date' TEXT DEFAULT '', 'duration' INTEGER DEFAULT 0);"
@@ -202,6 +214,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE ptna_normalization ('id' INTEGER DEFAULT
 # agency.txt - we take it as it is, no PRIMARY KEY defined, ...
 #
 
+echo
 echo "Table 'agency'"
 
 AGENCY_COUNT=0
@@ -230,6 +243,7 @@ fi
 # calendar_dates.txt - we take it as it is, no PRIMARY KEY defined, ... but create index on service_id
 #
 
+echo
 echo "Table 'calendar_dates'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS calendar_dates;"
@@ -263,6 +277,7 @@ sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_service_id ON calendar_dates (servic
 # calendar.txt - service_id is PRIMARY KEY, ...
 #
 
+echo
 echo "Table 'calendar'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS calendar;"
@@ -295,12 +310,13 @@ sqlite3 $SQ_OPTIONS "$DB" "UPDATE calendar SET end_date   = (SELECT date FROM ca
 # feed_info.txt - we take it as it is, no PRIMARY KEY defined, ...
 #
 
+echo
 echo "Table 'feed_info'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS feed_info;"
 if [ -f feed_info.txt ]
 then
-    sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 feed_info.txt feed_info"
+    sqlite3 $SQ_OPTIONS "$DB" ".import feed_info.txt feed_info"
 else
     columns="feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '',feed_lang TEXT DEFAULT '',feed_start_date TEXT DEFAULT '',feed_end_date TEXT DEFAULT '',feed_version TEXT DEFAULT ''"
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE feed_info ($columns);"
@@ -311,6 +327,7 @@ fi
 # routes.txt - route_id is PRIMARY KEY, ...
 #
 
+echo
 echo "Table 'routes'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS routes;"
@@ -351,6 +368,7 @@ fi
 # shapes.txt - no PRIMARY KEY, ... but create index over shape_id
 #
 
+echo
 echo "Table 'shapes'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS shapes;"
@@ -378,6 +396,7 @@ sqlite3 $SQ_OPTIONS "$DB" "UPDATE ptna SET has_shapes=(SELECT COUNT(*) FROM shap
 # stops.txt - stop_id is PRIMARY KEY, ...
 #
 
+echo
 echo "Table 'stops'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS stops;"
@@ -404,6 +423,7 @@ fi
 # stop_times.txt - we take it as it is, no PRIMARY KEY defined, ... but create index on trip_id adn stop_id
 #
 
+echo
 echo "Table 'stop_times'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS stop_times;"
@@ -432,6 +452,7 @@ fi
 # trips.txt - trip_id is PRIMARY KEY, ... create also index on route_id
 #
 
+echo
 echo "Table 'trips'"
 
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS trips;"
