@@ -308,15 +308,15 @@ then
 
     # to be done
     # find all occurances of this feed in all *-Analysis.html files having 'release_date' set
-     grep -r ', GTFS-Release-Date: 20' /osm/ptna/www/results/*/*Analysis.html | \
-     sed -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/' \
-         -e 's/^.*data-ref="//' \
-         -e 's/^.*GTFS-Feed: //' \
-         -e 's/, GTFS-Release-Date: /-/' \
-         -e 's/^.*feed=//' \
-         -e 's/&release_date=/-/'                                        | \
-     grep -v "gtfs:release_date"                                         | \
-     sort -u
+    # grep -r ', GTFS-Release-Date: 20' /osm/ptna/www/results/*/*Analysis.html | \
+    # sed -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/' \
+    #     -e 's/^.*data-ref="//' \
+    #     -e 's/^.*GTFS-Feed: //' \
+    #     -e 's/, GTFS-Release-Date: /-/' \
+    #     -e 's/^.*feed=//' \
+    #     -e 's/&release_date=/-/'                                        | \
+    # grep -v "gtfs:release_date"                                         | \
+    # sort -u
     # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
     # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
     # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
