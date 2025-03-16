@@ -221,7 +221,7 @@ AGENCY_COUNT=0
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
-    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+    columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e "s/,/ TEXT DEFAULT '', /g" -e "s/$/ TEXT DEFAULT ''/g" -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE agency ($columns);"
     AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
     if [ $AGENCY_COUNT -gt 1 ]     # including the header
@@ -350,6 +350,13 @@ then
         if [ $AGENCY_COUNT -eq 1 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
+
+            AGENCY_ID_NAME=$(sqlite3 $SQ_OPTIONS_PURE "$DB" "SELECT agency_id,agency_name from agency;")
+
+            if [ "$AGENCY_ID_NAME" == "1,???" ]
+            then
+                sqlite3 $SQ_OPTIONS "$DB" "INSERT INTO agency (agency_id,agency_name) SELECT DISTINCT agency_id,agency_id as agency_name FROM routes;"
+            fi
         fi
         sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET route_short_name = route_long_name WHERE route_short_name='';"
     else
