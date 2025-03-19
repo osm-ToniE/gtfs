@@ -236,7 +236,7 @@ sub FindRouteIdsOfAgency {
     }
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
+        if ( $row[0] ne '' ) {
             push( @return_array, $row[0] );
         }
     }
@@ -251,11 +251,13 @@ sub FindRouteIdsOfAgency {
 #
 
 sub FindTripIdsOfRouteId {
-    my $route_id     = shift || '-';
+    my $route_id     = shift;
 
     my $sth          = undef;
     my @row          = ();
     my @return_array = ();
+
+    $route_id = '-'     if ( !defined($route_id) || $route_id eq '' );
 
     $sth = $dbh->prepare( "SELECT DISTINCT trips.trip_id
                            FROM            trips
@@ -263,7 +265,7 @@ sub FindTripIdsOfRouteId {
     $sth->execute( $route_id );
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
+        if ( $row[0] ne '' ) {
             push( @return_array, $row[0] );
         }
     }

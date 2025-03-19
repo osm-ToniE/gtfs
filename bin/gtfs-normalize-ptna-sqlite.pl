@@ -232,7 +232,7 @@ sub NormalizeRouteLongName {
     $sth2 = $dbh->prepare( "REPLACE INTO ptna_routes (normalized_route_long_name,route_id) VALUES (?,?);" );
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0] && $row[1]  ) {
+        if ( $row[0] && $row[1] ne '' ) {
             $original = decode( 'utf8',  $row[0] );
             $route_id = $row[1];
 

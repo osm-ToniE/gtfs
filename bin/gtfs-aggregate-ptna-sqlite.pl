@@ -231,7 +231,7 @@ sub FindRouteIdsOfAgency {
     $sth->execute();
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
+        if ( $row[0] ne '' ) {
             push( @return_array, $row[0] );
         }
     }
@@ -281,11 +281,15 @@ sub FindValidTrips {
 #
 
 sub FindValidTripIdsOfRouteId {
-    my $route_id     = shift || '-';
+    my $route_id     = shift;
 
     my $sth          = undef;
     my @row          = ();
     my @return_array = ();
+
+    $route_id = '-'     if ( !defined($route_id) || $route_id eq '' );
+
+    printf STDERR "FindValidTripIdsOfRouteId() handle route_id eq '0'\n"  if ( $route_id eq '0' );
 
     if ( $consider_calendar ) {
         my ($sec,$min,$hour,$day,$month,$year) = localtime();
@@ -307,7 +311,7 @@ sub FindValidTripIdsOfRouteId {
     }
 
     while ( @row = $sth->fetchrow_array() ) {
-        if ( $row[0]  ) {
+        if ( $row[0] ne '' ) {
             push( @return_array, $row[0] );
         }
     }
@@ -413,9 +417,11 @@ sub FindUniqueTripIds {
         $sthR->execute( $trip_id );
 
         $hash_ref   = $sthR->fetchrow_hashref();
-        $route_id   = $hash_ref->{'route_id'}   || '-';
-        $service_id = $hash_ref->{'service_id'} || '-';
-        $shape_id   = $hash_ref->{'shape_id'}   || '-';
+        $route_id   = (exists($hash_ref->{'route_id'})   && $hash_ref->{'route_id'} ne '')   ? $hash_ref->{'route_id'}   : '-';
+        $service_id = (exists($hash_ref->{'service_id'}) && $hash_ref->{'service_id'} ne '') ? $hash_ref->{'service_id'} : '-';
+        $shape_id   = (exists($hash_ref->{'shape_id'})   && $hash_ref->{'shape_id'} ne '')   ? $hash_ref->{'shape_id'}   : '-';
+
+        #printf STDERR "\nFindUniqueTripIds() handle route_id eq '0'\n"  if ( $route_id eq '0' );
 
         $stop_id_list_as_string = FindStopIdListAsString( $trip_id );
 
@@ -423,16 +429,21 @@ sub FindUniqueTripIds {
         #    printf STDERR "route_id %s, trip_id %s: %s - %s\n", Encode::decode('utf8',$route_id), $trip_id, $stop_id_list_as_string, $shape_id;
         #}
         printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, $uniques, 0, $totals  if ( $verbose );
+        #printf STDERR "\n"  if ( $route_id eq '0' );
 
         if ( !defined($stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string}) ) {
             $stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string} = $trip_id;
             $representative_trip_id                             = $trip_id;
+            #printf STDERR "\nFindUniqueTripIds() representative trip_id == %s\n", $representative_trip_id  if ( $route_id eq '0' );
             push( @ret_array, $trip_id );
 
             printf STDERR "Trip: %06d, Unique: %06d, Stored: %06d, Total: %06d\r", $tripcount, ++$uniques, 0, $totals  if ( $verbose );
+            #printf STDERR "\n"  if ( $route_id eq '0' );
         } else {
             $representative_trip_id = $stop_list_hash{$route_id}{$shape_id}{$stop_id_list_as_string};
         }
+        #printf STDERR "\nFindUniqueTripIds() handled route_id eq '0'\n"  if ( $route_id eq '0' );
+
 
         $sthD->execute( $trip_id );
 
@@ -965,10 +976,11 @@ sub FillNewRoutesTable {
     foreach my $trip_id ( @{$array_ref} ) {
         $sthS->execute( $trip_id );
 
-        while ( $row[0] = $sthS->fetchrow_array() ) {
-            if ( $row[0] && !defined($have_seen{$row[0]}) ) {
+        while ( @row = $sthS->fetchrow_array() ) {
+            if ( $row[0] ne '' && !defined($have_seen{$row[0]}) ) {
                 $have_seen{$row[0]} = 1;
                 $sthI->execute( $row[0] );
+                #printf STDERR "FillNewRoutesTable() handle route_id ew '0'\n"   if ( $row[0] eq '0' );
             }
         }
     }
