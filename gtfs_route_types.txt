@@ -58,9 +58,9 @@ route_type,sort_key,string,osm_route
 712,5012,"School Bus",bus
 713,5013,"School and Public Service Bus",bus
 714,5014,"Rail Replacement Bus Service",bus
-715,5015,"Demand and Response Bus Service",share_taxi
+715,5015,"Demand and Response Bus Service",bus
 716,5016,"All Bus Services",bus
-717,5017,"Share Taxi",bus
+717,5017,"Share Taxi",share_taxi
 800,6300,"Trolleybus Service",trolleybus
 900,3000,"Tram Service",tram
 901,3000,"City Tram Service",tram
@@ -76,13 +76,13 @@ route_type,sort_key,string,osm_route
 1008,9908,"Local Passenger Ferry Service",ferry
 1013,9913,"Car High-Speed Ferry Service",ferry
 1014,9914,"Passenger High-Speed Ferry Service",ferry
-1015,9915,"Sightseeing Boat Service",bus
+1015,9915,"Sightseeing Boat Service",ferry
 1100,6300,"Air Service",bus
 1200,6300,"Ferry Service",ferry
 1300,9000,"Aerial Lift Service",aerialway
 1301,9000,"Telecabin Service",aerialway
-1302,9000,"Cable Car Service",aerialway
-1303,9000,"Elevator Service",aerialway
+1302,9000,"Cable Car Service",funicular
+1303,9000,"Elevator Service",funicular
 1304,9000,"Chair Lift Service",aerialway
 1305,9000,"Drag Lift Service",aerialway
 1306,9000,"Small Telecabin Service",aerialway
@@ -90,7 +90,7 @@ route_type,sort_key,string,osm_route
 1400,8000,"Funicular Service",funicular
 1500,6900,"Taxi Service",bus
 1501,6900,"Communal Taxi Service",bus
-1502,6900,"Water Taxi Service",bus
+1502,6900,"Water Taxi Service",ferry
 1503,6900,"Rail Taxi Service",train
 1504,6900,"Bike Taxi Service",bus
 1505,6900,"Licensed Taxi Service",bus
