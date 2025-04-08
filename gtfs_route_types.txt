@@ -60,6 +60,7 @@ route_type,sort_key,string,osm_route
 714,5014,"Rail Replacement Bus Service",bus
 715,5015,"Demand and Response Bus Service",share_taxi
 716,5016,"All Bus Services",bus
+717,5017,"Share Taxi",bus
 800,6300,"Trolleybus Service",trolleybus
 900,3000,"Tram Service",tram
 901,3000,"City Tram Service",tram
@@ -68,7 +69,7 @@ route_type,sort_key,string,osm_route
 904,3000,"Sightseeing Tram Service",tram
 905,3000,"Shuttle Tram Service",tram
 906,3000,"All Tram Services",tram
-907,6300,"Aerial Lift Service",aerialway
+907,6300,"Cable Tram",tram
 1000,9900,"Water Transport Service",ferry
 1002,9902,"National Car Ferry Service",ferry
 1004,9904,"Local Car Ferry Service",ferry
@@ -79,6 +80,13 @@ route_type,sort_key,string,osm_route
 1100,6300,"Air Service",bus
 1200,6300,"Ferry Service",ferry
 1300,9000,"Aerial Lift Service",aerialway
+1301,9000,"Telecabin Service",aerialway
+1302,9000,"Cable Car Service",aerialway
+1303,9000,"Elevator Service",aerialway
+1304,9000,"Chair Lift Service",aerialway
+1305,9000,"Drag Lift Service",aerialway
+1306,9000,"Small Telecabin Service",aerialway
+1307,9000,"All Telecabin Services",aerialway
 1400,8000,"Funicular Service",funicular
 1500,6900,"Taxi Service",bus
 1501,6900,"Communal Taxi Service",bus
