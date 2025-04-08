@@ -98,3 +98,4 @@ route_type,sort_key,string,osm_route
 1507,6900,"All Taxi Services",bus
 1700,6300,"Miscellaneous Service",bus
 1702,6300,"Horse-drawn Carriage",bus
+9999,1601,"Light Rail (OSM)",light_rail
