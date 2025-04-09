@@ -77,7 +77,8 @@ route_type,sort_key,string,osm_route
 1013,9913,"Car High-Speed Ferry Service",ferry
 1014,9914,"Passenger High-Speed Ferry Service",ferry
 1015,9915,"Sightseeing Boat Service",ferry
-1100,6300,"Air Service",bus
+1100,6300,"Air Service",none
+1102,6300,"Air Service (1102)",none
 1200,6300,"Ferry Service",ferry
 1300,9000,"Aerial Lift Service",aerialway
 1301,9000,"Telecabin Service",aerialway
