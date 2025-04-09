@@ -349,7 +349,7 @@ then
         AGENCY_COUNT=$(sqlite3 $SQ_OPTIONS_PURE "$DB" "SELECT COUNT(agency_id) from agency;")
         if [ $AGENCY_COUNT -eq 1 ]
         then
-            sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency) WHERE agency_id='';"
+            sqlite3 $SQ_OPTIONS "$DB" "UPDATE routes SET agency_id=(SELECT agency_id from agency);"
 
             AGENCY_ID_NAME=$(sqlite3 $SQ_OPTIONS_PURE "$DB" "SELECT agency_id,agency_name from agency;")
 
