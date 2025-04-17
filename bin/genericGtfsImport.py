@@ -33,7 +33,7 @@ class PtnaRoutesImporter:
     """
 
     routes_query = """
-        SELECT routes.*, agency_name, osm_route, sort_key
+        SELECT *
         FROM routes
         LEFT NATURAL JOIN agency
         LEFT NATURAL JOIN gtfs_route_types
@@ -105,12 +105,30 @@ class PtnaRoutesImporter:
     def add_default_route_properties(self):
         self.set_route_property("ref", "route_short_name")
         self.set_route_property("type", "osm_route")
+        self.set_route_property("route_type", "route_type")
+        self.set_route_property("route_type_name", "string")
         # self.set_route_property("from", "trip_headsign|stop_name")
         # self.set_route_property("to", "trip_headsign|stop_name")
         # self.set_route_property("comment", "route_long_name")
         self.set_route_property("operator", "agency_name")
         self.set_route_property("gtfs_feed", self.get_gtfs_feed)
         self.set_route_property("route_id", "route_id")
+
+    delims = '|,;'
+    """Available delimiters in properties. The first character is the default delimiter."""
+
+    def split_source(self, source, property_name=None):
+        """Split a source string into fields and delimiter"""
+        # source is a GTFS field name or a delimiter-separated list of GTFS field names
+        split = re.split(f"([{re.escape(self.delims)}])", source)
+
+        fields = [f.strip() for f in split[::2] if f.strip()]
+
+        seps = split[1::2] or [self.delims[0]]
+        if len(set(seps)) > 1: raise ValueError(f"Only one of the delimiters {self.delims} can be used in a property. Not allowed: {property_name + ' = ' if property_name else ''}{source}")
+        delim = seps[0]
+
+        return fields, delim
 
     def set_route_property(self, property_name, source, get_trips=False, get_stops=False):
         """Define a property for a route in the output JSON. Can override a previously-defined property.
@@ -138,6 +156,7 @@ class PtnaRoutesImporter:
         if isinstance(source, str):
             if not source:
                 raise ValueError("source cannot be an empty string. use remove_route_property to remove a property")
+            self.split_source(source, property_name) # just to raise errors
             self.route_properties[property_name] = source
         elif callable(source):
             if get_stops and not get_trips:
@@ -150,70 +169,63 @@ class PtnaRoutesImporter:
         """Remove a route property_name - basically undo set_route_property"""
         del self.route_properties[property_name]
 
-    def _get_property(self, gtfs_route, gtfs_trips, csv_field, source, _from_from_to_handler=False):
+    def _get_property(self, gtfs_route, gtfs_trips, property_name, source):
         if isinstance(source, str):
-            # source is a GTFS field name or a '|'-separated list of GTFS field names
-            if not _from_from_to_handler and csv_field in ['from', 'to']:
-                # special case
-                return self._from_to_handler(csv_field, source, gtfs_route, gtfs_trips)
+            fields, delim = self.split_source(source)
+
             values = set()
-            source = source.split('|')
-            for src in source:
-                if src in gtfs_route.keys():
+            for field in fields:
+                if property_name in ['from', 'to']:
+                    # special case
+                    if vals := self._from_to_handler(property_name, field, gtfs_route, gtfs_trips):
+                        values |= vals
+                        continue
+                if field in gtfs_route.keys():
                     # routes column
-                    values.add(gtfs_route[src])
-                else:
-                    # not a routes column, try trips
-                    for trip in gtfs_trips:
-                        if src in trip.keys():
-                            values.add(trip[src])
-                        else:
-                            # not a trips column, must be a stops column
-                            for stop in trip['stops']:
-                                if src in stop.keys():
-                                    values.add(stop[src])
-                                else:
-                                    # this is supposed to be caught earlier but might as well raise it here if it managed to get this far
-                                    raise RuntimeError(f"Column {src!r} for route property {csv_field!r} could not be found in any of the SQL queries. "
-                                        "The available columns for routes, trips, and stops respectively:",
-                                        list(gtfs_route.keys()), list(trip.keys()), list(stop.keys()))
+                    values.add(gtfs_route[field])
+                    continue
+                # not a routes column, try trips
+                for trip in gtfs_trips:
+                    if field in trip.keys():
+                        values.add(trip[field])
+                        continue
+                    # not a trips column, must be a stops column
+                    for stop in trip['stops']:
+                        if field in stop.keys():
+                            values.add(stop[field])
+                            continue
+                        # this is supposed to be caught earlier but might as well raise it here if it managed to get this far
+                        raise KeyError(f"Column {field!r} for route property {property_name!r} could not be found in any of the SQL queries. "
+                            "The available columns for routes, trips, and stops respectively:",
+                            list(gtfs_route.keys()), list(trip.keys()), list(stop.keys()))
 
             values = {v.strip() for v in values if v and v.strip()}
-            if _from_from_to_handler:
-                # recursive call, return set
-                return values
-            else:
-                return '|'.join(sorted(values))
+            return delim.join(sorted(values))
         else:
+            # source is a function
             src, get_trips, get_stops = source
             if get_trips:
-                return src(csv_field, gtfs_route, gtfs_trips)
+                return src(property_name, gtfs_route, gtfs_trips)
             else:
-                return src(csv_field, gtfs_route)
+                return src(property_name, gtfs_route)
 
-    def _from_to_handler(self, property_name, source, gtfs_route, gtfs_trips):
+    def _from_to_handler(self, property_name, field, gtfs_route, gtfs_trips):
         """Special logic to make more useful values for "from" and "to" fields"""
         assert property_name in ['from', 'to']
-        values = set()
-        source = source.split('|')
-        for src in source:
-            match src:
-                case 'trip_headsign':
-                    # 'to' takes trip_headsign from trips going the normal way
-                    # 'from' takes from trips going the other way
-                    direction_id = '1' if property_name == 'from' else '0'
-                    values |= set(trip['trip_headsign'] for trip in gtfs_trips if trip['direction_id'] == direction_id)
-                case 'stop_name':
-                    # 'to' takes stop_name from the last stop in each trip
-                    # 'from' takes from the first stop
-                    i = 0 if property_name == 'from' else -1
-                    values |= set(trip['stops'][i]['stop_name'] for trip in gtfs_trips)
-                case _:
-                    # fall back to generic code
-                    values |= _get_property(gtfs_route, gtfs_trips, property_name, src, True)
-
-        values = {v.strip() for v in values if v and v.strip()}
-        return '|'.join(sorted(values))
+        match field:
+            case 'trip_headsign':
+                # 'to' takes trip_headsign from trips going the normal way
+                # 'from' takes from trips going the other way
+                direction_id = '1' if property_name == 'from' else '0'
+                return set(trip['trip_headsign'] for trip in gtfs_trips if trip['direction_id'] == direction_id)
+            case 'stop_name':
+                # 'to' takes stop_name from the last stop in each trip
+                # 'from' takes from the first stop
+                i = 0 if property_name == 'from' else -1
+                return set(trip['stops'][i]['stop_name'] for trip in gtfs_trips)
+            case _:
+                # no special handling
+                return None
 
     def main(self, out_file):
         """Query database, convert to routes, sort and create .json"""
@@ -263,26 +275,26 @@ class PtnaRoutesImporter:
             if isinstance(source, str):
                 # source is SQL column(s)
                 print(f"{prop_name} = {source}")
-                for col in source.split("|"):
-                    if col in sql_routes_columns:
-                        print(f"\t{col} found in routes query")
+                for field in self.split_source(source)[0]:
+                    if field in sql_routes_columns:
+                        print(f"\t{field} found in routes query")
                         continue
 
                     # not a route column, we need trips
                     trips_cur = trips_cur or self.get_sql_trips()
                     trips_columns = trips_columns or [c[0] for c in trips_cur.description]
-                    if col in trips_columns:
-                        print(f"\t{col} found in trips query")
+                    if field in trips_columns:
+                        print(f"\t{field} found in trips query")
                         continue
 
                     # not a trip column, we need stops
                     stops_cur = stops_cur or self.get_sql_stop_times()
                     stops_columns = stops_columns or [c[0] for c in stops_cur.description]
-                    if col in stops_columns:
-                        print(f"\t{col} found in stop_times/stops query")
+                    if field in stops_columns:
+                        print(f"\t{field} found in stop_times/stops query")
                         continue
 
-                    raise RuntimeError(f"Column {col!r} for route property {prop_name!r} could not be found in any of the SQL queries. "
+                    raise RuntimeError(f"Column {field!r} for route property {prop_name!r} could not be found in any of the SQL queries. "
                         "The available columns for routes, trips, and stops respectively:",
                         sql_routes_columns, trips_columns, stops_columns)
             else:
@@ -304,13 +316,13 @@ class PtnaRoutesImporter:
         Return value is a dict where the key is route_id and the value is a list of trip mappings.
         Trip mappings are sqlite3.Row if they do not include stops, or dict if they do.
         If they include stops, they have a new key called 'stops' which contains a list of sqlite3.Row objects
-        with the fields: trip_id, stop_sequence, stops.*
+        with the fields from stop_times_query
         """
         trips_by_route_id = defaultdict(list)
 
         if not trips_cur:
             # no action needed
-            print("Skipping trips query - not required")
+            print("Skipping trips and stops queries - not required")
             return trips_by_route_id
 
         print("Getting trip data from query...")
@@ -394,8 +406,8 @@ class PtnaRoutesImporter:
         dict representing this route as it should appear in the output JSON.
         """
         route = {}
-        for csv_field, source in self.route_properties.items():
-            route[csv_field] = self._get_property(gtfs_route, gtfs_trips, csv_field, source)
+        for property_name, source in self.route_properties.items():
+            route[property_name] = self._get_property(gtfs_route, gtfs_trips, property_name, source)
 
         # delete None/empty values
         for k in list(route.keys()):
