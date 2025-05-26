@@ -602,7 +602,7 @@ sub NormalizeString {
             $normalized =~ s/Sch.ng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Schöng\.,\s*Rothschwaiger Str/Schöngeising, Rothschwaiger Str/g;
             $normalized =~ s/Sittenb\. Str/Sittenbacher Str/g;
-            $normalized =~ s/STA/Starnberg/g;
+            $normalized =~ s/STA[^W][^A][^G]/Starnberg/g;
             $normalized =~ s/St-Margar\.-Str/Sankt-Margarethen-Str/g;
             $normalized =~ s/St\. Hub\. Abz/St. Hubertus Abz/g;
             $normalized =~ s/St\.-Quirin-Platz/Sankt-Quirin-Platz/g;
