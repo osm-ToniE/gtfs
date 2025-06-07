@@ -21,6 +21,19 @@ if [ -f "$FROM_FILE" -a -r "$FROM_FILE" ]
 then
     WHERE_AM_I=$PWD
 
+    echo ""
+    echo "List of PTNA analysis configs where 'gtfs:release_date' is used in relations or CSV"
+    echo ""
+
+    # find all occurances of a GTFS feed in all *-Analysis.html files having 'release_date' set
+    grep -r 'data-info="GTFS" data-ref="[^"]*-20[0-9-]*"' /osm/ptna/www/results/*/*Analysis.html /osm/ptna/www/results/*/*/*Analysis.html |  \
+    sed  -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/'                   \
+         -e 's/^.*data-ref="//'                                               | \
+    sort -u                                                                   | \
+    tee $PTNA_WORK_LOC/gtfs-feeds-to-be-kept.log
+
+    echo ""
+
     for feed in $(awk '/^[A-Z].*not yet analyzed/ { print $1; }' "$FROM_FILE")
     do
         error_code=0
@@ -71,8 +84,8 @@ then
                     error_code=$(( $error_code + $ret_code ))
                 fi
 
-                # clean, erase empty, wipe out old
-                gtfs-feed.sh -cEW
+                # clean, erase empty, wipe out old but keep those referenced by release_date
+                gtfs-feed.sh -cE -W $PTNA_WORK_LOC/gtfs-feeds-to-be-kept.log
                 ret_code=$?
                 error_code=$(( $error_code + $ret_code ))
             else
@@ -89,8 +102,8 @@ then
                     error_code=$(( $error_code + $ret_code ))
                 fi
 
-                # clean, erase empty, wipe out old
-                gtfs-feed.sh -cEW   >> $LOGFILE 2>&1
+                # clean, erase empty, wipe out old but keep those referenced by release_date
+                gtfs-feed.sh -cE -W $PTNA_WORK_LOC/gtfs-feeds-to-be-kept.log >> $LOGFILE 2>&1
                 ret_code=$?
                 error_code=$(( $error_code + $ret_code ))
             fi
@@ -105,21 +118,6 @@ then
             echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' done"
         fi
     done
-
-    echo ""
-    echo "List of PTNA analysis configs where 'gtfs:release_date' is used in relations or CSV"
-    echo ""
-
-    # find all occurances of a GTFS feed in all *-Analysis.html files having 'release_date' set
-    grep -r ', GTFS-Release-Date: 20' /osm/ptna/www/results/*/*Analysis.html |  \
-    sed  -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/'                   \
-         -e 's/^.*data-ref="//'                                                 \
-         -e 's/^.*GTFS-Feed: //'                                                \
-         -e 's/, GTFS-Release-Date: /-/'                                        \
-         -e 's/^.*feed=//'                                                      \
-         -e 's/&release_date=/-/'                                             | \
-    grep -v "gtfs:release_date"                                               | \
-    sort -u
 
     cd $WHERE_AM_I
 else

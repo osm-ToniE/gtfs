@@ -9,7 +9,7 @@
 
 WORK_BASE_DIR="/osm/ptna/work"
 
-TEMP=$(getopt -o acdDEfnoPTuvW --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose,wipe-old -n 'gtfs-feed.sh' -- "$@")
+TEMP=$(getopt -o acdDEfnoPTuvW: --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose,wipe-old -n 'gtfs-feed.sh' -- "$@")
 
 # shellcheck disable=SC2181
 if [ $? != 0 ] ; then echo "$(date '+%Y-%m-%d %H:%M:%S') Terminating..."  1>&2 ; exit 2 ; fi
@@ -18,19 +18,19 @@ eval set -- "$TEMP"
 
 while true ; do
     case "$1" in
-        -a|--analyze)               analyze=true        ; shift ;;
-        -c|--clean)                 clean=true          ; shift ;;
-        -d|--date-print)            date_print=true     ; shift ;;
-        -D|--date-check)            date_check=true     ; shift ;;
-        -E|--clean-empty)           clean_empty=true    ; shift ;;
-        -f|--feed)                  feed_print=true     ; shift ;;
-        -n|--new)                   publish_as_new='-n' ; shift ;;
-        -o|--old)                   publish_as_old='-o' ; shift ;;
-        -P|--publish)               publish=true        ; shift ;;
-        -T|--touch-non-existent)    touch_n_e=true      ; shift ;;
-        -u|--url-print)             url_print=true      ; shift ;;
-        -v|--verbose)               verbose='-v'        ; shift ;;
-        -W|--wipe-old)              wipe_old=true       ; shift ;;
+        -a|--analyze)               analyze=true                        ; shift ;;
+        -c|--clean)                 clean=true                          ; shift ;;
+        -d|--date-print)            date_print=true                     ; shift ;;
+        -D|--date-check)            date_check=true                     ; shift ;;
+        -E|--clean-empty)           clean_empty=true                    ; shift ;;
+        -f|--feed)                  feed_print=true                     ; shift ;;
+        -n|--new)                   publish_as_new='-n'                 ; shift ;;
+        -o|--old)                   publish_as_old='-o'                 ; shift ;;
+        -P|--publish)               publish=true                        ; shift ;;
+        -T|--touch-non-existent)    touch_n_e=true                      ; shift ;;
+        -u|--url-print)             url_print=true                      ; shift ;;
+        -v|--verbose)               verbose='-v'                        ; shift ;;
+        -W|--wipe-old)              wipe_old=true       ; keep_file=$2  ; shift 2;;
         --) shift ; break ;;
         *) echo "$(date '+%Y-%m-%d %H:%M:%S') Internal error!" 1>&2 ; exit 3 ;;
     esac
@@ -306,22 +306,11 @@ then
 
     feed=$(./get-feed-name.sh)
 
-    # to be done
-    # find all occurances of this feed in all *-Analysis.html files having 'release_date' set
-    # grep -r ', GTFS-Release-Date: 20' /osm/ptna/www/results/*/*Analysis.html | \
-    # sed -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/' \
-    #     -e 's/^.*data-ref="//' \
-    #     -e 's/^.*GTFS-Feed: //' \
-    #     -e 's/, GTFS-Release-Date: /-/' \
-    #     -e 's/^.*feed=//' \
-    #     -e 's/&release_date=/-/'                                        | \
-    # grep -v "gtfs:release_date"                                         | \
-    # sort -u
     # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
     # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
     # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
     # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
-    # - found in the list of occurances above
+    # - listed in the keep-file
 
 fi
 
