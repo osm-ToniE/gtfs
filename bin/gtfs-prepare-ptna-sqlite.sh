@@ -221,6 +221,8 @@ AGENCY_COUNT=0
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS agency;"
 if [ -f agency.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' agency.txt
     columns=$(head -1 agency.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e "s/,/ TEXT DEFAULT '', /g" -e "s/$/ TEXT DEFAULT ''/g" -e 's/agency_id TEXT/agency_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
     sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE agency ($columns);"
     AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
@@ -249,6 +251,8 @@ echo "Table 'calendar_dates'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS calendar_dates;"
 if [ -f calendar_dates.txt -a -s calendar_dates.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' calendar_dates.txt
     if [ $(head -1 calendar_dates.txt | grep -F -c service_id) -gt 0 ]
     then
         if [ $(wc -l calendar_dates.txt | sed -e 's/ .*$//') -gt 1 ]
@@ -283,6 +287,8 @@ echo "Table 'calendar'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS calendar;"
 if [ -f calendar.txt -a -s calendar.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' calendar.txt
     if [ $(head -1 calendar.txt | grep -F -c service_id) -gt 0 ]
     then
         columns=$(head -1 calendar.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/service_id/service_id TEXT PRIMARY KEY/' -e 's/day/day INTEGER DEFAULT 0/g' -e 's/date/date INTEGER DEFAULT 0/g' -e 's/[\r\n]//gi')
@@ -316,6 +322,8 @@ echo "Table 'feed_info'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS feed_info;"
 if [ -f feed_info.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' feed_info.txt
     sqlite3 $SQ_OPTIONS "$DB" ".import feed_info.txt feed_info"
 else
     columns="feed_publisher_name TEXT DEFAULT '',feed_publisher_url TEXT DEFAULT '',feed_lang TEXT DEFAULT '',feed_start_date TEXT DEFAULT '',feed_end_date TEXT DEFAULT '',feed_version TEXT DEFAULT ''"
@@ -333,6 +341,8 @@ echo "Table 'routes'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS routes;"
 if [ -f routes.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' routes.txt
     if [ $(head -1 routes.txt | grep -F -c route_id) -gt 0 ]
     then
         columns=$(head -1 routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
@@ -381,6 +391,8 @@ echo "Table 'shapes'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS shapes;"
 if [ -f shapes.txt -a -s shapes.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' shapes.txt
     if [ $(head -1 shapes.txt | grep -F -c shape_id) -gt 0 ]
     then
         columns=$(head -1 shapes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
@@ -409,6 +421,8 @@ echo "Table 'stops'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS stops;"
 if [ -f stops.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' stops.txt
     if [ $(head -1 stops.txt | grep -F -c stop_id) -gt 0 ]
     then
         columns=$(head -1 stops.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/stop_id TEXT/stop_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
@@ -436,6 +450,8 @@ echo "Table 'stop_times'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS stop_times;"
 if [ -f stop_times.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' stop_times.txt
     if [ $(head -1 stop_times.txt | grep -F -c stop_id) -gt 0 ]
     then
         columns=$(head -1 stop_times.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/[\r\n]//gi')
@@ -465,6 +481,8 @@ echo "Table 'trips'"
 sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS trips;"
 if [ -f trips.txt ]
 then
+    # add potentially missing LF to end of file
+    sed -i '' -e '$a\' trips.txt
     if [ $(head -1 trips.txt | grep -F -c trip_id) -gt 0 ]
     then
         columns=$(head -1 trips.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/trip_id TEXT/trip_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
