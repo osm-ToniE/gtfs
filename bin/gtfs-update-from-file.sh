@@ -119,6 +119,8 @@ then
         fi
     done
 
+    find $PTNA_WORK_LOC -name '*-temporary-gtfs.zip' -exec rm {} \;
+
     cd $WHERE_AM_I
 else
     echo $(date "+%Y-%m-%d %H:%M:%S %Z") "File '$FROM_FILE' not found or cannot be read"
