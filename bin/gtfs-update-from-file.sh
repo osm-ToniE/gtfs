@@ -22,7 +22,7 @@ then
     WHERE_AM_I=$PWD
 
     echo ""
-    echo "List of PTNA analysis configs where 'gtfs:release_date' is used in relations or CSV"
+    echo "List of GTFS feed versions defined by 'gtfs:release_date' in relations or CSV of PTNA configs"
     echo ""
 
     # find all occurances of a GTFS feed in all *-Analysis.html files having 'release_date' set
