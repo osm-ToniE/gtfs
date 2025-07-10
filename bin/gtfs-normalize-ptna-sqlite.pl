@@ -666,6 +666,12 @@ sub NormalizeString {
             $normalized =~ s/Ste\./Sainte/g;
             $normalized =~ s/Ste-/Sainte-/g;
             $normalized =~ s/'/’/g;
+        } elsif ( $language =~ m/^en/ ) {
+            # lower case for some words
+            $normalized =~ s/ After / after /g;
+            $normalized =~ s/ At / at /g;
+            $normalized =~ s/ Before / before /g;
+            $normalized =~ s/ Opp / opp /g;
         }
 
         $normalized =~ s/^\s*//;
