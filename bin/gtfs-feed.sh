@@ -295,7 +295,7 @@ then
 
     if [ -n "$current" ]
     then
-        find $WORK_BASE_DIR -name "${feed}-20*.db" -size 0c ! -newer "$current" -exec rm {} \;
+        find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size 0c ! -newer "$current" -exec rm {} \;
     fi
 fi
 
@@ -306,11 +306,59 @@ then
 
     feed=$(./get-feed-name.sh)
 
-    # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
-    # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
-    # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
-    # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
-    # - listed in the keep-file
+    if [ -n "$keep_file" -a -f "$keep_file" ]
+    then
+        # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
+        # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
+        # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
+        # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
+        # - listed in the keep-file
+
+        existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p ")
+        current_points_to=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        previous_points_to=$(find $WORK_BASE_DIR -name "${feed}-previous-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        long_term_points_to=$(find $WORK_BASE_DIR -name "${feed}-long-termptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+
+        echo "Existing Files : $existing_files_with_date"
+        echo "Current File   : $current_points_to"
+        echo "Previous File  : $previous_points_to"
+        echo "Long-Term File : $long_term_points_to"
+
+        for existing_file in $existing_files_with_date
+        do
+            echo "Check File : $existing_file"
+            if [ -n "$long_term_points_to" -a "$long_term_points_to" == "$existing_file" ]
+            then
+                echo "    Keep As Long-Term File"
+                continue
+            fi
+            if [ -n "$previous_points_to" -a "$previous_points_to" == "$existing_file" ]
+            then
+                echo "    Keep As Previous File"
+                continue
+            fi
+            if [ -n "$current_points_to" -a "$current_points_to" == "$existing_file" ]
+            then
+                echo "    Keep As Current File"
+                continue
+            fi
+            short_name=$(basename $existing_file -ptna-gtfs-sqlite.db)
+            echo "Check Short Name : '$short_name' Against Keep File '$keep_file'"
+            if [ $(grep -F -c "$short_name" "$keep_file") -gt 0 ]
+            then
+                echo "    To Be Kept : $existing_file"
+                continue
+            fi
+            echo "    Delete File : $existing_file ?"
+        done
+    else
+        if [ -z "$keep_file" ]
+        then
+            echo "Keep File Not Specified For Option '-W ...'"
+        else
+            echo "Keep File For Option '-W $keep_file' does not exist"
+        fi
+    fi
 
 fi
 
