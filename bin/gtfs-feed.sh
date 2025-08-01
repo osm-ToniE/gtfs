@@ -314,7 +314,7 @@ then
         # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
         # - listed in the keep-file
 
-        existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p ")
+        existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p " | sort -r)
         current_points_to=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
         previous_points_to=$(find $WORK_BASE_DIR -name "${feed}-previous-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
         long_term_points_to=$(find $WORK_BASE_DIR -name "${feed}-long-termptna-gtfs-sqlite.db" -exec readlink -f {} \;)
