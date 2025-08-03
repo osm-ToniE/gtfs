@@ -669,8 +669,10 @@ sub NormalizeString {
         } elsif ( $language =~ m/^en/ ) {
             # lower case for some words
             $normalized =~ s/ After / after /g;
+            $normalized =~ s/ And / and /g;
             $normalized =~ s/ At / at /g;
             $normalized =~ s/ Before / before /g;
+            $normalized =~ s/ Of / of /g;
             $normalized =~ s/ Opp / opp /g;
         }
 
