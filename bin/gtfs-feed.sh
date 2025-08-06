@@ -349,7 +349,8 @@ then
                 echo "    To Be Kept : $existing_file"
                 continue
             fi
-            echo "    Delete File : $existing_file ?"
+            echo "    Delete File : $existing_file !"
+            rm $existing_file
         done
     else
         if [ -z "$keep_file" ]
