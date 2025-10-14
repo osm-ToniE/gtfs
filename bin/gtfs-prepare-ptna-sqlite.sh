@@ -228,7 +228,8 @@ then
     AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
     if [ $AGENCY_COUNT -gt 1 ]     # including the header
     then
-        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 agency.txt agency"
+        tr -c '\0-\177' '[?*]' < agency.txt > agency-tr.txt
+        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 agency-tr.txt agency"
         if [ "$(head -1 agency.txt | grep -F -c agency_id)" == 0 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE agency ADD agency_id TEXT DEFAULT '1';"
@@ -500,8 +501,68 @@ else
     exit 1
 fi
 
+#
+# operators.txt - oprator_id is PRIMARY KEY, ...
+#
+
 echo
-echo "Show schema'"
+echo "Table 'operators'"
+
+sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS operators;"
+if [ -f operators.txt ]
+then
+    # add potentially missing LF to end of file
+    sed -i -e '$a\' operators.txt
+    if [ $(head -1 operators.txt | grep -F -c operator_id) -gt 0 ]
+    then
+        columns=$(head -1 operators.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/operator_id TEXT/operator_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+        sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE operators ($columns);"
+        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 operators.txt operators"
+    else
+        echo "operators.txt without header"
+        rm -f "$DB"
+        exit 1
+    fi
+else
+    # create one with : operator_id,operator_name,operator_phone,operator_address
+    columns="operator_id TEXT PRIMARY KEY,operator_name TEXT DEFAULT '',operator_phone TEXT DEFAULT '',operator_address TEXT DEFAULT ''"
+    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE operators ($columns);"
+fi
+sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_operator_id ON operators (operator_id);"
+
+
+#
+# operator_routes.txt - route_id is PRIMARY KEY, ...
+#
+
+echo
+echo "Table 'operator_routes'"
+
+sqlite3 $SQ_OPTIONS "$DB" "DROP TABLE IF EXISTS operator_routes;"
+if [ -f operator_routes.txt ]
+then
+    # add potentially missing LF to end of file
+    sed -i -e '$a\' operator_routes.txt
+    if [ $(head -1 operator_routes.txt | grep -F -c operator_id) -gt 0 ]
+    then
+        columns=$(head -1 operator_routes.txt | sed -e 's/^\xef\xbb\xbf//' -e 's/\"//gi' -e 's/,/ TEXT, /g' -e 's/$/ TEXT/g' -e 's/route_id TEXT/route_id TEXT PRIMARY KEY/' -e 's/[\r\n]//gi')
+        sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE operator_routes ($columns);"
+        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 operator_routes.txt operator_routes"
+    else
+        echo "operator_routes.txt without header"
+        rm -f "$DB"
+        exit 1
+    fi
+else
+    # create one with : operator_id,route_id
+    columns="operator_id TEXT DEFAULT '0',route_id TEXT PRIMARY KEY DEFAULT '0'"
+    sqlite3 $SQ_OPTIONS "$DB" "CREATE TABLE operator_routes ($columns);"
+fi
+sqlite3 $SQ_OPTIONS "$DB" "CREATE INDEX idx_operator_route_id ON operator_routes (route_id);"
+
+
+echo
+echo "Show schema"
 sqlite3 $SQ_OPTIONS "$DB" ".schema"
 
 echo
@@ -556,6 +617,18 @@ echo "Test for calendar_dates"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar_dates LIMIT 2;"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar_dates;"
 echo "Lines in calendar_dates.txt : " $(wc -l calendar_dates.txt)
+
+echo
+echo "Test for operators"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operators LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM operators;"
+echo "Lines in operators.txt : " $(wc -l operators.txt)
+
+echo
+echo "Test for operator_routes"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operator_routes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM operator_routes;"
+echo "Lines in operator_routes.txt : " $(wc -l operator_routes.txt)
 
 echo
 echo "OSM settings"
