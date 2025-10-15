@@ -228,8 +228,7 @@ then
     AGENCY_COUNT=$(wc -l agency.txt | sed -e 's/ .*$//')
     if [ $AGENCY_COUNT -gt 1 ]     # including the header
     then
-        tr -c '\0-\177' '[?*]' < agency.txt > agency-tr.txt
-        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 agency-tr.txt agency"
+        sqlite3 $SQ_OPTIONS "$DB" ".import --skip 1 agency.txt agency"
         if [ "$(head -1 agency.txt | grep -F -c agency_id)" == 0 ]
         then
             sqlite3 $SQ_OPTIONS "$DB" "ALTER TABLE agency ADD agency_id TEXT DEFAULT '1';"
@@ -567,43 +566,43 @@ sqlite3 $SQ_OPTIONS "$DB" ".schema"
 
 echo
 echo "Test for agency"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM agency;"
 echo "Lines in agency.txt : " $(wc -l agency.txt)
 
 echo
 echo "Test for routes"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM routes LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM routes;"
 echo "Lines in routes.txt : " $(wc -l routes.txt)
 
 echo
 echo "Test for trips"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM trips LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM trips;"
 echo "Lines in trips.txt : " $(wc -l trips.txt)
 
 echo
 echo "Test for shapes"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM shapes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM shapes LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM shapes;"
 echo "Lines in shapes.txt : " $(wc -l shapes.txt)
 
 echo
 echo "Test for stops"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stops LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stops LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM stops;"
 echo "Lines in stops.txt : " $(wc -l stops.txt)
 
 echo
 echo "Test for stop_times"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stop_times LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM stop_times LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM stop_times;"
 echo "Lines in stop_times.txt : " $(wc -l stop_times.txt)
 
 echo
 echo "Test for calendar"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar;"
 if [ -f calendar.txt ]
 then
@@ -614,25 +613,25 @@ fi
 
 echo
 echo "Test for calendar_dates"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar_dates LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM calendar_dates LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM calendar_dates;"
 echo "Lines in calendar_dates.txt : " $(wc -l calendar_dates.txt)
 
 echo
 echo "Test for operators"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operators LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operators LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM operators;"
 echo "Lines in operators.txt : " $(wc -l operators.txt)
 
 echo
 echo "Test for operator_routes"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operator_routes LIMIT 2;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM operator_routes LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM operator_routes;"
 echo "Lines in operator_routes.txt : " $(wc -l operator_routes.txt)
 
 echo
 echo "OSM settings"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM osm;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM osm;" | tr -c '\0-\177' '[?*]'
 echo
 echo "PTNA settings"
-sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM ptna;"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM ptna;" | tr -c '\0-\177' '[?*]'
