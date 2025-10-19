@@ -676,6 +676,7 @@ sub NormalizeString {
             $normalized =~ s/ Opp / opp /g;
         }
 
+        $normalized =~ s/  / /g;
         $normalized =~ s/^\s*//;
         $normalized =~ s/\s*$//;
     }
