@@ -7,6 +7,8 @@
 # expected files: get_release_date.sh, get_release_url.sh, cleanup.sh
 #
 
+TIMETABLE_CHANGE=20251214
+
 WORK_BASE_DIR="/osm/ptna/work"
 
 TEMP=$(getopt -o acdDEfnoPTuvW: --long analyze,clean,date-print,date-check,clean-empty,feed-print,new,old,publish,touch-non-existent,url-print,verbose,wipe-old -n 'gtfs-feed.sh' -- "$@")
@@ -117,8 +119,8 @@ then
                         printf "%s - OK\n" "$RELEASE_DATE"
                     else
                         youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                        youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//')
-                        RELEASE_DATE_Ym=$(echo  "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//')
+                        youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//g')
+                        RELEASE_DATE_Ym=$(echo  "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
                         if [ -n "$youngest_real_Ym" ]
                         then
                             if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
@@ -137,16 +139,23 @@ then
                 else
                     youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
 
-                    youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//')
-                    RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//')
+                    youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//g')
+                    RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
                     if [ -n "$youngest_real_Ym" ]
                     then
                         if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                         then
-                            printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
-                            if [ "$touch_n_e" = "true" ]
+                            youngest_real_Ymd=$(echo "$youngest_real" | sed -e 's/-//g')
+                            RELEASE_DATE_Ymd=$( echo "$RELEASE_DATE"  | sed -e 's/-//g')
+                            if [ $RELEASE_DATE_Ymd -ge $TIMETABLE_CHANGE -a $youngest_real_Ymd -lt $TIMETABLE_CHANGE ]       # timetable change in many countries December 2025
                             then
-                                touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                                printf "%s is relevant - not yet analyzed (timetable change)\n" "$RELEASE_DATE"
+                            else
+                                printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                                if [ "$touch_n_e" = "true" ]
+                                then
+                                    touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                                fi
                             fi
                         elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
                         then
