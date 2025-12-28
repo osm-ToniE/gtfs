@@ -27,9 +27,9 @@ then
 
     # find all occurances of a GTFS feed in all *-Analysis.html files having 'release_date' set
     grep -r 'data-info="GTFS" data-ref="[^"]*-20[0-9-]*"' /osm/ptna/www/results/*/*Analysis.html /osm/ptna/www/results/*/*/*Analysis.html |  \
-    sed  -e 's/\(20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]\).*$/\1/'                   \
-         -e 's/^.*data-ref="//'                                               | \
-    sort -u                                                                   | \
+    sed  -e 's/\(20[0-9][0-9][0-9-]*\).*$/\1/'                  \
+         -e 's/^.*data-ref="//'                               | \
+    sort -u                                                   | \
     tee $PTNA_WORK_LOC/gtfs-feeds-to-be-kept.log
 
     echo ""
