@@ -1,6 +1,4 @@
-#!/usr/bin/env --split-string=sh -c '"$(dirname -- "$0")/venv/bin/python3" "$0" "$@"'
-# shebang to run with the venv in this directory
-# run create-venv.sh to create it
+#!/usr/bin/env python3
 
 # Copyright 2025 Nitai Sasson
 # Licensed under GNU GPLv3 or later
