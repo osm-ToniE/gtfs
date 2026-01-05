@@ -565,6 +565,12 @@ echo "Show schema"
 sqlite3 $SQ_OPTIONS "$DB" ".schema"
 
 echo
+echo "Test for feed_info"
+sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM feed_info LIMIT 2;" | tr -c '\0-\177' '[?*]'
+sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM feed_info;"
+echo "Lines in feed_info.txt : " $(wc -l feed_info.txt)
+
+echo
 echo "Test for agency"
 sqlite3 $SQ_OPTIONS "$DB" "SELECT * FROM agency LIMIT 2;" | tr -c '\0-\177' '[?*]'
 sqlite3 $SQ_OPTIONS "$DB" "SELECT COUNT(*) FROM agency;"
