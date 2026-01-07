@@ -339,14 +339,17 @@ then
         # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
         # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
         # - $feed-long-term-ptna-gtfs-sqlite.db as a symbolic link
+        # - $feed-error-ptna-gtfs-sqlite.db     as a symbolic link
         # - listed in the keep-file
 
         existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p " | sort -nr)
         current_points_to=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
         previous_points_to=$(find $WORK_BASE_DIR -name "${feed}-previous-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
-        long_term_points_to=$(find $WORK_BASE_DIR -name "${feed}-long-termptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        long_term_points_to=$(find $WORK_BASE_DIR -name "${feed}-long-term-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        error_points_to=$(find $WORK_BASE_DIR -name "${feed}-error-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
 
         echo "Existing Files : $existing_files_with_date"
+        echo "Error File     : $error_points_to"
         echo "Long-Term File : $long_term_points_to"
         echo "Previous File  : $previous_points_to"
         echo "Current File   : $current_points_to"
@@ -372,13 +375,10 @@ then
                 echo "    Keep as current file"
                 continue
             fi
-            if [ -n "$existing_date_int" -a -n "$current_date_int" ]
+            if [ -n "error_points_to" -a "$error_points_to" == "$existing_file" ]
             then
-                if [ $existing_date_int -ge $current_date_int ]
-                then
-                    echo "    Keep as newer than current file"
-                    continue
-                fi
+                echo "    Keep as error file"
+                continue
             fi
             short_name=$(basename $existing_file -ptna-gtfs-sqlite.db)
             echo "Check Short Name : '$short_name' against keep file '$keep_file'"

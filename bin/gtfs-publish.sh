@@ -50,6 +50,7 @@ then
         PREVIOUS_SYM="$D2-$D3-previous-$DB"
         #LONGTERM_SYM="$D2-$D3-long-term-$DB"
         WITHDATE_DB="$D2-$D3-$RELEASE_DATE-$DB"
+        ERROR_SYM="$D2-$D3-error-$DB"
         COUNTRY=$D2
     else
         TARGET_DIR="$WORK_BASE_DIR/$D1/$D2"
@@ -57,6 +58,7 @@ then
         PREVIOUS_SYM="$D1-$D2-$D3-previous-$DB"
         #LONGTERM_SYM="$D1-$D2-$D3-long-term-$DB"
         WITHDATE_DB="$D1-$D2-$D3-$RELEASE_DATE-$DB"
+        ERROR_SYM="$D1-$D2-$D3-error-$DB"
         COUNTRY=$D1
     fi
 
@@ -78,7 +80,7 @@ then
     if [ "$1" = "-n" ]
     then
 
-        FEED_END_DATE_INT=$(sqlite3 $SQ_OPTIONS "$TARGET_SYM" "SELECT feed_end_date FROM feed_info LIMIT 1;")
+        FEED_END_DATE_INT=$(sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "SELECT feed_end_date FROM feed_info LIMIT 1;")
 
         PUBLISH_AS_NEWEST="true"
         if [ -n "$FEED_END_DATE_INT" ]
@@ -98,6 +100,10 @@ then
             echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as 'newest'"
 
             former_newest=$(readlink "$TARGET_SYM")
+
+            # we have a new, valid 'newest' DB, so there's no need to keep older DB with error
+            #echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'error' (rm -f $ERROR_SYM)"
+            rm -f "$ERROR_SYM"
 
             echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'newest' (rm -f $TARGET_SYM)"
             rm -f "$TARGET_SYM"
@@ -141,6 +147,24 @@ then
         else
             echo "$(date '+%Y-%m-%d %H:%M:%S') 'feed_end_date' of 'feed_info' is in the past. Do not publish as 'newest'"
             error_code=$(( $error_code + 1 ))
+
+            #echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'error' (rm -f $ERROR_SYM)"
+            rm -f "$ERROR_SYM"
+
+            echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'error' (ln -s $WITHDATE_DB $ERROR_SYM)"
+            ln -s "$WITHDATE_DB" "$ERROR_SYM"
+
+            if [ "$use_language" = "de" ]
+            then
+                new_comment="Diese Version ist fehlerhaft: das \"feed_end_date\" = \"$FEED_END_DATE_INT\" liegt in der Vergangenheit"
+            else
+                new_comment="This version has an error: \"feed_end_date\" = \"$FEED_END_DATE_INT\" is in the past"
+            fi
+
+            echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' $WITHDATE_DB"
+            sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+            ret_code=$?
+            error_code=$(( $error_code + $ret_code ))
         fi
 
     elif [ "$1" = "-o" ]
