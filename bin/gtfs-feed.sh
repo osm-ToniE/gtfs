@@ -112,71 +112,71 @@ then
                 fi
                 mkdir -p "$WORK_LOC" 2> /dev/null
 
-                if [ -f "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db" ]
+                error_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-error-ptna-gtfs-sqlite.db -exec readlink -f {} \;" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+
+                if [ -n "$error_real" ]
                 then
-                    if [ -s "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db" ]
+                    # we have an 'error' file, need an update
+                    printf "%s versus %s - is relevant - not yet analyzed (needs an update)\n" "$error_real" "$RELEASE_DATE"
+                else
+                    if [ -f "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db" ]
                     then
-                        printf "%s - OK\n" "$RELEASE_DATE"
+                        if [ -s "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db" ]
+                        then
+                            printf "%s - OK\n" "$RELEASE_DATE"
+                        else
+                            youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                            youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//g')
+                            RELEASE_DATE_Ym=$(echo  "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
+                            if [ -n "$youngest_real_Ym" ]
+                            then
+                                if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
+                                then
+                                    printf "%s versus %s - skip(ped) version\n" "$youngest_real" "$RELEASE_DATE"
+                                elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
+                                then
+                                    printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
+                                else
+                                    printf "%s versus %s - not yet analyzed (stub)\n" "$youngest_real" "$RELEASE_DATE"
+                                fi
+                            else
+                                printf "%s is new - not yet analyzed (stub)\n" "$RELEASE_DATE"
+                            fi
+                        fi
                     else
                         youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+
                         youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//g')
-                        RELEASE_DATE_Ym=$(echo  "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
+                        RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
                         if [ -n "$youngest_real_Ym" ]
                         then
                             if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
                             then
-                                printf "%s versus %s - skip(ped) version\n" "$youngest_real" "$RELEASE_DATE"
+                                youngest_real_Ymd=$(echo "$youngest_real" | sed -e 's/-//g')
+                                RELEASE_DATE_Ymd=$( echo "$RELEASE_DATE"  | sed -e 's/-//g')
+                                if [ $RELEASE_DATE_Ymd -ge $TIMETABLE_CHANGE -a $youngest_real_Ymd -lt $TIMETABLE_CHANGE ]       # timetable change in many countries December 2025
+                                then
+                                    printf "%s versus %s - is relevant - not yet analyzed (timetable change)\n" "$youngest_real" "$RELEASE_DATE"
+                                else
+                                    printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                                    if [ "$touch_n_e" = "true" ]
+                                    then
+                                        touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
+                                    fi
+                                fi
                             elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
                             then
                                 printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                             else
-                                printf "%s versus %s - not yet analyzed (stub)\n" "$youngest_real" "$RELEASE_DATE"
-                            fi
-                        else
-                            printf "%s is new - not yet analyzed (stub)\n" "$RELEASE_DATE"
-                        fi
-                    fi
-                else
-                    youngest_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-20*-ptna-gtfs-sqlite.db" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-
-                    youngest_real_Ym=$(echo "$youngest_real" | cut -c 1-7 | sed -e 's/-//g')
-                    RELEASE_DATE_Ym=$( echo "$RELEASE_DATE"  | cut -c 1-7 | sed -e 's/-//g')
-                    if [ -n "$youngest_real_Ym" ]
-                    then
-                        if [ "$youngest_real_Ym" -eq "$RELEASE_DATE_Ym" ]
-                        then
-                            youngest_real_Ymd=$(echo "$youngest_real" | sed -e 's/-//g')
-                            RELEASE_DATE_Ymd=$( echo "$RELEASE_DATE"  | sed -e 's/-//g')
-                            if [ $RELEASE_DATE_Ymd -ge $TIMETABLE_CHANGE -a $youngest_real_Ymd -lt $TIMETABLE_CHANGE ]       # timetable change in many countries December 2025
-                            then
-                                printf "%s is relevant - not yet analyzed (timetable change)\n" "$RELEASE_DATE"
-                            else
-                                current_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-ptna-gtfs-sqlite.db -exec readlink -f {} \;" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
-                                if [ "$current_real" = "$youngest_real" ]
-                                then
-                                    # the "current" points to the latest non-zero size file
-                                    printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
-                                else
-                                    # the "current" is older than the latest non-zero size file (this one might have errors, not suitable to be called "current")
-                                    printf "%s is relevant - not yet analyzed (needs update)\n" "$RELEASE_DATE"
-                                fi
+                                printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
                                 if [ "$touch_n_e" = "true" ]
                                 then
                                     touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
                                 fi
                             fi
-                        elif [ "$youngest_real_Ym" -gt "$RELEASE_DATE_Ym" ]
-                        then
-                            printf "%s versus %s - older release date?\n" "$youngest_real" "$RELEASE_DATE"
                         else
-                            printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
-                            if [ "$touch_n_e" = "true" ]
-                            then
-                                touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
-                            fi
+                            printf "%s is new - not yet analyzed (new)\n" "$RELEASE_DATE"
                         fi
-                    else
-                        printf "%s is new - not yet analyzed (new)\n" "$RELEASE_DATE"
                     fi
                 fi
             else
