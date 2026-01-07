@@ -269,7 +269,7 @@ then
                 error_code=$(( $error_code + 1 ))
             fi
         else
-            echo failed 1>&2
+            echo "failed (url=$ru, date=$rd)" 1>&2
             error_code=$(( $error_code + 1 ))
         fi
     else
