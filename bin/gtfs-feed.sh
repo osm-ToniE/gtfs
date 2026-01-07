@@ -151,7 +151,15 @@ then
                             then
                                 printf "%s is relevant - not yet analyzed (timetable change)\n" "$RELEASE_DATE"
                             else
-                                printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                                current_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-ptna-gtfs-sqlite.db -exec readlink -f {} \;" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                                if [ "$current_real" = "$youngest_real" ]
+                                then
+                                    # the "current" points to the latest non-zero size file
+                                    printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
+                                else
+                                    # the "current" is older than the latest non-zero size file (this one might have errors, not suitable to be called "current")
+                                    printf "%s is relevant - not yet analyzed (needs update)\n" "$RELEASE_DATE"
+                                fi
                                 if [ "$touch_n_e" = "true" ]
                                 then
                                     touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
@@ -212,7 +220,7 @@ fi
 #
 #
 
-if [ "$url_print"  = "true" ]
+if [ "$url_print" = "true" ]
 then
     [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Retrieving Release-URL" 1>&2
     if [ -f ./get-release-url.sh ]
@@ -227,7 +235,7 @@ fi
 #
 #
 
-if [ "$analyze"  = "true" ]
+if [ "$analyze" = "true" ]
 then
     [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Analyzing GTFS package" 1>&2
     if [ -f ./get-release-url.sh ] && [ -f ./get-release-date.sh ]
@@ -274,7 +282,7 @@ fi
 #
 #
 
-if [ "$publish"  = "true" ]
+if [ "$publish" = "true" ]
 then
     [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Publishing data" 1>&2
     db=$(find . -maxdepth 2 -mindepth 1 -name ptna-gtfs-sqlite.db | sort | tail -1)
@@ -283,9 +291,19 @@ then
         rd=$(dirname "$db")
         if [ -n "$rd" ] && [ -d "$rd" ]
         then
-            (cd "$rd" && gtfs-publish.sh "$publish_as_new" "$publish_as_old")
+            cd "$rd"
+            ret_code=$?
+            echo "failed to cd into directory $rd" 1>&2
+            error_code=$(( $error_code + $ret_code ))
+            if [ $ret_code -eq 0 ]
+            then
+                gtfs-publish.sh "$publish_as_new" "$publish_as_old"
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
+            fi
         else
             echo "failed for directory $rd" 1>&2
+            error_code=$(( $error_code + 1 ))
         fi
     else
         echo "failed: 'ptna-gtfs-sqlite.db' not found" 1>&2
@@ -294,7 +312,7 @@ then
 fi
 
 
-if [ "$clean_empty"  = "true" ]
+if [ "$clean_empty" = "true" ]
 then
     [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Clean up older empty databases" 1>&2
 
@@ -309,7 +327,7 @@ then
 fi
 
 
-if [ "$wipe_old"  = "true" ]
+if [ "$wipe_old" = "true" ]
 then
     [ -n "$verbose" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') Wipe out older, not referenced databases (not yet realized)" 1>&2
 
@@ -320,7 +338,7 @@ then
         # delete all $feed-%Y-%m-%d-ptna-gtfs-sqlite.db files except those referenced by
         # - $feed-ptna-gtfs-sqlite.db           as a symbolic link
         # - $feed-previous-ptna-gtfs-sqlite.db  as a symbolic link
-        # - $feed-long-term-ptna-gtfs-sqlite.db as a symbilic link
+        # - $feed-long-term-ptna-gtfs-sqlite.db as a symbolic link
         # - listed in the keep-file
 
         existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p " | sort -nr)
@@ -333,40 +351,51 @@ then
         echo "Previous File  : $previous_points_to"
         echo "Current File   : $current_points_to"
 
+        current_date_int=$(echo $current_points_to | sed -e "s/^.*$feed-//" -e 's/-ptna-gtfs-sqlite.db.*//' -e 's/-//g' | grep -E '^[0-9]{8}$')
+
         for existing_file in $existing_files_with_date
         do
+            existing_date_int=$(echo $existing_file | sed -e "s/^.*$feed-//" -e 's/-ptna-gtfs-sqlite.db.*//' -e 's/-//g' | grep -E '^[0-9]{8}$')
             echo "Check File : $existing_file"
             if [ -n "$long_term_points_to" -a "$long_term_points_to" == "$existing_file" ]
             then
-                echo "    Keep As Long-Term File"
+                echo "    Keep as long-term file"
                 continue
             fi
             if [ -n "$previous_points_to" -a "$previous_points_to" == "$existing_file" ]
             then
-                echo "    Keep As Previous File"
+                echo "    Keep as previous file"
                 continue
             fi
             if [ -n "$current_points_to" -a "$current_points_to" == "$existing_file" ]
             then
-                echo "    Keep As Current File"
+                echo "    Keep as current file"
                 continue
+            fi
+            if [ -n "$existing_date_int" -a -n "$current_date_int" ]
+            then
+                if [ $existing_date_int -ge $current_date_int ]
+                then
+                    echo "    Keep as newer than current file"
+                    continue
+                fi
             fi
             short_name=$(basename $existing_file -ptna-gtfs-sqlite.db)
-            echo "Check Short Name : '$short_name' Against Keep File '$keep_file'"
+            echo "Check Short Name : '$short_name' against keep file '$keep_file'"
             if [ $(grep -F -c "$short_name" "$keep_file") -gt 0 ]
             then
-                echo "    To Be Kept : $existing_file"
+                echo "    To be kept : $existing_file"
                 continue
             fi
-            echo "    Delete File : $existing_file !"
+            echo "    Delete file : $existing_file !"
             rm $existing_file
         done
     else
         if [ -z "$keep_file" ]
         then
-            echo "Keep File Not Specified For Option '-W ...'"
+            echo "Keep file not specified for option '-W ...'"
         else
-            echo "Keep File For Option '-W $keep_file' does not exist"
+            echo "Keep file for option '-W $keep_file' does not exist"
         fi
     fi
 

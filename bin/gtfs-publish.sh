@@ -78,37 +78,69 @@ then
     if [ "$1" = "-n" ]
     then
 
-        echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as 'newest'"
+        FEED_END_DATE_INT=$(sqlite3 $SQ_OPTIONS "$TARGET_SYM" "SELECT feed_end_date FROM feed_info LIMIT 1;")
 
-        former_newest=$(readlink "$TARGET_SYM")
-
-        echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'newest' (rm -f $TARGET_SYM)"
-        rm -f "$TARGET_SYM"
-
-        echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
-        ln -s "$WITHDATE_DB" "$TARGET_SYM"
-
-        if [ -n "$former_newest" ]
+        PUBLISH_AS_NEWEST="true"
+        if [ -n "$FEED_END_DATE_INT" ]
         then
-            echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
-            rm -f "$PREVIOUS_SYM"
-
-            echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
-            ln -s "$former_newest" "$PREVIOUS_SYM"
-
-            RELEASE_DATE=$(sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
-
-            if [ "$use_language" = "de" ]
+            if [ $(echo $FEED_END_DATE_INT | grep -c -E '^[0-9]{8}$') -eq 1 ]
             then
-                new_comment="Dieses ist eine ältere Version der GTFS-Daten: $RELEASE_DATE"
-            else
-                new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
+                TODATE_INT=$(date '+%Y%m%d')
+                if [ $FEED_END_DATE_INT -le $TODATE_INT ]
+                then
+                    PUBLISH_AS_NEWEST=false
+                fi
+            fi
+        fi
+
+        if [ "$PUBLISH_AS_NEWEST" = 'true' ]
+        then
+            echo "$(date '+%Y-%m-%d %H:%M:%S') Publish as 'newest'"
+
+            former_newest=$(readlink "$TARGET_SYM")
+
+            echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'newest' (rm -f $TARGET_SYM)"
+            rm -f "$TARGET_SYM"
+
+            echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'newest' (ln -s $WITHDATE_DB $TARGET_SYM)"
+            ln -s "$WITHDATE_DB" "$TARGET_SYM"
+
+            if [ -n "$former_newest" ]
+            then
+                # now set 'previous' to the former newest
+                echo "$(date '+%Y-%m-%d %H:%M:%S') remove symbolic link 'previous' (rm -f $PREVIOUS_SYM)"
+                rm -f "$PREVIOUS_SYM"
+
+                echo "$(date '+%Y-%m-%d %H:%M:%S') set symbolic link 'previous' (ln -s $former_newest $PREVIOUS_SYM)"
+                ln -s "$former_newest" "$PREVIOUS_SYM"
+
+                RELEASE_DATE=$(sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "SELECT release_date FROM ptna WHERE id=1 LIMIT 1;")
+
+                if [ "$use_language" = "de" ]
+                then
+                    new_comment="Dieses ist eine ältere Version der GTFS-Daten: $RELEASE_DATE"
+                else
+                    new_comment="This is an older version of the GTFS data: $RELEASE_DATE"
+                fi
+
+                echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
+                sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
+            fi
+            cd $DB_DIR
+
+            if [ -f ../post-publish.sh ]
+            then
+                echo "$(date '+%Y-%m-%d %H:%M:%S') start post publishing $*"
+                ../post-publish.sh $*
+                ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
             fi
 
-            echo "$(date '+%Y-%m-%d %H:%M:%S') update comment='$new_comment' for 'previous' $PREVIOUS_SYM"
-            sqlite3 $SQ_OPTIONS "$PREVIOUS_SYM" "UPDATE ptna SET comment='$new_comment' WHERE id=1;"
-            ret_code=$?
-            error_code=$(( $error_code + $ret_code ))
+        else
+            echo "$(date '+%Y-%m-%d %H:%M:%S') 'feed_end_date' of 'feed_info' is in the past. Do not publish as 'newest'"
+            error_code=$(( $error_code + 1 ))
         fi
 
     elif [ "$1" = "-o" ]
@@ -125,16 +157,6 @@ then
         ret_code=$?
         error_code=$(( $error_code + $ret_code ))
 
-    fi
-
-    cd $DB_DIR
-
-    if [ -f ../post-publish.sh ]
-    then
-        echo "$(date '+%Y-%m-%d %H:%M:%S') start post publishing $*"
-        ../post-publish.sh $*
-        ret_code=$?
-        error_code=$(( $error_code + $ret_code ))
     fi
 
     cd "$GTFS_DIR" || { echo "cannot cd into GTFS_DIR $GTFS_DIR"; exit 1; }
