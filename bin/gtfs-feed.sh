@@ -112,7 +112,7 @@ then
                 fi
                 mkdir -p "$WORK_LOC" 2> /dev/null
 
-                error_real=$(find "$WORK_LOC/" -type f -size +1 -name "$FEED_NAME-error-ptna-gtfs-sqlite.db -exec readlink -f {} \;" | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
+                error_real=$(find "$WORK_LOC/" -type l -name "$FEED_NAME-error-ptna-gtfs-sqlite.db" -exec readlink -f {} \; | sort | tail -1 | sed -e "s/^.*$FEED_NAME-//" -e 's/-ptna-gtfs-sqlite.db$//')
 
                 if [ -n "$error_real" ]
                 then
@@ -343,10 +343,10 @@ then
         # - listed in the keep-file
 
         existing_files_with_date=$(find $WORK_BASE_DIR -name "${feed}-20*ptna-gtfs-sqlite.db" -size +0c -printf "%p " | sort -nr)
-        current_points_to=$(find $WORK_BASE_DIR -name "${feed}-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
-        previous_points_to=$(find $WORK_BASE_DIR -name "${feed}-previous-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
-        long_term_points_to=$(find $WORK_BASE_DIR -name "${feed}-long-term-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
-        error_points_to=$(find $WORK_BASE_DIR -name "${feed}-error-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        current_points_to=$(find $WORK_BASE_DIR -type l -name "${feed}-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        previous_points_to=$(find $WORK_BASE_DIR -type l -name "${feed}-previous-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        long_term_points_to=$(find $WORK_BASE_DIR -type l -name "${feed}-long-term-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
+        error_points_to=$(find $WORK_BASE_DIR -type l -name "${feed}-error-ptna-gtfs-sqlite.db" -exec readlink -f {} \;)
 
         echo "Existing Files : $existing_files_with_date"
         echo "Error File     : $error_points_to"
