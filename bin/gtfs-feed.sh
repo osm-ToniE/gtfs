@@ -183,6 +183,11 @@ then
                 if [ -n "$RELEASE_DATE" ]
                 then
                     printf "unknown release date: '$RELEASE_DATE'\n"
+                elif [ -f ./release_url_error.log -a -s ./release_url_error.log ]
+                then
+                    printf "unknown release url: "
+                    cat ./release_url_error.log
+                    rm -f ./release_url_error.log ./release_date_error.log
                 elif [ -f ./release_date_error.log -a -s ./release_date_error.log ]
                 then
                     printf "unknown release date: "
