@@ -298,12 +298,13 @@ then
         then
             cd "$rd"
             ret_code=$?
-            echo "failed to cd into directory $rd" 1>&2
-            error_code=$(( $error_code + $ret_code ))
             if [ $ret_code -eq 0 ]
             then
                 gtfs-publish.sh "$publish_as_new" "$publish_as_old"
                 ret_code=$?
+                error_code=$(( $error_code + $ret_code ))
+            else
+                echo "failed to cd into directory $rd" 1>&2
                 error_code=$(( $error_code + $ret_code ))
             fi
         else
