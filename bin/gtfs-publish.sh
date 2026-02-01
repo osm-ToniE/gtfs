@@ -88,7 +88,7 @@ then
             if [ $(echo $FEED_END_DATE_INT | grep -c -E '^[0-9]{8}$') -eq 1 ]
             then
                 TODATE_INT=$(date '+%Y%m%d')
-                if [ $FEED_END_DATE_INT -le $TODATE_INT ]
+                if [ $FEED_END_DATE_INT -later $TODATE_INT ]
                 then
                     PUBLISH_AS_NEWEST=false
                 fi
