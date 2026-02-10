@@ -738,8 +738,8 @@ sub FindNumberOfRidesForTripIds {
 #
 #
 # sum up the rides provided by the longest trip
-# longest trip: is not sub-route of another trip
-#               has sub-routes, add their "rides": "sum_rides" = "rides" + sum("rides" of sub-routes)
+# longest trip: is not subroute of another trip
+#               has subroutes, add their "rides": "sum_rides" = "rides" + sum("rides" of subroutes)
 #
 
 sub CalculateSumRidesOfLongestTrip {
@@ -765,7 +765,7 @@ sub CalculateSumRidesOfLongestTrip {
                                 WHERE     ptna_trips.route_id = ? AND subroute_of != '' AND (subroute_of=? OR subroute_of LIKE ? OR subroute_of LIKE ? OR subroute_of LIKE ?);" );
 
     #
-    # select all representative trip_ids which are not a sub-route
+    # select all representative trip_ids which are not a subroute
     #
     $sthT->execute();
 
@@ -827,7 +827,7 @@ sub MarkTripsOfRouteId {
 
                 if  ( $details_hash_ref->{$trip_id}{'stop_ids'} ne $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} ) {
                     if ( $details_hash_ref->{$compare_with_trip_id}{'stop_ids'} =~ m/\Q$details_hash_ref->{$trip_id}{'stop_ids'}\E/ ) {
-                        #printf STDERR "Route-Id %s: trip %s is sub-route of %s\n", $route_id, $trip_id, $compare_with_trip_id;
+                        #printf STDERR "Route-Id %s: trip %s is subroute of %s\n", $route_id, $trip_id, $compare_with_trip_id;
                         push( @subroute_of, $compare_with_trip_id );
                     }
                     if ( $details_hash_ref->{$trip_id}{'stop_names'} eq $details_hash_ref->{$compare_with_trip_id}{'stop_names'} ) {
