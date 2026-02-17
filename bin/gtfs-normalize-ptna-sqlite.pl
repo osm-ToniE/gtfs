@@ -488,6 +488,7 @@ sub NormalizeString {
             $normalized =~ s/H\.-Stie.b\.-Stra.e\s*\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
             $normalized =~ s/H\.-Tassilo-Realschule/Herzog-Tassilo-Realschule/g;
             $normalized =~ s/H\.Stie.b\.-Stra.e\(Schleife\)/Hans-Stießberger-Straße (Schleife)/g;
+            $normalized =~ s/Haar, Joh\.-Seb\.-Bach-Stra.e/Haar, Johann-Sebastian-Bach-Straße/g;
             $normalized =~ s/Hallberg\./Hallbergmoos/g;
             $normalized =~ s/Hallbergmoos, Bgm\.-Gruber-Str.ße./Hallbergmoos, Bürgermeister-Gruber-Straße/g;
             $normalized =~ s/Hallbergm\./Hallbergmoos/;
