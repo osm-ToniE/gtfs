@@ -566,7 +566,7 @@ sub NormalizeString {
             $normalized =~ s/Oberdorf\(DAH\)/Oberdorf (DAH)/g;
             $normalized =~ s/Oberhaching, St\.-Rita-Weg/Oberhaching, Sankt-Rita-Weg/g;
             $normalized =~ s/Oberpf\./Oberpfaffenhofen/g;
-            $normalized =~ s/Oberpframmern, Gh\. Neuwirt/Oberpframmern, Ghasthof Neuwirt/g;
+            $normalized =~ s/Oberpframmern, Gh\. Neuwirt/Oberpframmern, Gasthaus Neuwirt/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberschw\., Am Maibaum/Oberschweinbach, Am Maibaum/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
@@ -628,7 +628,7 @@ sub NormalizeString {
             $normalized =~ s/Unterweikertsho\./Unterweikertshofen/g;
             $normalized =~ s/Unterzeism\., Maibaum/Unterzeismering, Maibaum/g;
             $normalized =~ s/Vaterst\./Vaterstetten/g;
-            $normalized =~ s/Vaterstetten Rose-Breitenbach-Pl\./Vaterstetten Rose-Breitenbach-Platz/g;
+            $normalized =~ s/Vaterstetten Rose-Breitenbach-Pl\./Vaterstetten, Rose-Breitenbach-Platz/g;
             $normalized =~ s/Wartenberg, Aufhamerstra.e/Wartenberg, Aufhamer Straße/g;
             $normalized =~ s/W.rmk\./Würmkanal/g;
             $normalized =~ s/W\.-Heisenberg-Str/Werner-Heisenberg-Str/g;
