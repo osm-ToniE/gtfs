@@ -478,6 +478,7 @@ sub NormalizeString {
             $normalized =~ s/Gymnasium -S.d/Gymnasium-Süd/g;
             $normalized =~ s/H.henkirchen-S\./Höhenkirchen-Siegertsbrunn/g;
             $normalized =~ s/Geiselbullach, H\.-B.cker-Str/Geiselbullach, Hermann-Böcker-Str/g;
+            $normalized =~ s/GER, Karl-Lederer-Schule/Geretsried, Karl-Lederer-Schule/g;
             $normalized =~ s/Geretsried, St\. Nikolaus/Geretsried, Sankt Nikolaus/g;
             $normalized =~ s/H\.-B.cker-Str/Hermann-Böcker-Str/g;
             $normalized =~ s/H\.-Hildebrand-Weg/Heinrich-Hildebrand-Weg/g;
