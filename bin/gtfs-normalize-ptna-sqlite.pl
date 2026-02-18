@@ -640,8 +640,12 @@ sub NormalizeString {
             $normalized =~ s/Wittelsb\.Weg/Wittelsbacher Weg/g;
             $normalized =~ s/Wittelsbach\. Schule/Wittelsbacher Schule/g;
             $normalized =~ s/Wolfratsh\./Wolfratshausen/g;
+            $normalized =~ s/WOR, Grubigsteinstra.e/Wolfratshausen, Grubigsteinstraße/g;
+            $normalized =~ s/WOR, K.nigsdorfer S\./Wolfratshausen, Königsdorfer Straße/g;
+            $normalized =~ s/WOR, Wettersteinstra.e/Wolfratshausen, Wettersteinstraße/g;
             $normalized =~ s/Wolfratshausen, K.nigsdorfer S\./Wolfratshausen, Königsdorfer Straße/g;
             $normalized =~ s/Wolfratshausen, Me.nergassl/Wolfratshausen, Mesnergassl/g;
+            $normalized =~ s/Wolfratshausen, Sauerlacher St/Wolfratshausen, Sauerlacher Straße/g;
             $normalized =~ s/Wolfratshausen, Sauerlacher S\./Wolfratshausen, Sauerlacher Straße/g;
             $normalized =~ s/Wolfratshauser S\./Wolfratshauser Straße/g;
             $normalized =~ s/Wolfratshausen, St.dt.Bauhof/Wolfratshausen, Städtischer Bauhof/g;
