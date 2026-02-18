@@ -450,7 +450,7 @@ sub NormalizeString {
             $normalized =~ s/F\.-Kamerseder-Str/Franz-Kamerseder-Str/g;
             $normalized =~ s/F\.-Schüle-Str/Friedrich-Schüle-Str/g;
             $normalized =~ s/Fahrenzh\./Fahrenzhausen/g;
-            $normalized =~ s/Feldkirchen \(WOR\),\s*Abzweig\s*Moosh\./Feldkirchen (WOR), Abzweig Moosham/g;
+            $normalized =~ s/Feldkirchen \(WOR\),\s*Abzweig\s*Moosh\./Feldkirchen (Wolfratshausen), Abzweig Moosham/g;
             $normalized =~ s/Feringastra.eOst/Feringastraße Ost/g;
             $normalized =~ s/FFB/Fürstenfeldbruck/g;
             $normalized =~ s/Finsingerm\./Finsingermoos/g;
