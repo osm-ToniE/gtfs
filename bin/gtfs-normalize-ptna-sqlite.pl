@@ -399,6 +399,7 @@ sub NormalizeString {
                 $normalized =~ s/str,/straße,/g;
                 $normalized =~ s/Str$/Straße/g;
                 $normalized =~ s/str$/straße/g;
+                $normalized =~ s/Strasse/Straße/g;
             }
             if ( $language eq 'de_AT' ) {
                 $normalized =~ s/St\.-/Sankt /g;
@@ -568,6 +569,7 @@ sub NormalizeString {
             $normalized =~ s/Oberhaching, St\.-Rita-Weg/Oberhaching, Sankt-Rita-Weg/g;
             $normalized =~ s/Oberpf\./Oberpfaffenhofen/g;
             $normalized =~ s/Oberpframmern, Gh\. Neuwirt/Oberpframmern, Gasthaus Neuwirt/g;
+            $normalized =~ s/Oberpfram\., Zornedinger/Oberpframmern, Zornedinger/g;
             $normalized =~ s/Oberschl\./Oberschleißheim/g;
             $normalized =~ s/Oberschw\., Am Maibaum/Oberschweinbach, Am Maibaum/g;
             $normalized =~ s/Oberschlei.h\./Oberschleißheim/g;
@@ -611,6 +613,7 @@ sub NormalizeString {
             $normalized =~ s/Starnb\./Starnberg/g;
             $normalized =~ s/Starnberg, F\.-Maria-Grundschule/Starnberg, Ferdinand-Maria-Grundschule/g;
             $normalized =~ s/Starnberg, Ina-Seidl-Weg/Starnberg, Ina-Seidel-Weg/g;
+            $normalized =~ s|Starnberg, Klinik\./Medi-Center|Starnberg, Klinikum./Medi-Center|g;
             $normalized =~ s/Steinh.ring,\s*Gh\. Post/Steinhöring, Gasthof zur Post/g;
             $normalized =~ s/Stra.lach, Gh\.Wildpark/Straßlach, Gasthaus Wildpark/g;
             $normalized =~ s/Steink\./Steinkirchen/g;
