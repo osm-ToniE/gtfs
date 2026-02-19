@@ -80,7 +80,7 @@ then
     if [ "$1" = "-n" ]
     then
 
-        FEED_END_DATE_INT=$(sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "SELECT feed_end_date FROM feed_info LIMIT 1;")
+        FEED_END_DATE_INT=$(sqlite3 $SQ_OPTIONS "$WITHDATE_DB" "SELECT feed_end_date FROM feed_info LIMIT 1;" 2> /dev/null)
 
         PUBLISH_AS_NEWEST="true"
         if [ -n "$FEED_END_DATE_INT" ]
