@@ -586,6 +586,7 @@ sub NormalizeString {
             $normalized =~ s/Pfaffenr\.Stra/Pfaffenrieder Stra/g;
             $normalized =~ s/Pfaffenhofen \(a\.d\.Glonn\)/Pfaffenhofen an der Glonn/g;
             $normalized =~ s/Pfr-Caspar-Mayr-Pl/Pfarrer-Caspar-Mayr-Pl/g;
+            $normalized =~ s/Pfr-Caspar-Mayr-Pl\./Pfarrer-Caspar-Mayr-Platz/g;
             $normalized =~ s/Parkp$/Parkplatz/g;
             $normalized =~ s|pl\./|platz/|g;
             $normalized =~ s|Pl\./|Platz/|g;
