@@ -113,7 +113,7 @@ then
         fi
         if [ $error_code -gt 0 ]
         then
-            echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' failed, see the logs"
+            echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' failed, see the logs https://ptna.openstreetmap.de/en/showlogs.php?gtfs=$feed"
         else
             echo $(date "+%Y-%m-%d %H:%M:%S %Z") "Update GTFS feed '$feed' done"
         fi
