@@ -161,6 +161,9 @@ then
                                     printf "%s versus %s - same month\n" "$youngest_real" "$RELEASE_DATE"
                                     if [ "$touch_n_e" = "true" ]
                                     then
+                                        # remove older empty files, we're going to create a new, single one
+                                        find $WORK_LOC -name "$FEED_NAME-20*ptna-gtfs-sqlite.db" -size 0c -exec rm {} \;
+
                                         touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
                                     fi
                                 fi
@@ -171,6 +174,9 @@ then
                                 printf "%s versus %s - not yet analyzed (new)\n" "$youngest_real" "$RELEASE_DATE"
                                 if [ "$touch_n_e" = "true" ]
                                 then
+                                    # remove older empty files, we're going to create a new, single one
+                                    find $WORK_LOC -name "$FEED_NAME-20*ptna-gtfs-sqlite.db" -size 0c -exec rm {} \;
+
                                     touch "$WORK_LOC/$FEED_NAME-$RELEASE_DATE-ptna-gtfs-sqlite.db"
                                 fi
                             fi
