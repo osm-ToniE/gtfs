@@ -20,6 +20,32 @@ rm -f $DB
 
 unzip -o -- *.zip
 
+
+if [ ! -f routes.txt ]
+then
+    SUBDIRS=$(find . -type d | grep -v '^\.$' | wc -l)
+    if [ $SUBDIRS -eq 1 ]
+    then
+        # OK, this is still wrong but let's move the contents of this single dir one level up and rmdir this dir
+        # the dir name might include blanks!
+        SUBDIR="$(find . -type d | grep -v '^\.$')"
+        if [ "$SUBDIR/routes.txt" ]
+        then
+            echo "Invalid GTFS data, but lets give it a try"
+            # mv might not work due to blanks in SUBDIR name
+            find . -type f -name "*.txt" -print0 | xargs -0 -I@ cp @ .
+#            rm -rf "$SUBDIR"
+        else
+            echo "routes.txt not found - invalid GTFS data"
+            exit 1
+        fi
+    else
+        echo "routes.txt not found - invalid GTFS data"
+        exit 1
+    fi
+fi
+
+
 today=$(date '+%Y-%m-%d')
 
 # $PWD should include the date of the release like: "/osm/ptna/work/gtfs-networks/DE/BY/MVV/2020-03-17"
