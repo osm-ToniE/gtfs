@@ -31,10 +31,10 @@ then
 
                 if [ -n "$WIKI_ROUTES_PAGE" ]
                 then
-                    echo $(date "+%Y-%m-%d %H:%M:%S %Z") "processing 'genericGtfsImport.py --database=ptna-gtfs-sqlite.db --gtfs-feed=$network --outfile=$network-catalog.json comment=route_long_name from='trip_headsign|stop_name' to='trip_headsign|stop_name''"
+                    echo $(date "+%Y-%m-%d %H:%M:%S %Z") "processing 'genericGtfsImport.py --database=ptna-gtfs-sqlite.db --gtfs-feed=$(../get-feed-name.sh) --outfile=$network-catalog.json comment=route_long_name from='trip_headsign|stop_name' to='trip_headsign|stop_name''"
 
                     genericGtfsImport.py --database     ptna-gtfs-sqlite.db     \
-                                         --gtfs-feed    $network                \
+                                         --gtfs-feed    $(../get-feed-name.sh)  \
                                          --outfile      $network-catalog.json   \
                                          comment=route_long_name                \
                                          from="trip_headsign|stop_name"         \
