@@ -110,6 +110,7 @@ class PtnaRoutesImporter:
         # self.set_route_property("from", "trip_headsign|stop_name")
         # self.set_route_property("to", "trip_headsign|stop_name")
         # self.set_route_property("comment", "route_long_name")
+        self.set_route_property("name", "route_long_name")
         self.set_route_property("operator", "agency_name")
         self.set_route_property("gtfs_feed", self.get_gtfs_feed)
         self.set_route_property("route_id", "route_id")
@@ -430,7 +431,7 @@ class PropertyParseAction(argparse.Action):
 
 def main():
     parser = argparse.ArgumentParser(epilog='''Example:
-  %(prog)s --database ptna-gtfs-sqlite.db --gtfs-feed CA-QC-RTC --outfile routes.json comment=route_long_name from="trip_headsign|stop_name" to="trip_headsign|stop_name"''', formatter_class=argparse.RawDescriptionHelpFormatter)
+  %(prog)s --database ptna-gtfs-sqlite.db --gtfs-feed CA-QC-RTC --outfile routes.json name=route_long_name comment=route_long_name from="trip_headsign|stop_name" to="trip_headsign|stop_name"''', formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', '--database', required=True, help='sqlite3 database file created by PTNA')
     parser.add_argument('-g', '--gtfs-feed', required=True, help='feed identifier - value for gtfs_feed')
     parser.add_argument('-o', '--outfile', required=True, help='routes output file (.json)')
